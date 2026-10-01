@@ -13,8 +13,8 @@ This table lists every file in this folder, including this index. Chapters marke
 | [index.md](index.md) | Entry point, learning paths, and evidence conventions. | Available |
 | [01-overview.md](01-overview.md) | Research motivation, motion representations, and augmentation limits. | Available |
 | [02-code-map.md](02-code-map.md) | Real modules, tensor shapes, entry points, and a source-level sample trace. | Available |
-| [03-math-and-geometry.md](03-math-and-geometry.md) | Rotations, kinematics, constraints, and transformation mathematics. | Planned |
-| [04-data-training-evaluation.md](04-data-training-evaluation.md) | Data, dataset wrappers, recognizers, metrics, and experiments. | Planned |
+| [03-math-and-geometry.md](03-math-and-geometry.md) | Geometry that changes motion: representations, canonicalization, time and constraints. | Available |
+| [04-data-training-evaluation.md](04-data-training-evaluation.md) | From a video to a defensible experiment: datasets, training, metrics and comparisons. | Available |
 | [05-project-status.md](05-project-status.md) | Bounded verification, gaps, and unproven claims. | Planned |
 | [06-learning-roadmap.md](06-learning-roadmap.md) | A learning sequence and possible research contributions. | Planned |
 
