@@ -259,7 +259,7 @@ Engine sequence enforcement uses the previous corrected frame when moving forwar
 
 Collision detection asks whether two occupied volumes overlap. A **proxy** simplifies that volume: here limbs/torso use capsules (a cylinder with rounded ends) and selected parts use spheres, derived from joint positions and nominal body dimensions. These can miss fine finger/mesh contacts or flag harmless near-contact. Static/kinematic PyBullet bodies are positioned explicitly; this is not a simulation of gravity, muscles, ground reaction forces, or joint torque ([collision_checker.py](../../src/kinetic_augment/constraints/collision/collision_checker.py), lines 150–157, 162–208).
 
-The checker excludes selected adjacent pairs and tolerates selected intended contacts. It only uses the first row of batched joint positions (lines 181–183). Capsules are repositioned/oriented but their initial lengths are not dynamically rebuilt (lines 192–201). Thus a changed body shape may not be matched by changed proxy size.
+The checker excludes selected adjacent pairs and tolerates selected intended contacts. It only uses the first row of batched joint positions (lines 181–183). Every capsule is created with a fixed placeholder cylinder height of `0.1` (lines 134–141), rather than the measured initial limb length. Updates compute a segment center, orientation and length, but only center/orientation are applied; the capsule is never resized (lines 192–201). Thus the approximation can mismatch ordinary initial limbs as well as later body-shape changes.
 
 ### Walkthrough G: signed distance becomes penetration depth
 

@@ -23,6 +23,8 @@ Traditional data augmentation techniques often fail on skeletal time-series data
 
 ## Documentation
 
+*   **[Research onboarding guide](./docs/research-guide/index.md)**: Source walkthroughs, geometry, data/training, evidence-based status and a newcomer learning plan.
+
 The complete documentation provides the theory, architecture, and practical guides for using the framework.
 
 *   **[00 - Introduction](./docs/00_Introduction.md)**: Why KineticAugment? The problem with naive augmentation.

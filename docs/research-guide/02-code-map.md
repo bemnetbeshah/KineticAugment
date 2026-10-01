@@ -1,8 +1,8 @@
 # 2. Follow the actual code
 
-[Guide index](index.md) · Previous: [overview](01-overview.md) · Next: [math and geometry](03-math-and-geometry.md) (planned)
+[Guide index](index.md) · Previous: [overview](01-overview.md) · Next: [math and geometry](03-math-and-geometry.md)
 
-This map describes **code present** at `45472c6a1f99e24ac5763eeae7acb3be01ff4886`. Runtime evidence belongs in [project status](05-project-status.md) (planned). Follow concrete symbols rather than assuming every feature named in a docstring is wired into the pipeline.
+This map describes **code present** at `45472c6a1f99e24ac5763eeae7acb3be01ff4886`. Runtime evidence belongs in [project status](05-project-status.md). Follow concrete symbols rather than assuming every feature named in a docstring is wired into the pipeline.
 
 ## Start with these imports
 
@@ -151,4 +151,4 @@ Replacing the fixed interval with `[0.95, 1.05]` makes the scale random. The cha
 
 For example, modern `JointAnglePerturbation` reads `stddev` and `joint_groups` ([intrinsic.py](../../src/kinetic_augment/augmentations/intrinsic.py), lines 71–80). Older profiles use keys such as `noise_stddev_rad` and `joint_group`; retaining those keys does not ensure the intended settings are used. Top-level profile `joint_limits`, `kinematic_chains`, and environmental declarations are not automatically translated into modern `constraints` configuration.
 
-Use the installed `Pipeline` API with an explicit compatible configuration as the clearest source navigation route. Phase scripts and tests help locate intended workflows, but their existence is not evidence that all paths or optional assets were exercised. Continue to [math](03-math-and-geometry.md), [data and evaluation](04-data-training-evaluation.md), and [status](05-project-status.md) for the corresponding detail (planned).
+Use the installed `Pipeline` API with an explicit compatible configuration as the clearest source navigation route. Phase scripts and tests help locate intended workflows, but their existence is not evidence that all paths or optional assets were exercised. Continue to [math](03-math-and-geometry.md), [data and evaluation](04-data-training-evaluation.md), and [status](05-project-status.md) for the corresponding detail.
