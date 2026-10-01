@@ -61,7 +61,7 @@ The audit used CPU-only source imports through `PYTHONPATH=src`; it did **not** 
 
 These versions describe one observation, not a lockfile or compatibility promise. `[dev]` pins MediaPipe `0.10.21`; a dry-run resolver in Python 3.14.4 failed because that release had no `cp314` wheel (reported tags `cp39/cp310/cp311/cp312`). Python 3.11 was successful for the listed smoke packages. `[full]` excludes the pose-prior extra, and no VPoser runtime integration was found. Packaging version is `0.2.0`, runtime `__version__` is `0.4.0` ([metadata](../../pyproject.toml), line 7; [public module](../../src/kinetic_augment/__init__.py), line 38).
 
-All following commands used the audit Python, repo cwd, and environment `PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=1 MKL_NUM_THREADS=1`. Each subprocess had a 60-second limit, except Phase5 at 120 seconds; none timed out.
+The seven original smoke checks used the audit Python, repo cwd, and environment `PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=1 MKL_NUM_THREADS=1`. Each had a 60-second limit, except Phase5 at 120 seconds; none timed out. The final traceback row below was a separate direct rerun recorded in the command manifest, with only `PYTHONPATH` and `PYTHONDONTWRITEBYTECODE` explicitly set.
 
 | Exact Python command arguments | Exit / observed output | What that supports |
 | --- | --- | --- |
