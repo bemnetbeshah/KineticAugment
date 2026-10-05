@@ -1,0 +1,14 @@
+# Documentation index
+
+- `00_Introduction.md` — Introduces skeletal-motion augmentation and the framework’s motivation.
+- `01_Core_Principles.md` — Explains physical plausibility and task-level semantic constraints.
+- `02_Framework_Architecture.md` — Describes the augmentation, constraint, profile, and evaluation layers.
+- `03_Augmentation_Catalogue.md` — Catalogues extrinsic, intrinsic, and temporal transformations.
+- `04_Task_Specific_Profiles.md` — Explains how YAML profiles select and configure augmentations.
+- `05_Validation_Framework.md` — Describes checks for physical validity and task-level quality.
+- `06_Development_Roadmap.md` — Records implementation phases, status, and development plans.
+- `GLOSSARY.md` — Defines terminology used throughout the framework documentation.
+- `V1_Problem_Scope.md` — Scopes the MediaPipe ↔ SMPL-X round-trip conversion task and its success criteria.
+- `media/` — Images and placeholder assets referenced by documentation.
+- `index.md` — Index of the documentation pages and media folder.
+- `research-guide/` — Source-grounded research onboarding, verification status, and practical learning roadmap.

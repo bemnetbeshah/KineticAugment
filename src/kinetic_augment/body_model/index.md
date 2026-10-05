@@ -1,0 +1,13 @@
+# Body model index
+
+- `__init__.py` — Provides lazy accessors for SMPL-X and MediaPipe conversion classes.
+- `alignment.py` — Fits the similarity between two coordinate spaces for comparing poses.
+- `converter.py` — Converts world body landmarks to SMPL-X parameters and back.
+- `joint_mapping.py` — Defines SMPL-X/MediaPipe joint indices, chains, and angle limits.
+- `kinematics.py` — Composes local joint rotations down the chain into world joint positions.
+- `skeleton.py` — Supplies rest-pose joints and parent trees from synthetic or SMPL-X skeletons.
+- `mp_to_smplx.py` — Converts MediaPipe landmarks into SMPL-X pose parameters.
+- `smplx_to_mp.py` — Converts SMPL-X pose parameters back to MediaPipe landmarks.
+- `swing_ik.py` — Solves SMPL-X joint rotations analytically from observed bone directions.
+- `smplx_wrapper.py` — Loads SMPL-X assets and runs model inference and parameter handling.
+- `index.md` — Index of body-model mappings, converters, and wrapper code.
