@@ -19,6 +19,11 @@ Contract, per frame and hand:
 fingertips -- skinned mesh vertices the analytic start only approximates -- and
 whatever the model cannot represent exactly. `reconstruct_hand` reads nothing
 but a fit's parameters and the model.
+
+Shape is per hand track (`fit_hand_shape`): one plausible betas vector fitted
+jointly with every frame's pose. `fit_hands_per_frame_shape` lets each frame
+take its own plausible shape; it is a diagnostic of how much error comes from
+the detector's frame-to-frame size changes, not the pipeline's contract.
 """
 
 from dataclasses import dataclass
@@ -27,6 +32,7 @@ from typing import List, Optional, Sequence, Tuple
 import numpy as np
 import torch
 from scipy.spatial.transform import Rotation
+from scipy.stats import chi2
 
 from kinetic_augment.body_model.hand_model import (
     HAND_PARENTS,
@@ -48,6 +54,8 @@ POSE_PRIOR = 1e-4  # mm^2 per rad^2: only settles directions the landmarks leave
 MAX_ITERATIONS = 1000  # dry run: 200 stops short of convergence (0.07 mm); 1000 reaches 0.02 mm
 FRAMES_PER_BATCH = 32
 FIT_STATUSES = ("ok", "no_wrist", "no_palm", "diverged")
+SHAPE_PLAUSIBILITY = 0.95
+SHAPE_ITERATIONS = 1000
 
 
 @dataclass
@@ -163,31 +171,55 @@ def _rms_mm(residual: torch.Tensor, mask: torch.Tensor) -> np.ndarray:
     return torch.sqrt(squared.sum(dim=1) / mask.sum(dim=1).clamp(min=1)).numpy()
 
 
-def _optimise(model, observed, valid, start, betas):
+def plausible_radius(num_betas: int, plausibility: float = SHAPE_PLAUSIBILITY) -> float:
+    """The |betas| bound holding `plausibility` of the shape prior N(0, I)."""
+    return float(np.sqrt(chi2.ppf(plausibility, num_betas)))
+
+
+def _optimise(model, observed, valid, start, betas=None, shape=None,
+              plausibility=SHAPE_PLAUSIBILITY):
     """
     L-BFGS through the real forward pass on the wrist-relative landmark error (mm).
-    The frames are independent and their summed loss separates, so one run fits them all.
+    The frames are independent unless they share a fitted shape.
 
     Args:
         observed, valid: (F, 21, 3) and (F, 21) for the frames being fitted.
         start: (F, 48) starting wrist_orient and hand_pose.
-        betas: (K,) shape.
+        betas: (K,) fixed shape, used when `shape` is None.
+        shape: None, "shared" (one fitted shape for all frames) or "per_frame" (one
+            fitted shape per frame). Fitted shapes stay inside |betas| <= plausible_radius
+            by construction: betas = r u / sqrt(1 + |u|^2) for unconstrained u.
 
-    Returns (params (F, 48), rms_mm (F,)).
+    Returns (params (F, 48), betas (1 or F, K), rms_mm (F,)).
     """
     kept = np.where(valid[..., None], observed, 0.0)
     target = torch.as_tensor(1000.0 * (kept - kept[:, :1]), dtype=FIT_DTYPE)
     mask = torch.tensor(valid)
     mask[:, WRIST] = False  # zero by construction
-    shape = torch.as_tensor(betas, dtype=FIT_DTYPE)
     params = torch.tensor(start, dtype=FIT_DTYPE, requires_grad=True)
+
+    if shape is None:
+        fixed = torch.as_tensor(betas, dtype=FIT_DTYPE).reshape(1, -1)
+        variables, iterations = [params], MAX_ITERATIONS
+
+        def current_betas():
+            return fixed
+    else:
+        radius = plausible_radius(model.num_betas, plausibility)
+        rows = len(start) if shape == "per_frame" else 1
+        free = torch.zeros(rows, model.num_betas, dtype=FIT_DTYPE, requires_grad=True)
+        variables, iterations = [params, free], SHAPE_ITERATIONS
+
+        def current_betas():
+            return radius * free / torch.sqrt(1.0 + (free ** 2).sum(dim=1, keepdim=True))
+
     optimiser = torch.optim.LBFGS(
-        [params], lr=1.0, max_iter=MAX_ITERATIONS, tolerance_grad=1e-12,
+        variables, lr=1.0, max_iter=iterations, tolerance_grad=1e-12,
         tolerance_change=1e-15, history_size=100, line_search_fn="strong_wolfe",
     )
 
     def residuals():
-        points = 1000.0 * model.points(params[:, :3], params[:, 3:], shape)
+        points = 1000.0 * model.points(params[:, :3], params[:, 3:], current_betas())
         return (points - points[:, :1]) - target
 
     def closure():
@@ -198,7 +230,8 @@ def _optimise(model, observed, valid, start, betas):
 
     optimiser.step(closure)
     with torch.no_grad():
-        return params.detach().numpy().copy(), _rms_mm(residuals(), mask)
+        fitted = params.detach().numpy().copy()
+        return fitted, current_betas().numpy().copy(), _rms_mm(residuals(), mask)
 
 
 def fit_hands(observed, valid, model, betas=None) -> List[HandFit]:
@@ -229,7 +262,7 @@ def fit_hands(observed, valid, model, betas=None) -> List[HandFit]:
     frames = sorted(starts)
     for first in range(0, len(frames), FRAMES_PER_BATCH):
         batch = frames[first:first + FRAMES_PER_BATCH]
-        params, rms = _optimise(
+        params, _, rms = _optimise(
             model, observed[batch], valid[batch], np.stack([starts[t] for t in batch]), betas
         )
         for k, t in enumerate(batch):
@@ -302,3 +335,50 @@ def load_hand_fits(path) -> List[HandFit]:
         )
         for t in range(len(columns["status"]))
     ]
+
+
+def _starts_from(fits, frames) -> np.ndarray:
+    return np.stack([np.concatenate([fits[t].wrist_orient, fits[t].hand_pose]) for t in frames])
+
+
+def fit_hand_shape(observed, valid, model, plausibility=SHAPE_PLAUSIBILITY) -> np.ndarray:
+    """
+    One shape for a whole hand track: the plausible betas minimising the summed
+    landmark error of every frame, fitted jointly with the frames' poses (started
+    from neutral-shape fits). Frames the neutral fit cannot place are left out.
+
+    Returns (K,) betas; neutral when no frame can be fitted.
+    """
+    observed, valid = _prepared(observed, valid)
+    neutral = fit_hands(observed, valid, model)
+    frames = [t for t, fit in enumerate(neutral) if fit.status == "ok"]
+    if not frames:
+        return np.zeros(model.num_betas)
+    _, betas, _ = _optimise(model, observed[frames], valid[frames], _starts_from(neutral, frames),
+                            shape="shared", plausibility=plausibility)
+    return betas[0]
+
+
+def fit_hands_per_frame_shape(observed, valid, model,
+                              plausibility=SHAPE_PLAUSIBILITY) -> List[HandFit]:
+    """
+    Diagnostic, not the pipeline's contract: like `fit_hands`, but every frame takes
+    its own plausible shape. Comparing it with a per-track shape measures how much
+    of the round-trip error is the detector's frame-to-frame change of hand size.
+    """
+    observed, valid = _prepared(observed, valid)
+    fits = fit_hands(observed, valid, model)
+    frames = [t for t, fit in enumerate(fits) if fit.status == "ok"]
+    if not frames:
+        return fits
+    params, betas, rms = _optimise(model, observed[frames], valid[frames],
+                                   _starts_from(fits, frames), shape="per_frame",
+                                   plausibility=plausibility)
+    for k, t in enumerate(frames):
+        if not (np.isfinite(rms[k]) and np.isfinite(params[k]).all()):
+            fits[t] = _unfitted(model, "diverged")
+            continue
+        wrist = model.rest_points(betas[k])[WRIST]
+        fits[t] = HandFit(model.backend, model.side, params[k, :3], params[k, 3:], betas[k],
+                          observed[t, WRIST] - wrist, "ok", float(rms[k]))
+    return fits

@@ -20,12 +20,15 @@ torch = pytest.importorskip("torch")
 smplx = pytest.importorskip("smplx")
 
 from kinetic_augment.body_model.hand_converter import (  # noqa: E402
+    fit_hand_shape,
     fit_hands,
+    fit_hands_per_frame_shape,
     initial_pose,
     landmark_errors_mm,
     load_hand_fits,
     node_rotations,
     palm_rotation,
+    plausible_radius,
     reconstruct_hand,
     save_hand_fits,
 )
@@ -277,3 +280,71 @@ def test_a_track_with_gaps_round_trips_and_loads_into_shared_columns(tmp_path):
         bases = [getattr(f, name).base for f in loaded]
         assert bases[0] is not None and bases[0].shape[0] == len(loaded), name
         assert all(base is bases[0] for base in bases), name
+
+
+def test_plausible_radius_is_the_chi_square_quantile():
+    assert plausible_radius(10) == pytest.approx(4.2786732, abs=1e-6)
+    assert plausible_radius(2) == pytest.approx(2.4477468, abs=1e-6)
+
+
+def unit_shape(model, seed, norm=2.0):
+    betas = np.random.default_rng(seed).normal(size=model.num_betas)
+    return betas * norm / np.linalg.norm(betas)
+
+
+@pytest.mark.parametrize("backend", BACKENDS)
+def test_a_fitted_shape_reproduces_a_plausible_hand(backend):
+    model = hand(backend, "right")
+    observed = synthetic_track(model, 8, seed=32, betas=unit_shape(model, 31))
+    betas = fit_hand_shape(observed, all_valid(observed), model)
+    rebuilt = rebuild(fit_hands(observed, all_valid(observed), model, betas), model)
+    errors = landmark_errors_mm(rebuilt, observed)
+    assert errors.mean() <= 0.5
+    assert np.percentile(errors, 95) <= 1.0
+
+
+@pytest.mark.parametrize("backend", BACKENDS)
+def test_the_shape_never_leaves_the_plausible_region(backend):
+    model = hand(backend, "right")
+    radius = plausible_radius(model.num_betas)
+    extreme = np.zeros(model.num_betas)
+    extreme[0] = 3.0 * radius
+    observed = synthetic_track(model, 6, seed=33, betas=extreme)
+    assert np.linalg.norm(fit_hand_shape(observed, all_valid(observed), model)) <= radius
+
+
+@requires_mano
+def test_invalid_landmarks_never_influence_the_shape():
+    model = hand("mano", "right")
+    observed = synthetic_track(model, 4, seed=34)
+    valid = all_valid(observed)
+    valid[:, [4, 12]] = False
+    corrupted = observed.copy()
+    corrupted[:, [4, 12]] -= 0.02
+    np.testing.assert_array_equal(
+        fit_hand_shape(observed, valid, model), fit_hand_shape(corrupted, valid, model)
+    )
+
+
+@requires_mano
+def test_with_nothing_to_fit_the_shape_stays_neutral():
+    model = hand("mano", "right")
+    observed = synthetic_track(model, 2, seed=35)
+    no_landmarks = np.zeros(observed.shape[:2], dtype=bool)
+    np.testing.assert_array_equal(fit_hand_shape(observed, no_landmarks, model), np.zeros(10))
+
+
+@pytest.mark.parametrize("backend", BACKENDS)
+def test_per_frame_shapes_follow_a_hand_that_changes_size(backend):
+    model = hand(backend, "right")
+    observed = np.concatenate(
+        [synthetic_track(model, 1, seed=40 + k, betas=unit_shape(model, 50 + k)) for k in range(4)]
+    )
+    fits = fit_hands_per_frame_shape(observed, all_valid(observed), model)
+    assert [f.status for f in fits] == ["ok"] * 4
+    errors = landmark_errors_mm(rebuild(fits, model), observed)
+    assert errors.mean() <= 0.5
+    assert np.percentile(errors, 95) <= 1.0
+    radius = plausible_radius(model.num_betas)
+    assert all(np.linalg.norm(f.betas) <= radius for f in fits)
+    assert len({tuple(np.round(f.betas, 6)) for f in fits}) == 4
