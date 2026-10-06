@@ -11,6 +11,8 @@
 - `V1_Problem_Scope.md` — Scopes the MediaPipe ↔ SMPL-X round-trip conversion task and its success criteria.
 - `V1_2_Hand_Roundtrip_Plan.md` — Proposed V1.2 MediaPipe ↔ MANO/SMPL-X hand conversion plan, mapping, metrics, and implementation gates.
 - `V1_2_Assumptions.md` — V1.2 assumption ledger, dependency map, verification order, and failure traces.
+- `V1_2_Feasibility_Probes.md` — Measurements of the hand model assets and MediaPipe hand data taken before V1.2 implementation.
+- `V1_2_Implementation_Plan.md` — Task-by-task implementation plan for the V1.2 hand round-trip feasibility slice (P0–P3).
 - `media/` — Images and placeholder assets referenced by documentation.
 - `index.md` — Index of the documentation pages and media folder.
 - `research-guide/` — Source-grounded research onboarding, verification status, and practical learning roadmap.
