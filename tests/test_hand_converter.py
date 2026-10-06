@@ -5,6 +5,10 @@ Synthetic hands come from a skeleton or the real model with known parameters,
 so every target is exactly representable and any error is the converter's.
 """
 
+import os
+import subprocess
+import sys
+from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
@@ -16,13 +20,25 @@ torch = pytest.importorskip("torch")
 smplx = pytest.importorskip("smplx")
 
 from kinetic_augment.body_model.hand_converter import (  # noqa: E402
+    fit_hands,
     initial_pose,
+    landmark_errors_mm,
+    load_hand_fits,
     node_rotations,
     palm_rotation,
+    reconstruct_hand,
+    save_hand_fits,
 )
 from kinetic_augment.body_model.hand_model import HAND_PARENTS, TIPS  # noqa: E402
 from kinetic_augment.body_model.kinematics import forward_kinematics  # noqa: E402
-from tests.hand_assets import BACKENDS, SIDES, hand  # noqa: E402
+from tests.hand_assets import (  # noqa: E402
+    BACKENDS,
+    MODEL_DIR,
+    SIDES,
+    hand,
+    requires_mano,
+    training_poses,
+)
 
 # A hand-shaped rest skeleton in metres -- right hand, fingers along +y -- so the
 # analytic start can be tested without licensed model assets.
@@ -111,3 +127,125 @@ def test_on_the_real_model_joints_are_exact_and_tips_close(backend, side):
         gap_mm = 1000.0 * np.linalg.norm(rebuilt - frame, axis=1)
         assert gap_mm[joints].max() < 1e-4  # exact; smplx's Rodrigues adds 1e-8 rad
         assert gap_mm[list(TIPS)].max() < 10.0
+
+
+SRC_DIR = str(Path(__file__).resolve().parents[1] / "src")
+
+
+def synthetic_track(model, count, seed, spread=0.3, betas=None, poses=None):
+    """
+    Model-generated landmarks with known parameters, offset the way hand-world origins
+    are. Finger poses are random (N(0, spread) per value) unless `poses` is given.
+    """
+    rng = np.random.default_rng(seed)
+    wrist = Rotation.random(count, random_state=seed).as_rotvec()
+    pose = rng.normal(0.0, spread, (count, 45)) if poses is None else np.asarray(poses)
+    shape = np.zeros(model.num_betas) if betas is None else np.asarray(betas, dtype=float)
+    points = model.points(wrist, pose, shape).detach().numpy()
+    return points + rng.normal(0.0, 0.05, (count, 1, 3))
+
+
+def rebuild(fits, model):
+    return np.stack([reconstruct_hand(f, model) for f in fits])
+
+
+def all_valid(observed):
+    return np.ones(observed.shape[:2], dtype=bool)
+
+
+class TestLandmarkErrors:
+    def test_scores_wrist_relative_distances_in_millimetres(self):
+        observed = np.zeros((1, 21, 3))
+        predicted = observed.copy()
+        predicted[0, :, 0] += 0.5             # a pure translation is not an error
+        predicted[0, 8, 1] += 0.003           # 3 mm at the index tip
+        errors = landmark_errors_mm(predicted, observed)
+        assert errors.shape == (1, 20)
+        np.testing.assert_allclose(errors[0, 7], 3.0)
+        np.testing.assert_allclose(np.delete(errors[0], 7), 0.0, atol=1e-12)
+
+
+@pytest.mark.parametrize("poses", ["random", pytest.param("training", marks=requires_mano)])
+@pytest.mark.parametrize("side", SIDES)
+@pytest.mark.parametrize("backend", BACKENDS)
+def test_recovers_hands_the_model_can_represent(backend, side, poses):
+    """Plan Section 6 synthetic gate: mean <= 0.5 mm, p95 <= 1 mm."""
+    model = hand(backend, side)
+    real = training_poses(side, 12, seed=20) if poses == "training" else None
+    observed = synthetic_track(model, 12, seed=21, poses=real)
+    fits = fit_hands(observed, all_valid(observed), model)
+    assert [f.status for f in fits] == ["ok"] * 12
+    rebuilt = rebuild(fits, model)
+    errors = landmark_errors_mm(rebuilt, observed)
+    assert errors.mean() <= 0.5
+    assert np.percentile(errors, 95) <= 1.0
+    np.testing.assert_allclose(rebuilt[:, 0], observed[:, 0], atol=1e-9)
+
+
+@pytest.mark.parametrize("backend", BACKENDS)
+def test_rotating_the_observations_rotates_the_reconstruction(backend):
+    model = hand(backend, "right")
+    observed = synthetic_track(model, 3, seed=22)
+    turn = Rotation.from_rotvec([0.4, -0.9, 1.3]).as_matrix()
+    plain = rebuild(fit_hands(observed, all_valid(observed), model), model)
+    turned = rebuild(fit_hands(observed @ turn.T, all_valid(observed), model), model)
+    # Both runs converge to the same hand to well under 0.1 mm; a frame-convention bug
+    # would differ by centimetres.
+    np.testing.assert_allclose(turned, plain @ turn.T, atol=1e-4)
+
+
+@requires_mano
+def test_invalid_landmarks_never_influence_the_fit():
+    model = hand("mano", "right")
+    observed = synthetic_track(model, 2, seed=23)
+    valid = all_valid(observed)
+    valid[:, [8, 16]] = False
+    corrupted = observed.copy()
+    corrupted[:, [8, 16]] += 0.03
+    for a, b in zip(fit_hands(observed, valid, model), fit_hands(corrupted, valid, model)):
+        np.testing.assert_array_equal(a.wrist_orient, b.wrist_orient)
+        np.testing.assert_array_equal(a.hand_pose, b.hand_pose)
+
+
+@requires_mano
+def test_frames_it_cannot_fit_are_reported_not_invented():
+    model = hand("mano", "right")
+    observed = synthetic_track(model, 3, seed=24)
+    valid = all_valid(observed)
+    valid[1, [1, 5, 9, 13, 17]] = False
+    valid[2, 0] = False
+    fits = fit_hands(observed, valid, model)
+    assert [f.status for f in fits] == ["ok", "no_palm", "no_wrist"]
+    assert np.isnan(reconstruct_hand(fits[1], model)).all()
+    assert np.isnan(fits[2].hand_pose).all()
+
+
+@requires_mano
+def test_reconstruction_refuses_a_model_of_the_other_side():
+    model = hand("mano", "right")
+    observed = synthetic_track(model, 1, seed=25)
+    fit = fit_hands(observed, all_valid(observed), model)[0]
+    with pytest.raises(ValueError):
+        reconstruct_hand(fit, hand("mano", "left"))
+
+
+@requires_mano
+def test_a_fresh_process_rebuilds_the_hands_from_saved_parameters(tmp_path):
+    """Plan A008: the decoder needs only parameters and the model -- no landmarks, no cache."""
+    model = hand("mano", "right")
+    observed = synthetic_track(model, 3, seed=26)
+    fits = fit_hands(observed, all_valid(observed), model)
+    saved, out = tmp_path / "fits.npz", tmp_path / "rebuilt.npy"
+    save_hand_fits(saved, fits)
+    code = (
+        "import numpy as np\n"
+        "from kinetic_augment.body_model.hand_converter import load_hand_fits, reconstruct_hand\n"
+        "from kinetic_augment.body_model.hand_model import HandModel\n"
+        f"model = HandModel('mano', 'right', model_dir={MODEL_DIR!r})\n"
+        f"fits = load_hand_fits({str(saved)!r})\n"
+        f"np.save({str(out)!r}, np.stack([reconstruct_hand(f, model) for f in fits]))\n"
+    )
+    env = dict(os.environ, PYTHONPATH=os.pathsep.join([SRC_DIR, os.environ.get("PYTHONPATH", "")]))
+    subprocess.run([sys.executable, "-c", code], check=True, env=env)
+    np.testing.assert_allclose(np.load(out), rebuild(fits, model), atol=1e-12)
+    assert [f.status for f in load_hand_fits(saved)] == [f.status for f in fits]
