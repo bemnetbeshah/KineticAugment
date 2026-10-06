@@ -1,6 +1,6 @@
 # V1.2 plan: MediaPipe hands ↔ MANO and SMPL-X
 
-**Status:** Proposed; no converter implementation performed for this plan.
+**Status:** P0–P3 pilot implemented; see [V1.2 findings](V1_2_Findings.md).
 
 **Date:** 2026-10-05.
 
