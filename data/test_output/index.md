@@ -14,3 +14,4 @@
 - `videos/` — Rendered YAML augmentation overlays and a side-by-side preview for clip 01986.
 - `index.md` — Index of extracted arrays, analysis plots, and run summary in this folder.
 - `*_world.npz` — Metric MediaPipe world landmarks and visibility, used for body-model fitting.
+- `*_hands.npz` — MediaPipe hand world/image landmarks per anatomical side with the paired pose, for the V1.2 hand round trip.
