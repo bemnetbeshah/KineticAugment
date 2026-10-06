@@ -28,11 +28,18 @@ needs_videos = pytest.mark.skipif(
 
 @needs_videos
 def test_a_clip_does_not_depend_on_the_clip_before_it(tmp_path):
-    extract_all([VIDEOS / "01991.mp4", VIDEOS / "01992.mp4"], tmp_path / "after")
-    extract_all([VIDEOS / "01992.mp4"], tmp_path / "alone")
-    after = load_hand_clip(tmp_path / "after" / "01992_hands.npz")
-    alone = load_hand_clip(tmp_path / "alone" / "01992_hands.npz")
-    for name in ("world", "image", "present", "pose_world"):
+    """
+    01991 extracted after 01992 equals 01991 extracted alone.
+
+    The order matters. A `Hands` tracker kept from 01992 changes 01991's hand landmarks, but
+    one kept from 01991 leaves 01992's unchanged, so only this order catches a `Hands`
+    detector shared between clips. A shared `Holistic` changes `pose_world` in either order.
+    """
+    extract_all([VIDEOS / "01992.mp4", VIDEOS / "01991.mp4"], tmp_path / "after")
+    extract_all([VIDEOS / "01991.mp4"], tmp_path / "alone")
+    after = load_hand_clip(tmp_path / "after" / "01991_hands.npz")
+    alone = load_hand_clip(tmp_path / "alone" / "01991_hands.npz")
+    for name in ("world", "image", "present", "handedness_score", "pose_world"):
         np.testing.assert_array_equal(getattr(after, name), getattr(alone, name))
 
 
