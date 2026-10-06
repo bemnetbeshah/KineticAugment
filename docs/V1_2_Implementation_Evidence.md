@@ -8,11 +8,13 @@ holds. They were taken while Tasks 1–6 of the implementation plan were built a
 2026-10-05 and 2026-10-06. The implementers made them with one-off scripts and wrote them into
 working reports, which are not kept in the repository. The numbers below are copied exactly from
 those reports. Where a review made the measurement (§2, §6), they come from the review's notes.
-§2, §6, §8 and §9 also record checks made for the findings in Task 7.
+§2, §6, §8 and §9 also record checks made for the findings in Task 7, and §2 and §8 record checks
+made by the final whole-branch review.
 
 Each section names the task, what was run, the commit it ran on and the date. It also names the
 committed check or file that covers the same ground. The tests assert the gates; they do not pin
-these exact values.
+these exact values. The commit hashes refer to branch `feat/v1.2-hands` and stay valid only if it
+is merged without squashing.
 
 ## 1. Synthetic gate: refined fits (Task 3)
 
@@ -46,16 +48,34 @@ All eight cases clear the gate (mean ≤ 0.5 mm, p95 ≤ 1 mm) by at least 30 ti
 **Committed check:** `test_recovers_hands_the_model_can_represent` asserts the gate on this data
 for both backends and both sides. It passed on 2026-10-06 (§9).
 
-## 2. Batch coupling and the iteration cap (Task 3; checked again in Task 7)
+## 2. Batch coupling and the iteration cap (Task 3; checked again in Task 7 and the final review)
 
 **Batch coupling.** The Task 3 implementer measured this on commit `896d73f` (2026-10-06), on the
-gate data of §1:
+right-hand, random-pose gate data of §1 (12 frames, seed 21):
 
 - A frame fitted alone converges essentially exactly: mean error 0.0000 mm, p95 0.0001 mm.
 - Fitted in a shared batch of 12, it ends at 0.0115 mm (MANO) and 0.0158 mm (SMPL-X) mean.
 - A frame's reconstruction differs by at most 0.134 mm (MANO) and 0.139 mm (SMPL-X) between the
-  batch of 12 and fitting it alone.
+  batch of 12 and fitting it alone. This is the largest difference in any single coordinate. It is
+  not the distance a landmark moves (see below).
 - Results are deterministic for identical input and batching.
+
+**Per coordinate and as a distance.** The final whole-branch review (2026-10-06, on commit
+`a4a8ed0`) re-measured the coupling on the same data: the right hand, random poses, seed 21, 12
+frames. For each landmark of each frame, the shift is the difference between its position rebuilt
+from the batch-of-12 fit and from a fit of the frame alone. The review reported it two ways:
+
+| Shift | MANO | SMPL-X |
+| --- | ---: | ---: |
+| Largest difference in a single coordinate | 0.1344 mm | 0.1394 mm |
+| Largest Euclidean shift of a landmark | 0.1715 mm | 0.1810 mm |
+| Mean Euclidean shift of a landmark | 0.011 mm | 0.015 mm |
+
+The single-coordinate row agrees with the implementer's 0.134 and 0.139 mm above. The Euclidean
+rows are the figures to quote for how far a landmark moves: up to 0.172 mm (MANO) and 0.181 mm
+(SMPL-X). They are close to the batch fit's own largest and mean landmark errors in §1 (0.1725 and
+0.1814 mm; 0.0115 and 0.0158 mm), which is expected, since a frame fitted alone reproduces its
+observations almost exactly (first bullet above).
 
 **Iteration cap.** The Task 3 review (2026-10-06) found that the batched L-BFGS ends at the
 1,000-iteration cap, so status `ok` does not certify convergence and `rms_mm` is the quality
@@ -100,8 +120,8 @@ landmarks, the betas are a plausible shape that reproduces the landmarks, not an
 true shape.
 
 **Committed checks:** `test_a_fitted_shape_reproduces_a_plausible_hand` and
-`test_per_frame_shapes_follow_a_hand_that_changes_size` assert the gate. Both passed on 2026-10-06
-(§9).
+`test_per_frame_shapes_follow_a_hand_that_changes_size` assert the gate, on both backends and on the
+right hand only. Both passed on 2026-10-06 (§9).
 
 ## 4. Per-frame-shape diagnostic: synthetic floor against track length (Task 4)
 
@@ -198,9 +218,16 @@ counts, hand scales, every row of every track, the shapes, the chirality values 
 table. The run took 895 s by the script's own timer, against 681 s in the first run, which fitted
 fewer shapes.
 
-Task 7 (2026-10-06) checked this against git history. All 1,417 values that the first JSON
-(`git show 15db091:data/test_output/hand_round_trip.json`) shares with the current one are equal.
-The only keys of the first run now missing are its two replaced observability fields,
+Task 7 checked this against git history, and the final whole-branch review repeated the comparison
+(both 2026-10-06). All 1,417 values that the first JSON
+(`git show 15db091:data/test_output/hand_round_trip.json`) shares with the current one are equal,
+under one row mapping: the first run's row `held-out shape` is the current row
+`held-out shape (time halves)`, in the JSON `mano: held-out shape` and `smplx: held-out shape`,
+now `mano: held-out shape (time halves)` and `smplx: held-out shape (time halves)`. The later run
+added the interleaved row and gave the two held-out rows distinct names. Without this mapping, the
+first run's `held-out shape` rows have no counterpart in the current file and count as missing. The
+1,417 are 1,381 single numbers and the 36 elements of 18 two-element lists of shape norms. With the
+mapping, the only keys of the first run now missing are its two replaced observability fields,
 `median_weak_directions` and `weakest_direction_joint`.
 
 **Committed alternative:** both JSON files are in git history, so anyone can repeat the comparison.
