@@ -1733,6 +1733,7 @@ import numpy as np
 import pytest
 
 pytest.importorskip("mediapipe")
+pytest.importorskip("torch")  # the extractor imports hand_model, which needs torch
 
 REPO = Path(__file__).resolve().parents[1]
 VIDEOS = REPO / "data" / "sign_videos"
