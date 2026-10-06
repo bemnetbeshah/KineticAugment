@@ -70,6 +70,11 @@ class HandFit:
 
     `transl` puts the model's wrist on the observed wrist. A frame without a fit
     has its reason in `status` (one of FIT_STATUSES) and NaN parameters.
+
+    Status "ok" only means the parameters are finite. It does not certify that the
+    optimiser converged, because the optimiser stops at an iteration cap (see
+    `fit_hands`). `rms_mm` is the quality signal: the frame's RMS wrist-relative
+    landmark residual in millimetres, over its valid landmarks (the wrist excluded).
     """
 
     backend: str
@@ -180,7 +185,15 @@ def _optimise(model, observed, valid, start, betas=None, shape=None,
               plausibility=SHAPE_PLAUSIBILITY):
     """
     L-BFGS through the real forward pass on the wrist-relative landmark error (mm).
-    The frames are independent unless they share a fitted shape.
+
+    The loss is a sum over frames, so it separates by frame unless the frames share a
+    fitted shape. The iterates do not: one run shares a single line search (one step length
+    per iteration) and one curvature history across all the frames it is given, so a
+    frame's result depends on the frames it is batched with. In every run checked the
+    optimiser stopped at its iteration cap, not at a tolerance, so a result is the iterate
+    at the cap rather than a certified optimum: judge a fit by the returned `rms_mm`.
+    (docs/V1_2_Findings.md section 4.1 and docs/V1_2_Implementation_Evidence.md section 2
+    give the measurements.)
 
     Args:
         observed, valid: (F, 21, 3) and (F, 21) for the frames being fitted.
@@ -236,7 +249,17 @@ def _optimise(model, observed, valid, start, betas=None, shape=None,
 
 def fit_hands(observed, valid, model, betas=None) -> List[HandFit]:
     """
-    Fit every frame of one hand track independently.
+    Fit every frame of one hand track, each with its own pose, at one fixed shape.
+
+    The frames are optimised in batches of FRAMES_PER_BATCH that share one L-BFGS run (see
+    `_optimise`). Each frame has its own parameters and its own loss term, but a frame's
+    result depends on the other frames of its batch: fitted alone, or in another batch, it
+    comes out different (by up to 0.181 mm in a landmark's position on synthetic hands;
+    docs/V1_2_Implementation_Evidence.md section 2).
+
+    Status "ok" only means that the fit is finite. The optimiser stops at its iteration cap
+    rather than at a tolerance, so "ok" does not certify convergence; each fit's `rms_mm` is
+    the quality signal.
 
     Args:
         observed: (T, 21, 3) world landmarks of one hand, metres.
@@ -365,6 +388,15 @@ def fit_hands_per_frame_shape(observed, valid, model,
     Diagnostic, not the pipeline's contract: like `fit_hands`, but every frame takes
     its own plausible shape. Comparing it with a per-track shape measures how much
     of the round-trip error is the detector's frame-to-frame change of hand size.
+
+    Its shape stage runs one L-BFGS over every frame of the track that the neutral fit could
+    place, not in batches of FRAMES_PER_BATCH, with a fixed iteration budget
+    (SHAPE_ITERATIONS). The frames' losses are separate but their iterates are not (see
+    `_optimise`), and the budget does not grow with the track, so the accuracy it reaches
+    falls as the track gets longer: on synthetic MANO tracks the mean landmark error rose
+    from 0.100 mm at 8 frames to 0.174 mm at 250 (docs/V1_2_Implementation_Evidence.md
+    section 4). A gap between this and a per-track shape that is smaller than that floor
+    says nothing about changes of hand size.
     """
     observed, valid = _prepared(observed, valid)
     fits = fit_hands(observed, valid, model)
