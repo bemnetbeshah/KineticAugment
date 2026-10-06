@@ -3,6 +3,7 @@
 - `download_models.py` — Checks required model assets and prints setup or download guidance.
 - `extract_hand_landmarks.py` — Extracts MediaPipe hand world and image landmarks with the paired pose and a geometric left/right assignment.
 - `extract_world_landmarks.py` — Extracts metric MediaPipe world landmarks and visibility for body fitting.
+- `measure_hand_round_trip.py` — Measures the V1.2 hand round trip (MediaPipe hand → MANO / SMPL-X → landmarks) as an error ladder on the pilot clips.
 - `measure_noise_floor.py` — Measures MediaPipe's frame-to-frame noise floor to set the round-trip error budget.
 - `measure_round_trip.py` — Measures identity round-trip error and decomposes it by cause.
 - `render_augmented_from_yaml.py` — Applies YAML-configured augmentations to videos and renders overlays.

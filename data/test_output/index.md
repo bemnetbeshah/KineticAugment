@@ -10,6 +10,7 @@
 - `01991_landmarks.npy` — NumPy landmark sequence extracted from clip 01991.
 - `01992_analysis.png` — Pose and landmark analysis plot generated from clip 01992.
 - `01992_landmarks.npy` — NumPy landmark sequence extracted from clip 01992.
+- `hand_round_trip.json` — Per-track and pooled V1.2 hand round-trip errors, observability and environment hashes from `scripts/measure_hand_round_trip.py`.
 - `test_summary.json` — Per-video extraction metrics plus joint-mapping and conversion status from the reference run.
 - `videos/` — Rendered YAML augmentation overlays and a side-by-side preview for clip 01986.
 - `index.md` — Index of extracted arrays, analysis plots, and run summary in this folder.
