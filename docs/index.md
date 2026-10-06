@@ -9,6 +9,8 @@
 - `06_Development_Roadmap.md` — Records implementation phases, status, and development plans.
 - `GLOSSARY.md` — Defines terminology used throughout the framework documentation.
 - `V1_Problem_Scope.md` — Scopes the MediaPipe ↔ SMPL-X round-trip conversion task and its success criteria.
+- `V1_2_Hand_Roundtrip_Plan.md` — Proposed V1.2 MediaPipe ↔ MANO/SMPL-X hand conversion plan, mapping, metrics, and implementation gates.
+- `V1_2_Assumptions.md` — V1.2 assumption ledger, dependency map, verification order, and failure traces.
 - `media/` — Images and placeholder assets referenced by documentation.
 - `index.md` — Index of the documentation pages and media folder.
 - `research-guide/` — Source-grounded research onboarding, verification status, and practical learning roadmap.
