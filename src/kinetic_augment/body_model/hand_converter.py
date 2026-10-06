@@ -284,12 +284,21 @@ def save_hand_fits(path, fits: Sequence[HandFit]) -> None:
 
 def load_hand_fits(path) -> List[HandFit]:
     """Read fits written by `save_hand_fits`."""
-    data = np.load(path)
-    backend, side = str(data["backend"]), str(data["side"])
+    # An NpzFile reads and decompresses a member afresh on every access, so each column is
+    # read once here and the fits are views of it.
+    with np.load(path) as data:
+        columns = {key: data[key] for key in data.files}
+    backend, side = str(columns["backend"]), str(columns["side"])
     return [
         HandFit(
-            backend, side, data["wrist_orient"][t], data["hand_pose"][t], data["betas"][t],
-            data["transl"][t], str(data["status"][t]), float(data["rms_mm"][t]),
+            backend,
+            side,
+            columns["wrist_orient"][t],
+            columns["hand_pose"][t],
+            columns["betas"][t],
+            columns["transl"][t],
+            str(columns["status"][t]),
+            float(columns["rms_mm"][t]),
         )
-        for t in range(len(data["status"]))
+        for t in range(len(columns["status"]))
     ]

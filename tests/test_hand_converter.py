@@ -249,3 +249,31 @@ def test_a_fresh_process_rebuilds_the_hands_from_saved_parameters(tmp_path):
     subprocess.run([sys.executable, "-c", code], check=True, env=env)
     np.testing.assert_allclose(np.load(out), rebuild(fits, model), atol=1e-12)
     assert [f.status for f in load_hand_fits(saved)] == [f.status for f in fits]
+
+
+@requires_mano
+def test_a_track_with_gaps_round_trips_and_loads_into_shared_columns(tmp_path):
+    """
+    Unfitted frames are saved as NaN rows with their status and come back as they were.
+    Loading reads each column once, so the fits are views of one array per column rather
+    than T private copies of every column.
+    """
+    model = hand("mano", "right")
+    observed = synthetic_track(model, 4, seed=27)
+    valid = all_valid(observed)
+    valid[1, [1, 5, 9, 13, 17]] = False
+    valid[3, 0] = False
+    fits = fit_hands(observed, valid, model)
+    assert [f.status for f in fits] == ["ok", "no_palm", "ok", "no_wrist"]
+    save_hand_fits(tmp_path / "gaps.npz", fits)
+    loaded = load_hand_fits(tmp_path / "gaps.npz")
+    assert [f.status for f in loaded] == [f.status for f in fits]
+    assert [bool(np.isfinite(f.hand_pose).all()) for f in loaded] == [True, False, True, False]
+    for before, after in zip(fits, loaded):
+        assert (after.backend, after.side) == (before.backend, before.side)
+        for name in ("wrist_orient", "hand_pose", "betas", "transl", "rms_mm"):
+            np.testing.assert_array_equal(getattr(after, name), getattr(before, name), name)
+    for name in ("wrist_orient", "hand_pose", "betas", "transl"):
+        bases = [getattr(f, name).base for f in loaded]
+        assert bases[0] is not None and bases[0].shape[0] == len(loaded), name
+        assert all(base is bases[0] for base in bases), name
