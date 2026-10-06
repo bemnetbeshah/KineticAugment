@@ -11,10 +11,18 @@ import numpy as np
 import pytest
 from scipy.spatial.transform import Rotation
 
-from kinetic_augment.body_model.hand_converter import initial_pose, node_rotations, palm_rotation
-from kinetic_augment.body_model.hand_model import HAND_PARENTS, TIPS
-from kinetic_augment.body_model.kinematics import forward_kinematics
-from tests.hand_assets import BACKENDS, SIDES, hand
+# The converter imports hand_model, which needs torch and smplx: skip cleanly without them.
+torch = pytest.importorskip("torch")
+smplx = pytest.importorskip("smplx")
+
+from kinetic_augment.body_model.hand_converter import (  # noqa: E402
+    initial_pose,
+    node_rotations,
+    palm_rotation,
+)
+from kinetic_augment.body_model.hand_model import HAND_PARENTS, TIPS  # noqa: E402
+from kinetic_augment.body_model.kinematics import forward_kinematics  # noqa: E402
+from tests.hand_assets import BACKENDS, SIDES, hand  # noqa: E402
 
 # A hand-shaped rest skeleton in metres -- right hand, fingers along +y -- so the
 # analytic start can be tested without licensed model assets.
