@@ -11,7 +11,10 @@ landmarks 1-20, with no rotation or scale registration
 The ladder separates optimiser error from model mismatch:
     swing start      analytic palm rotation + finger swing, neutral shape
     refined          real-model refinement, neutral shape
-    held-out shape   shape fitted on the other half of the track
+    held-out shape   shape fitted on one part of the track and scored on the rest, both
+                     ways, for two splits: the track's halves in time (pessimistic: the
+                     hand's size drifts between them, see half_span_ratio) and its
+                     even / odd frames (optimistic: neighbours share size and pose)
     in-sample shape  shape fitted on the frames it is scored on (optimistic)
     per-frame shape  every frame its own plausible shape (diagnostic): how much
                      error MediaPipe's frame-to-frame change of hand size causes
@@ -20,8 +23,9 @@ The ladder separates optimiser error from model mismatch:
                      model-free, not a lower bound; also scaled per frame
 
 Also reported per track and backend: how many rotation directions the landmarks
-barely constrain (observability), and the error when the other side's model is
-used (chirality). Five clips are a pilot, not a held-out test set.
+barely constrain at several thresholds, and how that weak subspace spreads over
+the joints (observability), and the error when the other side's model is used
+(chirality). Five clips are a pilot, not a held-out test set.
 
 Usage:
     python scripts/extract_hand_landmarks.py   # once
@@ -67,7 +71,29 @@ TARGETS_MM = {"mean": 5.0, "tips": 8.0, "p95": 15.0}  # plan Section 6, provisio
 PALM = [1, 5, 9, 13, 17]  # wrist-relative, so the wrist is the origin
 MIDDLE_MCP = 9
 OBSERVABILITY_STRIDE = 5
-WEAK_FRACTION = 0.01
+WEAK_THRESHOLDS = (1e-6, 1e-3, 1e-2, 3e-2)  # relative singular values, s / s[0]
+WEIGHT_THRESHOLD = 1e-2  # the weak subspace that `joint_weak_weight` spreads over the joints
+SPLITS = {
+    "held-out shape (time halves)": (
+        "The shape is fitted on the first half of the track in time and scored on the second "
+        "half, then the reverse, so drift of the hand's size between the halves "
+        "(half_span_ratio) counts as error."),
+    "held-out shape (interleaved frames)": (
+        "The shape is fitted on the even-indexed frames of the track and scored on the "
+        "odd-indexed ones, then the reverse, so every frame is scored once but neighbouring "
+        "frames share size and pose."),
+}
+OBSERVABILITY = {
+    "stride": OBSERVABILITY_STRIDE,
+    "thresholds": list(WEAK_THRESHOLDS),
+    "joint_weight_threshold": WEIGHT_THRESHOLD,
+    "meaning": (
+        "A rotation direction is weak at threshold t when its singular value in the Jacobian "
+        "of the 20 wrist-relative landmarks with respect to the 48 rotation parameters is "
+        "below t times the largest; weak_counts is the median number of weak directions over "
+        "the sampled frames, and joint_weak_weight the trace of the weak projector at "
+        "joint_weight_threshold over each joint's three parameters, averaged over the frames."),
+}
 
 
 def tracks():
@@ -142,6 +168,35 @@ def summary(errors_mm, scale_mm):
     return out
 
 
+def time_halves(count):
+    """The first and the second half, in time, of a track of `count` frames."""
+    half = count // 2
+    return slice(0, half), slice(half, None)
+
+
+def interleaved(count):
+    """The even-indexed and the odd-indexed frames of a track of `count` frames."""
+    return slice(0, count, 2), slice(1, count, 2)
+
+
+def held_out(model, landmarks, valid, parts):
+    """
+    Errors (n, 20) with every frame scored once, by a shape fitted on the other part of the
+    track, and the norms of the two shapes fitted.
+
+    Args:
+        parts: two slices that split the track's frames between them.
+    """
+    errors = np.full((len(landmarks), len(LANDMARK_NAMES) - 1), np.nan)
+    norms = []
+    for fit_on, score_on in (parts, parts[::-1]):
+        betas = fit_hand_shape(landmarks[fit_on], valid[fit_on], model)
+        norms.append(float(np.linalg.norm(betas)))
+        fits = fit_hands(landmarks[score_on], valid[score_on], model, betas)
+        errors[score_on] = landmark_errors_mm(rebuild(fits, model), landmarks[score_on])
+    return errors, norms
+
+
 def ladder(model, landmarks):
     """Per-row (n, 20) errors for one track, plus the fitted shapes."""
     valid = np.ones(landmarks.shape[:2], dtype=bool)
@@ -149,16 +204,11 @@ def ladder(model, landmarks):
     neutral = fit_hands(landmarks, valid, model)
     rows["refined"] = landmark_errors_mm(rebuild(neutral, model), landmarks)
 
-    half = len(landmarks) // 2
-    held = np.full_like(rows["refined"], np.nan)
-    held_norms = []
-    halves = (slice(0, half), slice(half, None))
-    for fit_on, score_on in (halves, halves[::-1]):
-        betas = fit_hand_shape(landmarks[fit_on], valid[fit_on], model)
-        held_norms.append(float(np.linalg.norm(betas)))
-        fits = fit_hands(landmarks[score_on], valid[score_on], model, betas)
-        held[score_on] = landmark_errors_mm(rebuild(fits, model), landmarks[score_on])
-    rows["held-out shape"] = held
+    count = len(landmarks)
+    rows["held-out shape (time halves)"], held_norms = held_out(
+        model, landmarks, valid, time_halves(count))
+    rows["held-out shape (interleaved frames)"], interleaved_norms = held_out(
+        model, landmarks, valid, interleaved(count))
 
     in_sample = fit_hand_shape(landmarks, valid, model)
     fits = fit_hands(landmarks, valid, model, in_sample)
@@ -168,6 +218,7 @@ def ladder(model, landmarks):
     shapes = {
         "radius": plausible_radius(model.num_betas),
         "held_out_norms": held_norms,
+        "interleaved_norms": interleaved_norms,
         "in_sample_norm": float(np.linalg.norm(in_sample)),
         "failed_neutral_fits": int(sum(f.status != "ok" for f in neutral)),
     }
@@ -175,9 +226,19 @@ def ladder(model, landmarks):
 
 
 def observability(model, fits):
-    """How many of the 48 rotation directions barely move the landmarks; where the weakest is."""
+    """
+    How many of the 48 rotation directions the landmarks barely constrain, and where they are,
+    on every OBSERVABILITY_STRIDE-th fitted frame.
+
+    A direction is weak at threshold t when its singular value in the Jacobian of the
+    wrist-relative landmarks with respect to the 48 rotation parameters is below t times the
+    largest. `weak_counts` is the median number of weak directions per threshold.
+    `joint_weak_weight` spreads the weak subspace at WEIGHT_THRESHOLD over the wrist and the
+    15 finger joints: the trace of its projector over each joint's three parameters, averaged
+    over the frames (the weights sum to the weak count).
+    """
     names = ["wrist"] + [LANDMARK_NAMES[i] for i in POSE_SLOT_LANDMARKS]
-    counts, weakest = [], {}
+    counts, weights = [], []
     for fit in [f for f in fits if f.status == "ok"][::OBSERVABILITY_STRIDE]:
         betas = torch.as_tensor(fit.betas, dtype=torch.float64)
 
@@ -188,13 +249,17 @@ def observability(model, fits):
         x0 = torch.as_tensor(np.concatenate([fit.wrist_orient, fit.hand_pose]), dtype=torch.float64)
         jacobian = torch.autograd.functional.jacobian(relative, x0).numpy()
         _, singular, vt = np.linalg.svd(jacobian)
-        counts.append(int((singular < WEAK_FRACTION * singular[0]).sum()))
-        joint = names[int(np.argmax(np.linalg.norm(vt[-1].reshape(16, 3), axis=1)))]
-        weakest[joint] = weakest.get(joint, 0) + 1
+        singular = singular / singular[0]
+        counts.append([int((singular < t).sum()) for t in WEAK_THRESHOLDS])
+        weak = vt[singular < WEIGHT_THRESHOLD]
+        weights.append((weak ** 2).reshape(len(weak), len(names), 3).sum(axis=(0, 2)))
+    if not counts:
+        return {"frames": 0, "weak_counts": {}, "joint_weak_weight": {}}
+    median, weight = np.median(counts, axis=0), np.mean(weights, axis=0)
     return {
         "frames": len(counts),
-        "median_weak_directions": float(np.median(counts)) if counts else float("nan"),
-        "weakest_direction_joint": weakest,
+        "weak_counts": {str(t): float(m) for t, m in zip(WEAK_THRESHOLDS, median)},
+        "joint_weak_weight": {name: float(w) for name, w in zip(names, weight)},
     }
 
 
@@ -219,9 +284,9 @@ def environment():
 
 def print_table(title, rows):
     print(f"\n{title}")
-    print(f"  {'row':<36}{'frames':>7}{'mean':>8}{'tips':>8}{'p95':>8}{'% hand':>8}")
+    print(f"  {'row':<44}{'frames':>7}{'mean':>8}{'tips':>8}{'p95':>8}{'% hand':>8}")
     for name, s in rows.items():
-        print(f"  {name:<36}{s['frames']:>7}{s['mean_mm']:>8.2f}{s['tips_mm']:>8.2f}"
+        print(f"  {name:<44}{s['frames']:>7}{s['mean_mm']:>8.2f}{s['tips_mm']:>8.2f}"
               f"{s['p95_mm']:>8.2f}{s['mean_pct_hand']:>8.2f}")
 
 
@@ -233,13 +298,17 @@ def main():
 
     models = {(b, s): HandModel(b, s, model_dir=MODEL_DIR) for b in BACKENDS for s in SIDES}
     pooled_errors, pooled_scale = {}, {}
-    report = {"environment": environment(), "targets_mm": TARGETS_MM, "tracks": [], "pooled": {}}
+    report = {"environment": environment(), "targets_mm": TARGETS_MM, "splits": SPLITS,
+              "observability_settings": OBSERVABILITY, "tracks": [], "pooled": {}}
 
     for clip, side, landmarks, total in found:
         span = np.linalg.norm(landmarks[:, MIDDLE_MCP] - landmarks[:, WRIST], axis=-1)
         scale = np.full(len(landmarks), 1000.0 * np.median(span))
+        first, second = time_halves(len(landmarks))
+        drift = float(np.median(span[second]) / np.median(span[first]))
         entry = {"clip": clip, "side": side, "frames_in_clip": int(total),
-                 "frames_with_hand": len(landmarks), "hand_scale_mm": float(scale[0]), "rows": {}}
+                 "frames_with_hand": len(landmarks), "hand_scale_mm": float(scale[0]),
+                 "half_span_ratio": drift, "rows": {}}
         errors = {
             "rigid reference": landmark_errors_mm(rigid_reference(landmarks), landmarks),
             "rigid reference, per-frame scale": landmark_errors_mm(
@@ -267,8 +336,8 @@ def main():
             pooled_errors.setdefault(row, []).append(value)
             pooled_scale.setdefault(row, []).append(scale)
         report["tracks"].append(entry)
-        print_table(f"{clip} {side}  ({len(landmarks)}/{total} frames, hand "
-                    f"{scale[0]:.0f} mm)", entry["rows"])
+        print_table(f"{clip} {side}  ({len(landmarks)}/{total} frames, hand {scale[0]:.0f} mm, "
+                    f"second / first half span {drift:.2f})", entry["rows"])
 
     for row in pooled_errors:
         report["pooled"][row] = summary(
