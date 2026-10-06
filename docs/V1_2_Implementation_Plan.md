@@ -18,6 +18,16 @@ From `docs/V1_2_Feasibility_Probes.md`:
 - Only legacy `mp.solutions.hands.Hands` gives metric hand world landmarks. Its handedness label names the opposite hand on this unmirrored video; side is assigned from the pose wrists instead. Hand-world and pose-world axes agree.
 - MediaPipe's hands are not rigid: bone lengths vary about 16% within a clip and hand size about ±30%. A model-free rigid-hand estimate reproduces them to about 15 mm (wrist-relative mean). So the provisional real-data target (5 mm mean) may be out of reach for a hand with one shape per track. That is a result to measure and report, not a reason to change the metric.
 
+## As built: deviations made in review
+
+The code below is the plan as written. Task reviews changed it in these places; the committed code, not this text, is authoritative:
+
+- Every hand test module begins with `pytest.importorskip("torch")` / `("smplx")`. The Task 2 review found an unguarded import that aborted the whole suite without torch, and the Global Constraint governs over the brief's code.
+- `load_hand_fits` and `load_hand_clip` read each column once inside `with np.load(path) as data:`. The Task 3 review found quadratic time and memory, plus an open file handle.
+- The clip-independence test extracts 01992, then 01991, and compares 01991 with a lone run. The Task 5 review showed that the original order could not detect a `Hands` detector shared between clips.
+- The measurement script reports two held-out rows, `held-out shape (time halves)` and `held-out shape (interleaved frames)`, and records `half_span_ratio` for each track. Observability is summarised as `weak_counts` and `joint_weak_weight`. The Task 6 review found that the time-halves row alone is confounded by MediaPipe's drift in hand size, and that the "weakest joint" label was arbitrary.
+- From Task 3's fix round on, implementers' commits carry their own model's co-author trailer.
+
 ## Global Constraints
 
 - Work only inside the checkout you are given (a git worktree). Run Python from its root as
@@ -2353,11 +2363,20 @@ PYTHONPATH=src <python> -c "import json; r = json.load(open('data/test_output/ha
 
 Use exactly these sections, with every number taken from the evidence above (cite the file each comes from; never round a failing number into a passing one):
 
-1. **The answer** — two or three sentences: the pooled held-out-shape result per backend against the provisional targets (mean ≤ 5 mm, tips ≤ 8 mm, p95 ≤ 15 mm), whether the synthetic gates passed, and how much of the gap the per-frame-shape diagnostic closes.
-2. **Error ladder** — one table per backend: rows `swing start`, `refined`, `held-out shape`, `in-sample shape`, `per-frame shape (diagnostic)`, plus both rigid references; columns mean, tips, p95, % of hand; pooled and equal-track (`track_mean_mm`).
-3. **Per finger and per track** — the `held-out shape` per-finger means and the per-track means; name the worst finger and the worst track.
-4. **What limits the error** — classify the remaining error, with the evidence for each: optimiser (compare `refined` with the synthetic gate results), MediaPipe's frame-to-frame size change (per-frame shape diagnostic vs per-track shape; rigid reference with and without per-frame scale), model mismatch (compare the ladder with the rigid reference; non-rigid palm, bone-length variation), shape (held-out vs in-sample, norms vs radius), observability (median weak directions, which joints), side assignment (chirality own vs other side).
-5. **Data** — per-clip hand coverage and the side-assignment statistics from the extraction (assigned, ambiguous, label agreement), and the hand-world vs pose-world frame finding from the probes.
+1. **The answer** — two or three sentences: the pooled result per backend against the provisional targets (mean ≤ 5 mm, tips ≤ 8 mm, p95 ≤ 15 mm), given as the bracket between the two held-out rows; whether the synthetic gates passed; and how far the per-frame-shape diagnostic gets.
+2. **Error ladder** — one table per backend: rows `swing start`, `refined`, `held-out shape (time halves)`, `held-out shape (interleaved frames)`, `in-sample shape`, `per-frame shape (diagnostic)`, plus both rigid references; columns mean, tips, p95, % of hand; pooled and equal-track (`track_mean_mm`).
+3. **Per finger and per track** — per-finger means for both held-out rows and the per-track means, with each track's `half_span_ratio`; name the worst finger and the worst track.
+4. **What limits the error** — classify the remaining error, with the evidence for each: optimiser (compare `refined` with the synthetic gate results); MediaPipe's change of hand size, within a clip (`half_span_ratio` against the time-halves penalty) and frame to frame (per-frame-shape diagnostic; rigid reference with and without per-frame scale); model mismatch (the ladder against the rigid reference; non-rigid palm, bone-length variation); shape (the two held-out rows against in-sample, norms against the radius); observability (`weak_counts` per threshold, `joint_weak_weight`); side assignment (chirality, own side against the other).
+5. **Data** — per-clip hand coverage and the side-assignment statistics from the extraction (assigned, unassigned and why, label agreement), and the hand-world vs pose-world frame finding from the probes.
+
+Interpretation rules — established by the task reviews; the findings must respect them:
+- The two held-out rows bracket generalisation. `time halves` is pessimistic: it includes MediaPipe's drift in hand size between the halves of a clip (`half_span_ratio` 0.61–1.55, which correlates 0.89 with the penalty for MANO and 0.73 for SMPL-X). `interleaved frames` is optimistic, because it scores frames adjacent to the ones it was fitted on. Never attribute the time-halves penalty to shape overfitting.
+- The fitter minimises summed squared error. A fitted shape therefore never raises that sum, but it can raise the mean distance (2 of 18 track-backends). State the "a fitted shape includes the neutral one" check in squared-error or RMS terms, and do not call those 2 cases optimiser failures.
+- Two rows are not achievable pipeline results. `rigid reference, per-frame scale` is an oracle: each frame's scale is chosen from the observations it is scored on. `per-frame shape (diagnostic)` adds 10 shape values per frame, on top of 48 pose values, against 60 observed values. Label both as such. Only the 1-DoF scale reference isolates the effect of size change.
+- Every fitted shape, MANO and SMPL-X, sits at 99.6–99.95% of the plausibility bound, so the shape fits are bound-limited. SMPL-X betas are not identifiable from hand landmarks: report them as "a plausible shape", never as a body-shape estimate.
+- Observability: exactly 10 rotation directions are numerically null on every track. The weak counts at larger thresholds depend on the threshold. The weak subspace spreads across the finger joints; no single joint is "the weakest".
+- Chirality: the other side's model fits only 1.02–1.31× worse on 16 of 18 track-backends. Fit quality cannot verify which hand is which; sides rest on the geometric assignment.
+- Batched L-BFGS couples frames: a frame's reconstruction moves up to about 0.16 mm with its batch-mates, and runs end at the iteration cap. Status `ok` is not a convergence certificate; `rms_mm` is the quality signal.
 6. **Assumptions** — a table of every assumption whose status changed (A002–A012, A018, A019 as applicable): ID, new status (`verified` / `open` / `broken`), one-line evidence with the test name or report path.
 7. **Limits** — five pilot clips, one signer, no sealed test set; no wrist attachment (P4); no temporal model (P5); no multi-start best-found reference, renders or robust loss (squared error only); what a small round-trip error does and does not mean (plan §1).
 8. **Next steps** — P4 (attachment to the V1 arm via `R_parentᵀ R_wrist`, needs the V1 converter on this branch), corpus growth per plan §8, and only then augmentation and training.
@@ -2365,7 +2384,7 @@ Use exactly these sections, with every number taken from the evidence above (cit
 
 - [ ] **Step 3: Update the ledger and the plan**
 
-In `docs/V1_2_Assumptions.md`, change the `Confidence / status` cell of each assumption the evidence settles and append the evidence pointer (test name, report path) to its `Evidence` cell. Do not mark an assumption verified because a test was written for it — only because the test or measurement ran and passed. Add a dated line under the title: `**Updated:** 2026-10-05 from [V1.2 findings](V1_2_Findings.md).`
+In `docs/V1_2_Assumptions.md`, change the `Confidence / status` cell of each assumption the evidence settles and append the evidence pointer (test name, report path) to its `Evidence` cell. Do not mark an assumption verified because a test was written for it — only because the test or measurement ran and passed. Add a dated line under the title: `**Updated:** 2026-10-06 from [V1.2 findings](V1_2_Findings.md).`
 
 In `docs/V1_2_Hand_Roundtrip_Plan.md`, replace the line `**Status:** Proposed; no converter implementation performed for this plan.` with `**Status:** P0–P3 pilot implemented; see [V1.2 findings](V1_2_Findings.md).`
 
