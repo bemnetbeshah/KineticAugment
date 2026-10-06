@@ -18,12 +18,13 @@ pilot clips, what limits the error, and which assumptions the evidence settles.
   and read with `load_hand_clip`. Committed.
 - *Tests*: `tests/test_hand_model.py`, `tests/test_hand_converter.py`,
   `tests/test_hand_observations.py` and `tests/test_extract_hand_landmarks.py`. On 2026-10-06 all
-  68 passed and none was skipped.
+  68 passed and none was skipped (implementation evidence §9).
 - *Probes*: [V1.2 feasibility probes](V1_2_Feasibility_Probes.md), measured before implementation.
-- *Task reports*: `.superpowers/sdd/V1_2_Implementation_Plan/task-N-report.md` and `progress.md`,
-  the implementation and review notes. They are git-ignored, so they are not in the repository.
-  They are cited only for the synthetic-gate values and a few diagnostics; the tests behind those
-  values are committed.
+- *Implementation evidence*: [V1.2 implementation evidence](V1_2_Implementation_Evidence.md), which
+  keeps the measurements taken while the code was built: the synthetic gates, batch coupling, the
+  check-2 diagnosis, extraction determinism and the checks run for these findings. Each comes with
+  its task, procedure, commit and date. Cited as "implementation evidence §n". Where a test or the
+  round-trip JSON covers the same ground, that is cited too.
 
 Millimetre values from the measurement are rounded to two decimals, as the script prints them. No
 value is rounded onto or across a target.
@@ -40,8 +41,8 @@ limits the real-data error. The per-frame-shape diagnostic, which gives every fr
 plausible shape and is not an achievable pipeline result, gets inside all three targets: 4.41 mm
 mean, 2.11 mm tips and 11.67 mm p95 for MANO, and 4.49, 2.16 and 12.31 mm for SMPL-X.
 
-Sources: round-trip JSON, `pooled` (§2); the synthetic values come from the task-3 report and
-`test_recovers_hands_the_model_can_represent` (§4.1).
+Sources: round-trip JSON, `pooled` (§2). The synthetic values are in implementation evidence §1,
+and `test_recovers_hands_the_model_can_represent` asserts the gate they pass (§4.1).
 
 ## 2. Error ladder
 
@@ -183,10 +184,10 @@ additive causes (round-trip JSON, `pooled`):
 
 - On model-generated hands the same fitter meets the synthetic gates (mean ≤ 0.5 mm, p95 ≤ 1 mm)
   on both backends and both sides. Refined fits reach a mean of 0.007–0.016 mm and a p95 of at
-  most 0.051 mm (`test_recovers_hands_the_model_can_represent`; task-3 report). Shape fits reach a
-  mean of 0.069 mm on MANO and 0.108 mm on SMPL-X (`test_a_fitted_shape_reproduces_a_plausible_hand`;
-  task-4 report). On the real hands the `refined` row is 8.25 mm and 8.59 mm, more than 500 times
-  larger.
+  most 0.051 mm (implementation evidence §1; `test_recovers_hands_the_model_can_represent` asserts
+  the gate). Shape fits reach a mean of 0.069 mm on MANO and 0.108 mm on SMPL-X (implementation
+  evidence §3; `test_a_fitted_shape_reproduces_a_plausible_hand`). On the real hands the `refined`
+  row is 8.25 mm and 8.59 mm, more than 500 times larger.
 - Refinement lowers the swing start's mean on all 18 track-backends (round-trip JSON, `tracks`).
 - The fitter minimises the summed squared wrist-relative error, plus a pose prior of
   1e-4 mm² per rad² on the finger rotations. A fitted shape includes the neutral one (zero betas
@@ -195,11 +196,15 @@ additive causes (round-trip JSON, `pooled`):
   track-backends: 01986 right on MANO (8.38 → 8.40 mm) and 01988 right on SMPL-X
   (9.76 → 10.00 mm). On those two, the summed squared error fell by 24.1% and 23.6%. The shape
   lowered the worst frames (worst-frame RMS 21.6 → 17.6 mm and 39.0 → 32.8 mm) and made 15 of 52
-  and 36 of 101 frames worse (task-6 report). These are not optimiser failures.
-- Batched L-BFGS couples the frames of a batch: a frame's reconstruction moves by up to about
-  0.16 mm with its batch-mates. Runs also end at the 1,000-iteration cap. So status `ok` is not a
-  convergence certificate; each fit's `rms_mm` is the quality signal (task-3 report;
-  `progress.md`). These effects are small next to the 7–11 mm measured. No multi-start reference
+  and 36 of 101 frames worse (implementation evidence §5). The round-trip JSON shows the same
+  trade: on those two, the p95 fell from 31.23 to 24.00 mm and from 42.37 to 33.05 mm while the
+  mean rose (`tracks`). These are not optimiser failures.
+- Batched L-BFGS couples the frames of a batch. On the synthetic gate data, a frame's
+  reconstruction differs by up to 0.134 mm (MANO) and 0.139 mm (SMPL-X) between a batch of 12 and
+  a fit on its own. The runs end at the 1,000-iteration cap: every run checked, synthetic and
+  real, used all 1,000 iterations (implementation evidence §2). Status `ok` only means the result
+  is finite (`fit_hands`), so it is not a convergence certificate; each fit's `rms_mm` is the
+  quality signal. These effects are small next to the 7–11 mm measured. No multi-start reference
   was run on the real hands, so local minima on real frames are not excluded.
 
 ### 4.2 MediaPipe's change of hand size: within a clip and from frame to frame
@@ -241,8 +246,8 @@ range of 0.69–1.31, and a median within-clip coefficient of variation of 15.9%
   change, but also anything else that 10 more values per frame can absorb: 58 free values against
   60 observed ones. So it is not a measure of size change alone. The model ladder has no
   scale-only row, so the part due to size alone is not measured for the models.
-- The per-frame diagnostic's floor on synthetic hands is 0.10–0.17 mm (task-4 report), far below
-  these differences.
+- The per-frame diagnostic's floor on synthetic hands is 0.10–0.17 mm (implementation
+  evidence §4), far below these differences.
 
 ### 4.3 Model mismatch and MediaPipe's non-rigid hand: the remaining 4–5 mm, not separable
 
@@ -291,8 +296,8 @@ range of 0.69–1.31, and a median within-clip coefficient of variation of 15.9%
   shape that reproduces the landmarks, not an estimate of body shape. SMPL-X betas are not
   identifiable from hand landmarks. On synthetic hands generated with a shape of norm 2.0, the
   SMPL-X fit lands at |betas| = 4.13, 4.50 from the true vector, while it reproduces the landmarks
-  to a mean of 0.108 mm (task-4 report). MANO's fit lands at 2.38, 1.06 from the true vector, so MANO's betas
-  are not recovered either.
+  to a mean of 0.108 mm. MANO's fit lands at 2.38, 1.06 from the true vector, so MANO's betas are
+  not recovered either (implementation evidence §3).
 
 ### 4.5 Observability: the rotations are not unique; the landmark error is unaffected
 
@@ -362,11 +367,14 @@ naming the opposite hand, matches the assigned side.
   the image height from its pose wrist, with a maximum of 8.1%. Each is at least 4.7% of the
   height nearer to its own pose wrist than to the other (hand clips). 01991 has no left hand in
   any frame.
-- **Unassigned: 12.** Nine are second detections at a side already taken, that is, duplicate
-  detections of one hand: seven in 01991 and two in 01988 (frames 28 and 30). The other three lie
-  beyond the 10% cap (01988 frames 126–128, with gaps of 10.3%, 11.5% and 13.8% of the height).
-  The clips record how many detections were left unassigned, but not why; the reasons come from
-  the Task 5 review (`progress.md`). The rule's constants come from the implementation plan and
+- **Unassigned: 12.** Nine are a second detection at a side already taken. The seven in 01991 are
+  duplicate detections of one hand. The other two are in 01988, at frames 28 and 30 by the clips;
+  the probes describe that pair as overlapping hands at the frame edge
+  ([probes](V1_2_Feasibility_Probes.md), "Duplicates"). The extraction does not store unassigned
+  detections, so the 01988 pair is not re-checked here. The last three lie beyond the 10% cap:
+  01988 frames 126–128, with gaps of 10.3%, 11.5% and 13.8% of the height. The clips record which
+  frames hold an unassigned detection, but not why; the reasons come from the Task 5 review and the
+  probes (implementation evidence §6). The rule's constants come from the implementation plan and
   were not tuned after extraction.
 - **Label.** The legacy label assumes mirrored (selfie) input, so on this unmirrored video it names
   the opposite hand. Read that way, it agrees with the geometric side on 528 of 535 assigned
@@ -383,9 +391,9 @@ naming the opposite hand, matches the assigned side.
   wrist (Probes), while the pose's is at the hips (`HandClip`). The implementation relies on the
   axes finding without testing it again, and nothing was attached to a body (P4).
 - **Determinism.** Extraction is independent of clip order
-  (`test_a_clip_does_not_depend_on_the_clip_before_it`, which a mutation check showed would fail
-  for a detector shared between clips; task-5 report). Re-extracting all five clips in reverse
-  order reproduced the committed files byte for byte (task-5 report).
+  (`test_a_clip_does_not_depend_on_the_clip_before_it`, which fails when a detector is shared
+  between clips; implementation evidence §7). Re-extracting all five clips in reverse order
+  reproduced the committed files byte for byte (implementation evidence §7).
 
 ## 6. Assumptions
 
@@ -400,12 +408,12 @@ part of the claim was tested; the evidence column names that part.
 | A005 hand-to-body frame | unknown / open | likely / **open** (partly settled) | Settled by the probe: hand-world axes equal pose-world axes (Probes, "Axes"). Untested: attachment (P4). |
 | A006 conventions | risky / open | confirmed / **verified** (numerical; no renders) | `test_points_equal_the_full_model_forward`, `test_zero_pose_is_the_flat_template_hand`, `test_landmarks_follow_hand_anatomy`, `test_tips_extend_their_distal_bone`, `test_left_hand_is_the_mirror_of_the_right` and `test_one_joint_moves_only_its_own_finger` pass on both backends. |
 | A008 parameter-only decoder | unknown / open | confirmed / **verified** | `test_a_fresh_process_rebuilds_the_hands_from_saved_parameters`: a new process given only the saved parameters and the model rebuilds the hands to within 1e-12 m. |
-| A009 synthetic inversion | unknown / open | confirmed / **verified** (synthetic; single start) | `test_recovers_hands_the_model_can_represent` (mean 0.007–0.016 mm, task-3 report) and `test_a_fitted_shape_reproduces_a_plausible_hand` (0.069 and 0.108 mm, task-4 report) pass on both backends. |
+| A009 synthetic inversion | unknown / open | confirmed / **verified** (synthetic; single start) | `test_recovers_hands_the_model_can_represent` (mean 0.007–0.016 mm) and `test_a_fitted_shape_reproduces_a_plausible_hand` (0.069 and 0.108 mm) pass on both backends (implementation evidence §1, §3). |
 | A010 observability | risky / open | risky / **open** (partly settled) | Rank measured: 10 of 48 rotation directions are null on every track (round-trip JSON, `observability`), so the rotations are not unique and a pose prior settles them. Untested: multi-start and occlusion. |
 | A011 real fit ≤ 5 mm | unknown / open | **broken** on the pilot | Held-out mean 7.39–10.92 mm (MANO) and 7.48–11.18 mm (SMPL-X) against ≤ 5 mm, and p95 20.93–35.16 mm against ≤ 15 mm (round-trip JSON, `pooled`). No sealed test set and no multi-start reference. |
 | A012 shared shape generalises | unknown / open | risky / **open** (partly settled) | Every fitted shape is at the bound (99.57–99.97%). The time-halves shape is worse than the neutral one on 7 of 9 (MANO) and 6 of 9 (SMPL-X) tracks, tracking drift (r = 0.89 and 0.73). The interleaved shape is within 0.04 mm of in-sample (round-trip JSON). |
 | A018 corpus coverage | risky / open | **broken** for the current five clips | 5 clips of 4 people ([V1 scope, Finding 10](V1_Problem_Scope.md)), 9 hand tracks, 535 frame-sides, and no left hand in 01991: below the plan §8 minimum of 20 clips and 5 people. |
-| A019 reproducibility | likely / open | likely / **open** (partly settled) | Package versions and the SHA-256 of the assets and hand clips are in the round-trip JSON, and re-runs reproduce bit for bit on this machine (task-5 and task-6 reports). Not done: a clean-environment replay. |
+| A019 reproducibility | likely / open | likely / **open** (partly settled) | Package versions and the SHA-256 of the assets and hand clips are in the round-trip JSON, and re-runs reproduce bit for bit on this machine (implementation evidence §7, §8). Not done: a clean-environment replay. |
 
 The evidence also bears on A007, the 21-point landmark correspondence, but its status stays risky
 / open. The adapter matches each model's skeleton (`test_landmarks_follow_hand_anatomy`,
@@ -479,7 +487,8 @@ PYTHONPATH=src python -c "import json; r = json.load(open('data/test_output/hand
 
 Steps 1 and 2 overwrite committed files. On the machine that recorded them, the extraction
 reproduced the committed clip files byte for byte, and a re-run of the measurement reproduced every
-earlier number bit for bit (task-5 and task-6 reports). The recorded environment was Python
+earlier number bit for bit; the measurement took 895 s (implementation evidence §7, §8). The
+recorded environment was Python
 3.11.15, numpy 1.26.4, scipy 1.17.1, torch 2.14.1 on CPU and smplx 0.1.28 (round-trip JSON), with
 MediaPipe 0.10.21 (hand clips, `meta`). The SMPL-X asset is version 1.1 by content, although
 `models/smplx/version.txt` says 1.0 (Probes).

@@ -14,6 +14,7 @@
 - `V1_2_Feasibility_Probes.md` — Measurements of the hand model assets and MediaPipe hand data taken before V1.2 implementation.
 - `V1_2_Implementation_Plan.md` — Task-by-task implementation plan for the V1.2 hand round-trip feasibility slice (P0–P3).
 - `V1_2_Findings.md` — Measured V1.2 hand round-trip results, assumption status and next steps.
+- `V1_2_Implementation_Evidence.md` — Measurements taken while implementing V1.2 (synthetic gates, batch coupling, extraction determinism), kept with their provenance.
 - `media/` — Images and placeholder assets referenced by documentation.
 - `index.md` — Index of the documentation pages and media folder.
 - `research-guide/` — Source-grounded research onboarding, verification status, and practical learning roadmap.

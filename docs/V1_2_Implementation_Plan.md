@@ -2378,7 +2378,7 @@ Interpretation rules — established by the task reviews; the findings must resp
 - Chirality: the other side's model fits only 1.02–1.31× worse on 16 of 18 track-backends. Fit quality cannot verify which hand is which; sides rest on the geometric assignment.
 - Batched L-BFGS couples frames: a frame's reconstruction moves up to about 0.16 mm with its batch-mates, and runs end at the iteration cap. Status `ok` is not a convergence certificate; `rms_mm` is the quality signal.
 6. **Assumptions** — a table of every assumption whose status changed (A002–A012, A018, A019 as applicable): ID, new status (`verified` / `open` / `broken`), one-line evidence with the test name or report path.
-7. **Limits** — five pilot clips, one signer, no sealed test set; no wrist attachment (P4); no temporal model (P5); no multi-start best-found reference, renders or robust loss (squared error only); what a small round-trip error does and does not mean (plan §1).
+7. **Limits** — five pilot clips, four people (01991 and 01992 show the same signer), no sealed test set; no wrist attachment (P4); no temporal model (P5); no multi-start best-found reference, renders or robust loss (squared error only); what a small round-trip error does and does not mean (plan §1).
 8. **Next steps** — P4 (attachment to the V1 arm via `R_parentᵀ R_wrist`, needs the V1 converter on this branch), corpus growth per plan §8, and only then augmentation and training.
 9. **Reproduce** — the exact commands, from extraction to measurement and tests.
 
