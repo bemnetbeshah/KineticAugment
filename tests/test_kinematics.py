@@ -17,7 +17,7 @@ SMPLX_MODEL_PATH = "models"
 
 try:
     import torch
-    import smplx
+    import smplx  # noqa: F401 -- imported to detect availability
     _smplx_ok = True
 except ImportError:
     _smplx_ok = False
@@ -160,25 +160,59 @@ class TestForwardKinematicsMatchesSMPLX:
 
 @requires_smplx
 class TestShapedSMPLXSkeleton:
-    BETAS = np.array([1.5, -1.0, 0.5, 0.8, -0.3, 0.0, 0.0, 0.0, 0.0, 0.0])
+    # Coefficients past the conventional first ten exercise the full shape space,
+    # which the Step 10 shape fit uses.
+    BETAS = np.zeros(300)
+    BETAS[:5] = [1.5, -1.0, 0.5, 0.8, -0.3]
+    BETAS[[50, 299]] = [2.0, -1.5]
+
+    @staticmethod
+    def _model_output(model, betas):
+        with torch.no_grad():
+            return model(
+                betas=torch.tensor(betas, dtype=torch.float32)[None], return_verts=False,
+            ).joints[0].numpy()
 
     def test_rest_joints_match_the_model_for_nonzero_betas(self):
         # The betas path was written in Step 2 and exercised by nothing until the
         # body-shape cases needed it.
         s = SMPLXSkeleton(model_path=SMPLX_MODEL_PATH, betas=self.BETAS)
-        with torch.no_grad():
-            expected = s.model(
-                betas=torch.tensor(self.BETAS, dtype=torch.float32)[None], return_verts=False,
-            ).joints[0, :55].numpy()
-        np.testing.assert_allclose(s.rest_joints, expected, atol=1e-5)
+        expected = self._model_output(s.model, self.BETAS)
+        np.testing.assert_allclose(s.rest_joints, expected[:55], atol=1e-5)
 
     def test_rest_nose_is_the_models_own_nose_landmark(self):
         # SMPL-X appends the nose vertex as output joint 55. Pairing MediaPipe's
         # nose with it, rather than with the head joint, avoids a ~30 degree bias
         # in the direction the two points sit from the shoulders.
         s = SMPLXSkeleton(model_path=SMPLX_MODEL_PATH, betas=self.BETAS)
-        with torch.no_grad():
-            expected = s.model(
-                betas=torch.tensor(self.BETAS, dtype=torch.float32)[None], return_verts=False,
-            ).joints[0, 55].numpy()
-        np.testing.assert_allclose(s.rest_nose, expected, atol=1e-5)
+        expected = self._model_output(s.model, self.BETAS)
+        np.testing.assert_allclose(s.rest_nose, expected[55], atol=1e-5)
+
+    def test_reshaping_matches_the_model_and_leaves_the_original_alone(self):
+        # Reconstruction re-shapes the skeleton from each fit's own betas, so a
+        # shaped copy must be the model's body, and must not leak into the original.
+        s = SMPLXSkeleton(model_path=SMPLX_MODEL_PATH)
+        template = s.rest_joints.copy()
+
+        shaped = s.shaped(self.BETAS)
+
+        expected = self._model_output(s.model, self.BETAS)
+        np.testing.assert_allclose(shaped.rest_joints, expected[:55], atol=1e-5)
+        np.testing.assert_allclose(shaped.rest_nose, expected[55], atol=1e-5)
+        np.testing.assert_array_equal(s.rest_joints, template)
+
+    def test_ten_betas_mean_the_same_body_in_the_full_shape_space(self):
+        # Ten coefficients are the common convention. Missing coefficients are zero.
+        s = SMPLXSkeleton(model_path=SMPLX_MODEL_PATH)
+        padded = np.zeros(300)
+        padded[:10] = self.BETAS[:10]
+
+        short = s.shaped(self.BETAS[:10])
+
+        np.testing.assert_allclose(short.rest_joints,
+                                   self._model_output(s.model, padded)[:55], atol=1e-5)
+
+    def test_rejects_more_betas_than_the_shape_space_holds(self):
+        s = SMPLXSkeleton(model_path=SMPLX_MODEL_PATH)
+        with pytest.raises(ValueError):
+            s.shaped(np.zeros(301))

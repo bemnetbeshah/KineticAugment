@@ -1,6 +1,9 @@
 # V1 Problem Scope: MediaPipe ↔ SMPL-X Round-Trip Conversion
 
-**Status:** Proposed work. **Date:** 2026-10-01. **Source snapshot:** `45472c6`.
+**Status:** Steps 0–10 complete; V1 result accepted 2026-10-05 (Step 10). **Date:** 2026-10-01,
+revised through 2026-10-05. **Source snapshot:** `45472c6`. Proven and disproven assumptions are
+collected in [Section 12](#12-assumptions-ledger); a presentation-ready summary is in
+[`V1_Findings.md`](V1_Findings.md).
 
 This document scopes the first deliverable for the MediaPipe ↔ SMPL-X conversion task:
 convert MediaPipe landmarks into genuine SMPL-X parameters and back, losing as little
@@ -71,6 +74,11 @@ Treat **0.18% as a reference scale**, not an acceptance threshold. A defensible 
 to be derived from the same statistic as the reconstruction score — for example, the spread
 between repeated detections of the same pose, or a task-level criterion.
 
+**Resolved in Step 9 (2026-10-05).** The threshold is the **rigid-skeleton floor**: the same
+per-frame position error, computed by the same round trip, through the best constant-shape
+skeleton for each clip. It is the most "lossless" any rigid body model can be on this input. See
+Step 9, Consequence 1.
+
 **Rejected alternative.** Exactness is reachable by storing a per-landmark residual alongside
 `θ`, making reconstruction exact by construction. This was considered and declined for V1: it
 guarantees the number without earning it, and the residual would silently absorb exactly the
@@ -127,6 +135,11 @@ It is prior art to learn from, not a working baseline — it was never verified,
 - Fitting genuine `body_pose` rotations and `global_orient` for those limbs.
 - A measured noise floor, and a round-trip error decomposed by cause.
 
+> **As delivered (Finding 5).** Legs are not observed in this footage, so V1 fits the **6 arm
+> landmarks** (shoulders, elbows, wrists): 4 constrained joints plus the root, oriented by the
+> nose, or by the hip centre when the nose is missing. The landmark tables below describe the
+> original plan.
+
 ### Explicitly out of scope for V1
 
 | Deferred | Why |
@@ -167,15 +180,31 @@ Reconstruction of unconstrained joints therefore reflects a documented default, 
 
 ## 5. Definition of done
 
-V1 is complete when all of the following are true:
+**Revised 2026-10-05; all met.** The original criteria (struck below) named the legacy
+`MediaPipeToSMPLX` / `SMPLXToMediaPipe` classes, which the Step 7 decision deprecated, and asked
+for rotation recovery, which joint positions cannot support because twist is unobservable
+(Step 5). V1 as delivered:
 
-1. `MediaPipeToSMPLX.fit()` returns parameters that run through the real SMPL-X forward pass
-   without error and produce a plausible mesh.
-2. `SMPLXToMediaPipe.project()` reconstructs landmarks **by evaluating the SMPL-X model**,
-   not by adding stored displacements.
-3. A synthetic ground-truth test recovers known rotations to near machine precision (Step 5a).
-4. Round-trip error on the five cached real clips is reported with the decomposition in Step 5b,
-   and compared against the Step 1 noise floor.
+| # | Criterion | Status |
+| --- | --- | --- |
+| 1 | `fit_shape` and `fit_body` return genuine SMPL-X parameters (`betas`, `body_pose`, `global_orient`, `transl`) that run through the real SMPL-X forward pass, for a plausible body | ✅ The forward pass reproduces `reconstruct_body` within 1e-5 m with a fitted shape (test). The body is upright in 409/409 frames, with or without the nose, and its shape lies inside SMPL-X's 95% region |
+| 2 | `reconstruct_body` rebuilds landmarks from the parameters alone, shape included, and reports a landmark it could not place as missing | ✅ Tests. Before the fix, 61/409 real frames returned invented positions |
+| 3 | Synthetic ground truth recovers known joint **positions** to machine precision; rotations are not claimed | ✅ ≤ 4e-16 m, including rotated roots |
+| 4 | The real-clip round trip is reported as direct error, per joint, per clip and held out, against the rigid-skeleton floor | ✅ 3.52% (3.99% held out), against 2.36% (3.41%) |
+| 5 | The result is written down **whether or not it passes** | ✅ [`V1_Findings.md`](V1_Findings.md); accepted 2026-10-05 |
+
+"Plausible" is checked as posture and as typicality of shape. Mesh contact and
+self-intersection are not measured.
+
+Original criteria (2026-10-01), superseded:
+
+1. ~~`MediaPipeToSMPLX.fit()` returns parameters that run through the real SMPL-X forward pass
+   without error and produce a plausible mesh.~~
+2. ~~`SMPLXToMediaPipe.project()` reconstructs landmarks **by evaluating the SMPL-X model**,
+   not by adding stored displacements.~~
+3. ~~A synthetic ground-truth test recovers known rotations to near machine precision (Step 5a).~~
+4. ~~Round-trip error on the five cached real clips is reported with the decomposition in Step 5b,
+   and compared against the Step 1 noise floor.~~
 5. The result is written down **whether or not it passes**. A measured failure is a valid V1
    outcome; an unmeasured success is not.
 
@@ -329,6 +358,9 @@ them is the evidence that the number is real:
 | 3-D | 0.18% | 0.10% |
 
 > **V1 error budget: 0.18% of shoulder width (≈ 0.6 mm at SMPL-X's 0.3159 m scale).**
+>
+> *Now a reference scale, not a gate (Section 2 correction). The gate is the rigid-skeleton
+> floor (Step 9).*
 
 Landmark validity now comes from MediaPipe's own per-landmark `visibility` rather than the
 image-bounds heuristic, which does not apply to world coordinates. It confirms Finding 5
@@ -570,7 +602,7 @@ detected). The blocking data problem is recorded as Finding 9 below.
 | Part A — synthetic ground truth (**positions**) | **2.99e-16 m** (machine precision) |
 | Part B — round-trip error | **5.94%** of shoulder width |
 | Step 1 noise floor | 0.18% |
-| Verdict | **33× the budget — above the floor** |
+| Verdict | **33× the jitter reference**, which is not a gate (Section 2 correction) |
 
 Per joint (median / p95, % shoulder width): shoulders 6.2 / 11.6 and 6.5 / 10.6, elbows
 5.7 / 9.1 and 4.2 / 8.9, wrists 6.9 / 15.5 and 6.5 / 14.8. Error is spread evenly rather than
@@ -597,7 +629,7 @@ converter's contract must say what coordinate state it returns.
 | Component | Value | Reading |
 | --- | --- | --- |
 | Bone **length** error | 6.66% | **dominant** |
-| Bone **direction** error | exact by construction | fit is not missing |
+| Bone **direction** error | exact by construction | fit is not missing — *exact in the IK, but 2–3° in the output until Step 8 removed the final rotation (now 0.00°)* |
 
 Observed bone lengths against the SMPL-X neutral rest skeleton:
 
@@ -672,6 +704,10 @@ Corroborating evidence: the per-frame Procrustes fits a median scale of **0.9726
 percentile 0.91–1.02) when both spaces are metric and the true scale is 1.0. A free scale
 parameter absorbing ±5% per frame is a symptom of systematic correspondence error, not noise.
 
+**Disproven (2026-10-05).** With each clip's fitted shape (Step 10) the median per-frame scale is
+**0.9997** (template body: 0.978 on the clean data). The deficit was body shape, not
+correspondence error — consistent with E7 (Step 9), where constant offsets explain about 4%.
+
 ---
 
 ### Step 5 — the data problem that had to be fixed first
@@ -684,7 +720,9 @@ Umeyama similarity used to compare SMPL-X's metric space to MediaPipe's.
 
 > 200 random poses, worst joint position error: **2.99e-16 m**.
 
-Rotations we generated are recovered to machine precision. **The mathematics is correct.**
+~~Rotations we generated are recovered to machine precision.~~ Joint *positions* are recovered to
+machine precision; rotations are not claimed, because twist is unobservable (Step 5, above).
+**The mathematics is correct.**
 
 #### Part B — real clips: 50.05% of shoulder width, 68× the Step 1 budget
 
@@ -722,8 +760,9 @@ Re-extracting clip `01986` both ways:
 | SMPL-X rest | 0.946 | 0.2676 m |
 
 World landmarks were present in **83/83 frames** and give anatomically plausible proportions.
-The residual 13% is ordinary individual variation — precisely what `betas` exists to absorb, and
-exactly the case Step 7 was scoped for.
+~~The residual 13% is ordinary individual variation — precisely what `betas` exists to absorb, and
+exactly the case Step 7 was scoped for.~~ **Disproven in Step 10 (Finding 14):** a forearm/upper-arm
+ratio of 1.066 lies 5.9σ outside SMPL-X's population, and no plausible body reaches it.
 
 #### Consequence
 
@@ -868,6 +907,9 @@ The review is right that the verified maths is not yet reachable through `MediaP
 This is an architecture decision about the framework's data format, not a V1 implementation
 detail, and is raised for a decision rather than resolved unilaterally.
 
+**Decided (2026-10-04): keep the paths separate** and deprecate the legacy classes (the Wiring
+decision above). Since 2026-10-05 the V1 converter is exported from `kinetic_augment.body_model`.
+
 ---
 
 ### Step 7 (original text) — Define and enforce the converter's contract
@@ -949,6 +991,28 @@ is a rotation *about* that axis, which is gauge.
 as output joint 55) rather than the head joint, so the pitch that is fitted is the anatomically
 correct one.
 
+#### ⚠️ Found in Step 10 (2026-10-05): the nose-less fallback turns the body upside down
+
+**Verified now, on real data.** With the nose, the fitted body is upright on all 409 real frames:
+the head joint is above the shoulder midpoint and the pelvis below it. This resolves the inverted
+body the review assessment found before Step 8 (its §4.1). With the nose masked, the fallback — the
+minimal rotation between shoulder axes — puts the head *below* the shoulders on **409/409**
+frames: MediaPipe's world frame is y-down, so "minimal" means "inverted".
+
+The arms are unaffected (pitch is gauge, Finding 11), and the nose is visible on every real frame,
+so no measured number changes. It is **latent, not fixed**: a sign with the hand over the face
+would flip `global_orient` by ~180° for those frames. The fix is a convention-aware fallback, for
+example the hip centre as apex, which MediaPipe's world origin provides.
+
+**Fixed (2026-10-05).** Without the nose, the apex is now the hip centre: observed when both hips
+are valid, and otherwise MediaPipe's hip-centred origin.
+- **On real data,** with the nose masked, and with nose and hips masked, the body stays upright on
+  409/409 frames.
+- **The root moves** a median 7.0° (max 18.4°) from the nose-based one. That change is pitch only,
+  so the arms are unaffected (`measure_round_trip.py`).
+- **Tests:** `test_hips_recover_the_root_when_the_nose_is_missing` and
+  `test_without_nose_or_hips_a_mediapipe_body_is_not_turned_upside_down`.
+
 #### Collar motion is a real V1 limitation
 
 A shrug rotates one shoulder about its collar joint, changing the shoulder geometry in a way no
@@ -1012,7 +1076,137 @@ The largest *correctly understood* gap, and a prerequisite for interpreting any 
 - Note that root-only refinement made clip `01988` slightly *worse* (5.06% → 5.11%). Understand
   that before accepting any estimator.
 
-### Step 9 — Investigate the unexplained 44.5%
+### Step 9 — ✅ **COMPLETE (2026-10-05)**
+
+Reproduce with [`scripts/diagnose_residual.py`](../scripts/diagnose_residual.py) (add
+`--unsmoothed` for E6, which reruns MediaPipe); the floor itself is reported by
+[`scripts/measure_round_trip.py`](../scripts/measure_round_trip.py). **No library code changed**:
+the investigation found nothing in the converter to fix.
+
+The "unexplained 44.5%" came from the pre-Step 8 converter under the aligned metric, so it no
+longer described anything. The ladder was rerun on the current converter, direct metric.
+
+#### ⚠️ Re-baselined (2026-10-05): the data were order-dependent
+
+**Verified now.** `extract_world_landmarks.py` ran one MediaPipe Holistic instance across all
+clips. Video mode is stateful — a tracked region of interest and landmark smoothing — so each
+clip inherited the previous clip's state. Flagged by the review assessment (§4.3) and confirmed
+by re-extracting every clip with its own instance:
+
+| Clip | Arm landmarks, stored vs fresh | Median arm-length change |
+| --- | --- | --- |
+| 01986 (processed first) | identical | 0% |
+| 01987 | median 32.8 mm, max 114 mm | +3.3 to +4.9% |
+| 01988 | median 3.6 mm, max 79 mm | −1.2 to +0.7% |
+| 01991 | median 0.7 mm, max 24 mm | ≤ 0.4% |
+| 01992 | median 22.4 mm, max 103 mm | up to −4.5% |
+
+Fixed test-first: one instance per clip (`tests/test_extract_world_landmarks.py`). Extraction is
+now deterministic — forward and reverse processing orders give bit-identical files — and the
+stored `*_world.npz` were regenerated. Step 10 fits each clip's shape to these lengths, so the fix
+came first.
+
+| | Before | After |
+| --- | --- | --- |
+| Direct, template body | 6.02% | **5.92%** |
+| Rigid-skeleton floor | 2.63% | **2.36%** |
+| Gap | 3.39 pts | **3.55 pts** |
+| Floor per clip | 01986 2.33, 01987 4.09, 01988 3.19, 01991 2.71, 01992 1.44 | 2.33, **2.26**, 2.84, 2.78, 1.41 |
+
+Much of `01987`'s apparent non-rigidity was inherited tracker state. Every Step 9 conclusion
+survives a rerun of `diagnose_residual.py` on the clean data: bone-length CV 2.0–14.6% (E1); the
+per-frame skeleton is exact, 2.5e-14% (E2); joint angles R² 0.55 against a null of 0.43, depth
+0.42 against 0.16 (E4); rescaling is not depth-specific, x 5.4%, y 15.8%, z 16.0% (E5);
+constant offsets explain 4.4% (E7); with smoothing off, slowness falls only from 4.7 to 3.3,
+still partial (E6, `--unsmoothed`). The noise reference is unchanged at 0.18%. The numbers in
+Steps 5–9 are left as measured.
+
+#### Result — the residual is identified, and it lies outside the converter
+
+| Skeleton forced to | Direct error | Explains |
+| --- | --- | --- |
+| Neutral SMPL-X (current converter) | 6.02% | — |
+| Per-clip bone lengths | 3.59% | 40.3% |
+| Per-clip shoulder width | 5.95% | 1.2% |
+| **Per-clip lengths + width** | **2.63%** | **56.4%** |
+| Per-frame lengths + width | 2.5e-14% | 100% |
+
+The last row is decisive. The six arm landmarks are 18 numbers, fully determined by the two
+shoulder positions and the four bone vectors, so a skeleton re-shaped to every frame reproduces
+them to machine precision. **Nothing else contributes.** Everything below the best constant
+shape — 2.63% — is frame-to-frame variation in MediaPipe's own output.
+
+#### Finding 12 — MediaPipe's world landmarks are not a rigid body
+
+**Verified now.** Within a single clip, bone lengths vary with a coefficient of variation of
+**3–12%** (forearms up to 12.2%). Shoulder width is steadier at 0.6–4.6%, consistent with the
+detector's body prior (Finding 10). Real bones do not change length, so no rigid body model —
+SMPL-X or any other — can reproduce this.
+
+#### What drives it: five explanations tested
+
+| Exp. | Hypothesis | Result |
+| --- | --- | --- |
+| E4 | Joint-angle effect: length follows the elbow and shoulder angles | R² 0.54 against a **chance level of 0.36**. Weak. |
+| E4 | Depth ambiguity: length follows the bone's angle to the camera | R² 0.48 against a chance level of 0.16 — stronger, but the sign flips between clips (12 positive, 8 negative) |
+| E5 | Per-clip depth-scale error | Best per-clip rescaling: z 15.2%, y 13.8%, x 5.6% — **not depth-specific**. Strong only in `01986` (k_z = 0.59) |
+| E6 | Per-frame noise stretched into drift by MediaPipe's smoothing | Smoothing off: slowness 4.4 → 3.3, not the ~1 independent noise gives. **Partial** |
+| E7 | **The plan's leading hypothesis:** constant joint-centre offsets | Best constant offset per joint, fixed in its segment's frame, explains **5.0%** by RMS. **Refuted** |
+
+The variation is a slowly drifting, image-dependent error in MediaPipe's 3-D predictions, with a
+depth component and some contribution from temporal smoothing. No single geometric cause
+dominates, and none is a property of SMPL-X or of the conversion.
+
+Three methodological notes, because each changed a conclusion:
+
+- **The null in E4 matters.** An earlier pass reported "pose R² 0.54" as evidence of pose
+  dependence. Regressing each bone on *another clip's* angles showed slowly varying series
+  correlate at R² 0.36 by chance, so most of that was spurious.
+- **E5's objective has degenerate optima.** `01991`'s best y-factor sits at the search boundary
+  (4.0); its per-clip factors should not be read as calibrations.
+- **Motion jitter dwarfs the Step 1 floor.** With smoothing off, bone-length jitter during motion
+  is ~1.6% of bone length (3–4 mm), against Step 1's 0.6 mm measured on still frames. A further
+  reason the 0.18% figure was never a usable threshold.
+
+#### Consequence 1 — the V1 gate is the rigid-skeleton floor
+
+Section 2's correction asked for a threshold built from the same statistic as the reconstruction
+score. The rigid-skeleton floor is exactly that, and it is the best any constant-shape body can
+achieve with exactly fitted bone directions.
+
+> **V1 gate: direct round-trip error should reach the rigid-skeleton floor.**
+> Today: **6.02%** against a floor of **2.63%** — a gap of 3.39 points, all of it shape.
+
+Floor per clip: `01986` 2.33%, `01987` 4.09%, `01988` 3.19%, `01991` 2.71%, `01992` 1.44%.
+
+The floor uses per-clip *median* lengths, so a shape tuned to minimise error could sit marginally
+below it. It also bypasses `betas`, so SMPL-X's shape space may not reach it. The 3.39-point gap is
+therefore the *most* Step 10 can recover.
+
+#### Consequence 2 — what "lossless" means for the original question
+
+The conversion preserves everything a physical body can carry: bone directions exactly (0.00°),
+and lengths and width up to their per-clip values once shape is fitted. What it discards is
+MediaPipe's frame-to-frame violation of bone-length constancy — variation no real body exhibits.
+In that sense the round trip denoises rather than loses information.
+
+That has a consequence for augmentation which is **inference, not yet tested**. Samples generated
+through SMPL-X will have perfectly rigid bones, while real MediaPipe data carries 3–12% length
+drift. A classifier trained on both sees two different distributions of bone-length behaviour,
+and is tested on the non-rigid one. If that matters, the residual channel rejected in Section 2
+gains a legitimate role: not to fake an exact round trip, but to carry the detector's signature
+onto augmented samples. Open question for V2.
+
+#### Consequence 3 — no new parameters
+
+- **No correspondence offsets.** E7 bounds what any constant-offset model could recover at ~5%.
+- **No per-clip depth calibration.** E5 found nothing depth-specific, and its optima can be
+  degenerate.
+- **Shape is the only lever left,** with a measured ceiling.
+
+---
+
+### Step 9 (original text) — Investigate the unexplained 44.5%
 
 Do not add parameters before the dominant unexplained term is identified. Adding `betas` now
 risks absorbing a correspondence bias into a shape estimate and reporting it as anatomy.
@@ -1021,8 +1215,215 @@ Leading hypothesis: the **joint-centre offset** of Section 2 — MediaPipe's sho
 near the body surface, SMPL-X's is an internal rotation centre. Testable by estimating a
 per-joint offset and measuring what it explains, exactly as the Step 5 oracles did.
 
-### Step 10 — Shape, with a prior and a bounded claim *(only after Step 9)*
+### Step 10 — ✅ **COMPLETE (2026-10-05)**
 
+Implemented test-first: a new [`shape.py`](../src/kinetic_augment/body_model/shape.py)
+(`fit_shape`, `round_trip_quadratic`, `arm_proportions`); the shape space and `shaped()` in
+[`skeleton.py`](../src/kinetic_augment/body_model/skeleton.py); `betas` carried through
+[`converter.py`](../src/kinetic_augment/body_model/converter.py). The headline comes from
+[`scripts/measure_round_trip.py`](../scripts/measure_round_trip.py), and every table below from
+[`scripts/study_shape_fit.py`](../scripts/study_shape_fit.py) (sections S0–S6). Full suite:
+**98 passed, 2 xfailed**.
+
+The data were re-extracted first (Step 9, re-baseline box), so the gap to close is **3.55
+points** (5.92% → 2.36%), not 3.39.
+
+#### The contract, extended to shape
+
+```
+betas = fit_shape(clip_landmarks, clip_validity, skeleton)      # once per clip
+fit   = fit_body(landmarks, validity, skeleton.shaped(betas))   # per frame; records betas
+out   = reconstruct_body(fit, skeleton)                         # shape comes from fit.betas
+```
+
+Reconstruction takes the body shape from the parameters, so Step 7's claim — everything needed
+lives in the parameters — now holds for shaped bodies. Before, `fit.betas` was always zero and
+never read: with a shaped skeleton, SMPL-X's own forward pass missed `reconstruct_body` by
+42–112 mm (review assessment §4.5). It now agrees to within 1e-5 m with all 300 coefficients in
+use (`test_smplx_forward_pass_reproduces_the_reconstruction[fitted]`). A consumer must build
+SMPL-X with `num_betas=len(fit.betas)`.
+
+#### Finding 13 — the round trip sees a skeleton through five numbers, linearly
+
+**Verified now.** Bone directions are reproduced exactly (Step 8), so a skeleton enters the round
+trip only through **shoulder width and the four arm bone lengths**. Within a frame each landmark's
+error is linear in those five: laid out from the left shoulder, a landmark is a sum of lengths
+along directions the frame itself supplies, and the translation absorbs the mean. A clip's summed
+squared round-trip error is therefore an **exact quadratic** in five numbers.
+
+- It equals the converter's own error on all five real clips to **4e-14** (S0). The test pins it
+  on a non-rigid clip with a missing wrist and an unfittable frame.
+- So the shape fit minimises the converter's actual error, not a proxy for it.
+
+#### How the fit is built, and why
+
+| Choice | Alternative | Fitted / held out |
+| --- | --- | --- |
+| Minimise the round-trip error itself | Match median proportions (the floor's own definition) | **3.52 / 3.99%** vs 3.68 / 4.08% (S6) |
+| SMPL-X's full shape space, **300 betas** | The conventional 10 | **3.52 / 3.99%** vs 3.90 / 4.26%; saturates by about 100 (S5) |
+| Plausibility bound, \|betas\| ≤ √χ²(0.95, df) = **3.33** | No bound | Fitted bodies 1.60–1.70 m tall. Unbounded fits do better (2.45 / 3.43%) with non-human bodies (Finding 15) |
+| Validity mask only | `visibility` as weights (the original plan) | Not adopted: visibility does not track positional noise (ρ ≈ 0, review assessment). Not re-measured here |
+
+- **Why a chi-square bound on |betas|.** At the optimum the betas lie in the span the five
+  proportions can see. |betas| is therefore the Mahalanobis distance of the fitted proportions from
+  SMPL-X's population mean. Its df is the number of observable proportions: five, fewer if a bone
+  is never seen, and never more than the number of betas.
+  - At 0.95, the body's arm proportions may be no more unusual than 95% of SMPL-X's bodies.
+  - The prior was checked, not assumed. Under betas ~ N(0, I), the population stands 1.73 m
+    ± 9.6 cm (S1), a plausible adult spread, so the coefficients really are unit-variance.
+- **Why 300 coefficients.** Truncating to ten makes the prior understate how bodies vary in exactly
+  the directions MediaPipe pulls on. The weakest observable direction moves 0.045 mm per unit beta
+  with ten coefficients, against 0.34 mm with 300 (S2).
+- **Ties.** Among bodies with equal error, the most typical is returned.
+
+#### Result
+
+| Skeleton | Fitted | Held out |
+| --- | --- | --- |
+| Template body, `betas` = 0 (Steps 8–9) | 5.92% | 5.92% |
+| Shape fit, 10 betas | 3.90% | 4.26% |
+| **Shape fit, 300 betas — V1** | **3.52%** | **3.99%** |
+| Best symmetric skeleton, bypassing `betas` | 3.29% | 3.62% |
+| Rigid-skeleton floor, bypassing `betas` | 2.36% | 3.41% |
+
+"Held out" fits shape on one contiguous half of each clip and scores the other.
+
+- **Shape recovers 2.40 of the 3.55-point gap (68%)** on the clip it is fitted to.
+- **Held out, it recovers 77% of the gap:** 5.92 → 3.99%, against a held-out floor of 3.41%. The
+  gain survives held-out evaluation. The review assessment expected about 10%, but it measured
+  10 betas, the Step 7 converter and the contaminated data, so that expectation is superseded.
+- **In millimetres,** at a 0.33 m shoulder width: 19.5 → 11.6 mm, against a floor of 7.8 mm.
+- **Scale is no longer hidden.** An evaluation-time similarity now hides only 0.03 points (3.52%
+  → 3.48% aligned), against 0.57 for the template body. The fitted shape has absorbed the scale
+  mismatch the free scale used to hide (Step 7).
+- **Per clip,** template → fitted (floor): `01986` 4.97 → 3.48% (2.33), `01987` 6.05 → 2.67% (2.26),
+  `01988` 5.42 → 4.40% (2.84), `01991` 7.51 → 3.71% (2.78), `01992` 6.85 → 3.27% (1.41).
+- **Every clip** fits on the plausibility bound, |betas| = 3.33.
+
+#### Finding 14 — MediaPipe's arm proportions are not a human body's
+
+**Verified now** (S1), against SMPL-X's own population (300 betas, N(0, I)):
+
+| | Forearm / upper arm | z | Upper arm, L − R | z |
+| --- | --- | --- | --- | --- |
+| SMPL-X population | 0.927 ± 0.024 | | −7.3 ± 1.8 mm | |
+| 01986 | 1.068 | +5.9 | −5.5 mm | +1.0 |
+| 01987 | 0.834 | −3.9 | −8.5 mm | −0.7 |
+| 01988 | 1.084 | +6.6 | +23.6 mm | +17.6 |
+| 01991 | 1.046 | +5.0 | −31.1 mm | −13.6 |
+| 01992 | 1.078 | +6.3 | −1.3 mm | +3.4 |
+
+Four clips have forearms longer than upper arms, 5–7σ outside the population. Two have left–right
+differences no SMPL-X body has: the shape space is nearly symmetric, with left and right rows of
+the proportion Jacobian at cosine 0.996–0.9995 (S2). This confirms the review assessment's §4.10
+and extends it to the full shape space. It is why every clip sits on the bound.
+
+It also accounts for what remains. These are ladder rows of pooled medians, so the parts are not
+additive:
+
+- **Left–right asymmetry.** The best *symmetric* skeleton reaches 3.29%; only an asymmetric one
+  reaches 2.36%.
+- **Plausibility.** The fitted body sits 0.23 points above the best symmetric skeleton, mostly the
+  forearm/upper-arm ratio it is not allowed to reach.
+
+The floor's remaining gap is MediaPipe skeleton geometry outside the human shape space. It is not
+a converter fault, and no plausible SMPL-X body reaches it.
+
+#### Finding 15 — the prior is not optional
+
+**Verified now** (S4). Loosening the bound keeps lowering the error, to 2.45% with no bound,
+because the data always prefer MediaPipe's proportions exactly. The bodies that get there are not
+human: with 10 betas, |betas| reaches **337** and one body stands **3.81 m** tall. Held-out error
+also falls, nearly monotonically, as the bound loosens (4.29% at 0.5, 3.99% at 0.95, 3.43%
+unbounded). The data therefore cannot choose the level: 0.95 is a policy about what counts as a human body, fixed in
+advance rather than tuned. This answers review §6, step 6, which asked for "an explicit
+prior-strength policy".
+
+#### Finding 16 — the in-sample floor overstates what a constant shape achieves
+
+**Verified now** (S3). Fitted to one half of a clip and scored on the other, the rigid-skeleton
+floor is **3.41%**, not 2.36%. MediaPipe's proportions drift within a clip (Finding 12), so part of
+the in-sample floor is a skeleton tracking that drift. The gate keeps its definition, since it is
+the right ceiling for the clip a shape is fitted to. Quote the held-out figures beside it.
+
+#### Bound the claim
+
+- **`betas` are a convention.** Five proportions cannot identify 300 coefficients. Of all bodies
+  with the fitted proportions, the most typical is returned
+  (`test_prefers_the_most_typical_body_with_those_proportions`). Bodies 12 cm apart in height can
+  share all five (review assessment, A006).
+- **The fitted body is the plausible human closest to MediaPipe's skeleton,** not the signer's
+  anatomy. MediaPipe's proportions lie outside the human range (Finding 14), so they carry
+  detector convention as well as anatomy.
+
+#### Decision (2026-10-05): accept — the remaining 1.15 points
+
+**Decided: option 1.** V1's result is **3.52%** of shoulder width (held out 3.99%), through a
+plausible SMPL-X body. The options considered, since shape was the last lever inside SMPL-X
+(Step 9, Consequence 3):
+
+1. **Accept** *(chosen)*. Report 3.52% (held out 3.99%) as V1's round trip through a plausible
+   SMPL-X body, and the remainder as MediaPipe skeleton geometry outside the human shape space. It
+   answers the original question with a measured, bounded number.
+2. **Relax plausibility.** This lowers the error with non-human bodies (Finding 15). It would harm
+   anything that uses the mesh: contact checks, rendering, the collision constraints in Phase 3.
+3. **Carry a per-clip skeleton correction.** Store five numbers: MediaPipe's proportions minus the
+   fitted body's, applied after reconstruction.
+   - The round trip depends on nothing else (Finding 13), so this reaches the floor exactly while
+     the SMPL-X body stays plausible.
+   - It is Section 9's residual channel in its smallest, reported form: per clip, not per landmark.
+
+Option 3 probably matters more for augmentation than for V1. A sample generated through option 1
+has SMPL-X's arm proportions, not the signer's MediaPipe proportions. A classifier would then see
+two skeleton conventions, just as it would see two rigidity regimes (Step 9, Consequence 2). Both
+are **inference, not yet tested**, and both can only be tested once the converter is wired into
+augmentation.
+
+#### Context: MediaPipe against itself
+
+**Verified now** ([`measure_detector_agreement.py`](../scripts/measure_detector_agreement.py)).
+Each clip was re-extracted with one setting changed and compared with the stored extraction,
+using the round trip's own statistic with no alignment:
+
+| Change | Median | p95 |
+| --- | --- | --- |
+| Smoothing off | 2.41% | 5.67% |
+| Static-image mode | 9.22% | 20.04% |
+| Heavy model | 25.47% | 88.46% |
+
+The V1 round trip (3.52%) loses about as much as turning smoothing off. These are disagreements,
+not errors, but they are the same statistic as the round-trip score, which the 0.18% jitter
+figure never was. The smoothing-off row is the better reference scale (review assessment §6,
+step 9). The heavy-model row reproduces the assessment's 25.7%.
+
+#### Contract fixes after acceptance (2026-10-05)
+
+From the review assessment's remaining items, each verified on current code before it was fixed.
+None changes a headline number.
+
+| Defect | Before | After |
+| --- | --- | --- |
+| **Invented landmarks.** An unobserved elbow or wrist leaves its bone at the rest pose, and `reconstruct_body` returned that position as if fitted | 61/409 real frames (14.9%); the invented points sit a median 46% of shoulder width from MediaPipe's own low-visibility estimate | `BodyFit.placed` marks what the fit determined. Anything else comes back NaN (`test_landmarks_it_could_not_place_come_back_missing`) |
+| **Orphaned landmarks.** A valid wrist below an invalid elbow entered the translation and shifted every correctly placed landmark | 60 mm on a synthetic case; no real frames | Only placed landmarks set the translation (`test_an_orphaned_landmark_does_not_disturb_the_rest`). The shape fit's quadratic already excluded them |
+| **The nose-less root** | Upside down on 409/409 frames | Hip-centre apex (Step 8 note) |
+| **Public API.** The package advertised the deprecated classes | `fit_body` and `reconstruct_body` not exported | The V1 converter is exported from `kinetic_augment.body_model` |
+| **The noise script** printed "PROPOSED V1 ERROR BUDGET" | — | Labelled a jitter reference, not a gate |
+
+The harnesses score only landmarks the fit placed. Re-run, the headline is unchanged: 3.52%
+fitted, 3.99% held out.
+
+---
+
+### Step 10 (original text) — Shape, with a prior and a bounded claim *(only after Step 9)*
+
+As built, two points changed:
+- `visibility` weights were not adopted, for the reason in the table above.
+- Scale was not fitted separately, because betas already reach a uniform scale. The review
+  assessment measured about 0.9σ per 1%.
+
+- **Measured ceiling (Step 9):** shape can recover at most **3.39 points** (6.02% → 2.63%), and
+  only if `betas` can reach each clip's median arm lengths and shoulder width. Width alone is
+  worth 1.2%; lengths carry most of it. Success means approaching the floor, not reaching zero.
 - Four arm lengths plus shoulder width cannot determine 10 `betas` plus scale. The problem is
   **underdetermined** and needs regularisation toward the shape prior; an unregularised fit will
   find a shape that matches five numbers and means nothing.
@@ -1031,17 +1432,25 @@ per-joint offset and measuring what it explains, exactly as the Step 5 oracles d
 - Compare against analytic IK as baseline, and consider a small confidence-weighted optimisation
   using `visibility` as weights, initialised from the analytic solution.
 - **Bound the claim.** A better reconstruction does not establish that a signer has the inferred
-  proportions; detector bias and correspondence offsets remain live alternatives.
+  proportions. Step 9 narrows the alternatives: constant correspondence offsets explain only ~5%,
+  but detector bias remains live — MediaPipe's body prior (Finding 10) and its non-rigid output
+  (Finding 12) both shape the "observed" lengths a shape fit would be matching.
 
 ---
 
 ## 8. Deliverables
 
-1. A working `MediaPipeToSMPLX` producing genuine SMPL-X parameters.
-2. A working `SMPLXToMediaPipe` that evaluates the real model.
-3. A round-trip test suite: synthetic exactness plus real-data error decomposition.
-4. A results document recording the measured noise floor, the three error metrics, and the
-   Step 6 verdict — including a negative verdict.
+**Revised 2026-10-05; all delivered.**
+
+1. ✅ **The V1 converter**, exported from `kinetic_augment.body_model`: `SMPLXSkeleton`,
+   `fit_shape`, `fit_body`, `reconstruct_body` and `BodyFit`. It replaces original deliverables
+   1–2, the legacy classes, which the Step 7 decision deprecated.
+2. ✅ **A round-trip test suite**, covering synthetic exactness, the parameter contract and the
+   shape fit. Real-data harnesses: [`measure_round_trip.py`](../scripts/measure_round_trip.py),
+   [`diagnose_residual.py`](../scripts/diagnose_residual.py) and
+   [`study_shape_fit.py`](../scripts/study_shape_fit.py).
+3. ✅ **Results documents:** this scope, the full record, and [`V1_Findings.md`](V1_Findings.md),
+   the summary. The Step 6 verdict they were to record was retracted and superseded by Steps 9–10.
 
 ---
 
@@ -1051,10 +1460,10 @@ Ordered by what the measurement would be telling us.
 
 | Trigger | Fallback |
 | --- | --- |
-| Length error survives Step 7 — `betas` cannot span the subject's proportions | Accept and report it. This is a genuine finding about SMPL-X's shape space, not a failure. |
+| Length error survives Step 7 — `betas` cannot span the subject's proportions | Accept and report it. This is a genuine finding about SMPL-X's shape space, not a failure. **Triggered in Step 10:** no plausible `betas` span MediaPipe's proportions (Finding 14). Reported; the choice of response is open (Step 10). |
 | Analytic IK accumulates error down long chains | **Approach A:** gradient-based fitting (SMPLify-X style), optimising all parameters jointly against a global objective. Adam loop recoverable from `f9c6d7b^` as a starting reference. |
 | Direction error persists — joint centres offset systematically | Calibrate a per-joint correspondence offset from data, then re-fit. |
-| Round-trip cannot reach the noise floor by any route | **Residual channel:** store `θ` plus a per-landmark residual, making reconstruction exact by construction, and report residual magnitude as the measure of what SMPL-X cannot represent. Declined for V1 (Section 2); legitimate as a last resort *provided the residual is reported, not hidden*. |
+| Round-trip cannot reach the noise floor by any route | **Residual channel:** store `θ` plus a per-landmark residual, making reconstruction exact by construction, and report residual magnitude as the measure of what SMPL-X cannot represent. Declined for V1 (Section 2); legitimate as a last resort *provided the residual is reported, not hidden*. Its smallest form is a per-clip, five-number skeleton correction (Step 10, option 3). |
 | ~~Weights never arrive~~ | Resolved 2026-10-01 — see Step 0. |
 
 ---
@@ -1067,7 +1476,14 @@ Ordered by what the measurement would be telling us.
 - Does the shoulder–hip torso frame suffice for `global_orient`, or does depth noise in
   MediaPipe's `z` make it unstable? Testable in Step 1.
 - Should `betas` be shared across all clips from one signer rather than per clip? Relevant to V2;
-  V1 has too few subjects to tell.
+  V1 has too few subjects to tell. Finding 16 shows MediaPipe's proportions drift even *within* a
+  clip, so sharing would need held-out evidence across clips.
+- ~~Accept the plausible-body round trip, relax plausibility, or carry a per-clip skeleton
+  correction?~~ **Decided 2026-10-05: accept** (Step 10). The correction stays a candidate for
+  augmentation, pending the next question.
+- Do SMPL-X's rigid bones and human proportions on augmented samples hurt a classifier trained
+  and tested on MediaPipe's non-rigid, non-human skeleton? Testable only after integration
+  (Step 9, Consequence 2; Step 10, option 3).
 
 ---
 
@@ -1117,3 +1533,76 @@ distinguish 32 unrelated poses from a 32-frame clip.
 apply them across all `T` frames. Per-frame is correct for the *geometry*; once-per-clip is
 correct for the *augmentation*. These are different time constants and the current code conflates
 them — the same distinction §6 already makes for shape.
+
+---
+
+## 12. Assumptions ledger
+
+Every assumption this work has relied on or tested, with its status and where the evidence lives.
+Update it whenever a step proves or retracts something.
+
+### Proven
+
+| # | Assumption | Evidence |
+| --- | --- | --- |
+| P1 | The SMPL-X weights were never in git; they are installed locally, and the license forbids redistributing them | Step 0 |
+| P2 | `smplx.create` takes `model_path="models"`, not `"models/smplx"` | Finding 1 |
+| P3 | SMPL-X's forward pass returns 127 joints; the kinematic chain is the first 55 | Finding 2 |
+| P4 | The repo's SMPL-X ↔ MediaPipe joint mapping is correct | Finding 3 |
+| P5 | Our forward kinematics is SMPL-X's, to ~2e-7 m, provided `flat_hand_mean=True` | Steps 2–3, Finding 6 |
+| P6 | Legs are not observed in this data: knee and ankle visibility ≤ 0.03 | Finding 5 |
+| P7 | Zeros cannot mark missing data in hip-centred coordinates; NaN does | Finding 8 |
+| P8 | `pose_world_landmarks` are metric; image-space `pose_landmarks` are anisotropic | Finding 9 |
+| P9 | The five clips show at least four different people, so shape is fitted per clip | Finding 10 |
+| P10 | Swing IK solved relative to the torso root reproduces every bone direction exactly (0.00°) | Steps 4, 8 |
+| P11 | Torso pitch is a gauge freedom for the arm landmarks | Finding 11 |
+| P12 | MediaPipe's world skeleton is not rigid: bone lengths vary 2–15% within a clip | Finding 12, Step 9 box |
+| P13 | Below the rigid-skeleton floor lies only MediaPipe non-rigidity (per-frame skeleton: 2.5e-14%) | Step 9 |
+| P14 | The round trip sees a skeleton only through five proportions, as an exact quadratic (4e-14) | Finding 13 |
+| P15 | SMPL-X's joints are linear in `betas`, and its shape prior is N(0, I): population 1.73 m ± 9.6 cm | Step 10, S1 |
+| P16 | A plausible per-clip shape recovers 68% of the gap to the floor, and 77% held out | Step 10 |
+| P17 | MediaPipe's arm proportions lie outside SMPL-X's human shape space: ratio 4–7σ, asymmetry up to 18σ | Finding 14 |
+| P18 | With the nose, the fitted body is upright on all 409 real frames | Step 8, Step 10 note |
+| P19 | A shared MediaPipe instance made stored landmarks depend on clip order, by up to 114 mm | Step 9 box |
+| P20 | MediaPipe disagrees with itself by more than the conversion loses: smoothing off 2.41%, static mode 9.22%, heavy model 25.47% | Step 10, context |
+
+### Disproven, retracted or superseded
+
+| # | Claim | What replaced it | Evidence |
+| --- | --- | --- | --- |
+| D1 | The existing converter round-trips at 3.7e-9 | It never evaluated SMPL-X, so it never produced valid parameters | Section 3 |
+| D2 | MediaPipe's `z` is 4.8× noisier than x/y | An artifact of image-space landmarks | Finding 4 |
+| D3 | "Lossless" means below the 0.18% jitter floor | A different statistic; the rigid-skeleton floor is the gate | Section 2, Step 9 |
+| D4 | `global_orient` cannot affect the gate | Retracted after the review's counterexample (47 mm at 45°) | Steps 4, 8 |
+| D5 | Length error dominates, so fit shape next (first Step 6 verdict) | Retracted: root first, then the residual investigation | Step 6 |
+| D6 | "This signer has shorter upper arms" | The figures pooled at least four people | Finding 10 |
+| D7 | An aspect-ratio correction rescues image-space landmarks | It made things worse; world landmarks replaced them | Finding 9 |
+| D8 | The aligned error (5.94%) is the converter's error | The direct error is the real number | Step 7 |
+| D9 | Synthetic Part A recovers rotations | It recovers positions only; twist is unobservable | Step 5 |
+| D10 | `01988` regressed under the new root | Noise under the aligned metric; a real, accepted trade-off under the direct one | Step 8 |
+| D11 | Joint-centre offsets explain the residual (Step 9's leading hypothesis) | They explain 4–5% | Step 9, E7 |
+| D12 | Joint angles drive length drift (R² 0.54) | Mostly chance: the null R² is 0.36–0.43 | Step 9, E4 |
+| D13 | A per-clip depth-scale error | Not depth-specific | Step 9, E5 |
+| D14 | Smoothing-stretched noise explains the drift | Only partly | Step 9, E6 |
+| D15 | Stored world landmarks depend on the clip alone | They depended on clip order until re-extraction | Step 9 box |
+| D16 | `betas` can reach each clip's median proportions | Only with non-human bodies: \|betas\| 337, 3.81 m tall | Findings 14–15 |
+| D17 | Ten `betas` suffice | 300 recover more, held out too | Step 10, S5 |
+| D18 | `visibility` can weight the fit | It does not track positional noise (ρ ≈ 0, review assessment; not re-measured) | Step 10 |
+| D19 | The floor is what a constant shape achieves | Only in-sample: 2.36% fitted, 3.41% held out | Finding 16 |
+| D20 | The nose-less fallback root is acceptable | It inverted the body on 409/409 frames. Fixed with a hip-centre apex | Step 8 note |
+| D21 | MediaPipe's proportions differ from SMPL-X's by ordinary individual variation that `betas` absorb | Four clips lie 5–7σ outside the population | Finding 9 note, Finding 14 |
+| D22 | The 0.97 evaluation-time scale is evidence of correspondence error | With fitted shape it is 0.9997: the deficit was shape | Step 6 note |
+| D23 | Every modelled landmark that `reconstruct_body` returns was fitted | 14.9% of real frames returned invented elbows or wrists. Now NaN | Step 10, contract fixes |
+| D24 | Adaptive IK would meaningfully lower the error | With fitted shape, 3.52% → 3.43% for 1.2° of direction error; worse after 3 passes | Findings doc, study S7 |
+
+### Open
+
+| # | Question | Status |
+| --- | --- | --- |
+| O1 | Accept the plausible-body round trip, relax plausibility, or carry a per-clip skeleton correction? | **Decided 2026-10-05: accept**, 3.52% (held out 3.99%) (Step 10) |
+| O2 | Do SMPL-X's rigid bones and human proportions on augmented samples hurt a classifier? | Untested; needs integration |
+| O3 | Should shape be fitted per signer rather than per clip? | V2; needs cross-clip held-out evidence (Finding 16) |
+| O4 | How should shrugs (collar motion) be represented? | Not representable in V1 (strict xfail) |
+| O5 | The nose-less fallback root, and orphan correspondences (review assessment §4.6) | **Both fixed 2026-10-05** (Step 10, contract fixes) |
+| O6 | Are the elbow and shoulder joint-limit axes wrong (review assessment §4.2)? | Not re-verified; latent until augmentation is wired |
+| O7 | Is `z` noise 1.2× or about 1.9× that of x/y per axis (review assessment §4.7)? | Not re-verified; reference figures only |

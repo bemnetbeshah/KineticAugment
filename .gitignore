@@ -228,3 +228,9 @@ models/vposer/*.pt
 
 # Personal presentation / findings notes
 /presentation_one.md
+
+# macOS metadata
+.DS_Store
+
+# Raw dataset videos (kept local; not redistributed)
+/data/metsis_new_unseen_sign_videos/

@@ -24,7 +24,7 @@ from scipy.spatial.transform import Rotation
 
 try:
     import torch
-    import smplx
+    import smplx  # noqa: F401 -- imported to detect availability
     _smplx_ok = True
 except ImportError:
     _smplx_ok = False
@@ -33,10 +33,14 @@ pytestmark = pytest.mark.skipif(not _smplx_ok, reason="torch/smplx not installed
 
 SMPLX_MODEL_PATH = "models"
 NOSE_MP = 0
+HIPS = [(1, 23), (2, 24)]   # (SMPL-X joint, MediaPipe landmark)
 HEAD_JOINT = 15
 LEFT_COLLAR = 13
 SPINE_JOINTS = (3, 6, 9)
 ARM_SEGMENTS_MP = [(11, 13), (13, 15), (12, 14), (14, 16), (11, 12)]
+# A body other than the template, using coefficients past the conventional ten.
+BODY_BETAS = np.zeros(300)
+BODY_BETAS[[0, 1, 2, 3, 40]] = [1.5, -1.0, 0.5, 0.8, 2.0]
 
 
 @pytest.fixture(scope="module")
@@ -45,7 +49,8 @@ def skeleton():
     return SMPLXSkeleton(model_path=SMPLX_MODEL_PATH)
 
 
-def landmarks_from(skeleton, rotations, offset=(0.0, 0.0, 0.0), with_nose=False):
+def landmarks_from(skeleton, rotations, offset=(0.0, 0.0, 0.0), with_nose=False,
+                   with_hips=False):
     """
     Pose SMPL-X and lay the corresponded joints out as MediaPipe landmarks.
 
@@ -69,6 +74,9 @@ def landmarks_from(skeleton, rotations, offset=(0.0, 0.0, 0.0), with_nose=False)
         landmarks[mp_idx] = posed[smplx_idx]
     if with_nose:
         landmarks[NOSE_MP] = posed[-1]
+    if with_hips:
+        for smplx_idx, mp_idx in HIPS:
+            landmarks[mp_idx] = posed[smplx_idx]
     return landmarks, np.isfinite(landmarks).all(axis=1)
 
 
@@ -102,6 +110,19 @@ class TestContract:
         params = list(inspect.signature(reconstruct_body).parameters)
         assert params == ["fit", "skeleton"]
 
+    def test_the_v1_converter_is_the_packages_public_api(self):
+        # The deprecated classes are what the package advertised; consumers should
+        # find the converter that replaced them at the same import path.
+        import kinetic_augment.body_model as body_model
+        from kinetic_augment.body_model import converter, shape, skeleton
+
+        assert body_model.fit_shape is shape.fit_shape
+        assert body_model.fit_body is converter.fit_body
+        assert body_model.reconstruct_body is converter.reconstruct_body
+        assert body_model.SMPLXSkeleton is skeleton.SMPLXSkeleton
+        assert {"fit_shape", "fit_body", "reconstruct_body", "BodyFit",
+                "SMPLXSkeleton"} <= set(body_model.__all__)
+
     def test_fit_returns_genuine_smplx_parameter_shapes(self, skeleton):
         from kinetic_augment.body_model.converter import fit_body
         landmarks, validity = landmarks_from(skeleton, random_arm_pose(0))
@@ -111,7 +132,7 @@ class TestContract:
         assert fit.body_pose.shape == (63,)
         assert fit.global_orient.shape == (3,)
         assert fit.transl.shape == (3,)
-        assert fit.betas.shape == (10,)
+        assert fit.betas.shape == (skeleton.model.num_betas,)
 
 
 class TestRoundTrip:
@@ -145,18 +166,20 @@ class TestRoundTrip:
             if i not in modelled:
                 assert np.all(np.isnan(out[i])), f"landmark {i} should not be reconstructed"
 
-    def test_smplx_forward_pass_reproduces_the_reconstruction(self, skeleton):
+    @pytest.mark.parametrize("shape", ["template", "fitted"])
+    def test_smplx_forward_pass_reproduces_the_reconstruction(self, skeleton, shape):
         # Requirement 2 of the scope: the returned parameters must mean to SMPL-X
         # exactly what they mean to us. A rotated root makes global_orient and its
-        # pivot compensation non-trivial.
+        # pivot compensation non-trivial; a fitted shape makes betas non-trivial.
         from kinetic_augment.body_model.converter import (
             ARM_CORRESPONDENCE, fit_body, reconstruct_body)
 
+        body = skeleton if shape == "template" else skeleton.shaped(BODY_BETAS)
         truth = random_arm_pose(3)
         truth[0] = rotvec([20, -35, 10])
         landmarks, validity = landmarks_from(
-            skeleton, truth, offset=(-0.4, 0.2, 1.5), with_nose=True)
-        fit = fit_body(landmarks, validity, skeleton)
+            body, truth, offset=(-0.4, 0.2, 1.5), with_nose=True)
+        fit = fit_body(landmarks, validity, body)
         ours = reconstruct_body(fit, skeleton)
 
         def t(a):
@@ -221,6 +244,40 @@ class TestTorso:
         assert_arms_match(reconstruct_body(fit_a, skeleton),
                           reconstruct_body(fit_b, skeleton), atol=1e-9)
 
+    def test_hips_recover_the_root_when_the_nose_is_missing(self, skeleton):
+        # A hand over the face hides the nose. The hips sit on the torso too, so
+        # they still say which way is up.
+        from kinetic_augment.body_model.converter import fit_body
+
+        truth = random_arm_pose(15)
+        truth[0] = rotvec([20, -40, 15])
+        landmarks, validity = landmarks_from(skeleton, truth, offset=(0.4, -0.3, 1.8),
+                                             with_hips=True)
+
+        fit = fit_body(landmarks, validity, skeleton)
+
+        error = Rotation.from_rotvec(fit.global_orient).inv() * Rotation.from_rotvec(truth[0])
+        assert error.magnitude() < 1e-9
+
+    def test_without_nose_or_hips_a_mediapipe_body_is_not_turned_upside_down(self, skeleton):
+        # MediaPipe's world frame is y-down with the subject facing -z, so a frontal
+        # SMPL-X body sits in it turned 180 degrees about the shoulder axis -- the
+        # one rotation the shoulders cannot reveal. Its origin is the hip centre,
+        # which still holds the answer when no landmark beyond the arms is valid.
+        from kinetic_augment.body_model.converter import fit_body
+
+        truth = random_arm_pose(16)
+        truth[0] = (Rotation.from_euler("x", 180, degrees=True)
+                    * Rotation.from_euler("y", 15, degrees=True)).as_rotvec()
+        landmarks, validity = landmarks_from(skeleton, truth, with_hips=True)
+        landmarks = landmarks - 0.5 * (landmarks[23] + landmarks[24])
+        validity[[23, 24]] = False
+
+        fit = fit_body(landmarks, validity, skeleton)
+
+        error = Rotation.from_rotvec(fit.global_orient).inv() * Rotation.from_rotvec(truth[0])
+        assert error.magnitude() < 1e-9
+
     @pytest.mark.xfail(
         strict=True,
         reason="V1 holds the collar joints at zero. A shrug moves one shoulder about its "
@@ -275,8 +332,71 @@ class TestBodyShape:
         worst = max(np.linalg.norm(out[m] - landmarks[m]) for _, m in ARM_SEGMENTS_MP)
         assert worst > 1e-3
 
+    def test_fit_records_the_skeletons_shape(self, skeleton):
+        from kinetic_augment.body_model.converter import fit_body
+
+        body = skeleton.shaped(BODY_BETAS)
+        landmarks, validity = landmarks_from(body, random_arm_pose(13))
+
+        fit = fit_body(landmarks, validity, body)
+
+        np.testing.assert_array_equal(fit.betas, BODY_BETAS)
+
+    def test_parameters_alone_carry_the_shape(self, skeleton):
+        # Fitted on the shaped body, reconstructed against the bare template: the
+        # shape can only reach the reconstruction through fit.betas.
+        from kinetic_augment.body_model.converter import fit_body, reconstruct_body
+
+        body = skeleton.shaped(BODY_BETAS)
+        truth = random_arm_pose(14)
+        truth[0] = rotvec([0, 40, 0])
+        landmarks, validity = landmarks_from(body, truth, offset=(0.2, -0.1, 1.0))
+
+        out = reconstruct_body(fit_body(landmarks, validity, body), skeleton)
+
+        assert_arms_match(out, landmarks, atol=1e-9)
+
+    def test_reconstruction_refuses_a_shape_its_skeleton_cannot_apply(self, skeleton):
+        # A skeleton with no shape space would otherwise drop the betas silently.
+        from kinetic_augment.body_model.converter import BodyFit, reconstruct_body
+
+        bare = SimpleNamespace(rest_joints=skeleton.rest_joints, parents=skeleton.parents,
+                               num_joints=skeleton.num_joints, rest_nose=skeleton.rest_nose)
+        fit = BodyFit(body_pose=np.zeros(63), global_orient=np.zeros(3),
+                      transl=np.zeros(3), betas=BODY_BETAS)
+
+        with pytest.raises(ValueError):
+            reconstruct_body(fit, bare)
+
 
 class TestValidity:
+    def test_landmarks_it_could_not_place_come_back_missing(self, skeleton):
+        # An unobserved joint leaves its bone unsolved, at the rest pose. Returning
+        # that position would invent a landmark, which augmented data would inherit.
+        landmarks, validity = landmarks_from(skeleton, random_arm_pose(15))
+        validity = validity.copy()
+        validity[15] = False   # left wrist: the left forearm cannot be solved
+        validity[14] = False   # right elbow: nor can anything below the right shoulder
+
+        out = round_trip(skeleton, landmarks, validity)
+
+        for mp_idx in (15, 14, 16):
+            assert np.all(np.isnan(out[mp_idx])), f"landmark {mp_idx} was invented"
+
+    def test_an_orphaned_landmark_does_not_disturb_the_rest(self, skeleton):
+        # A valid wrist below an invalid elbow cannot be placed. Letting its residual
+        # into the translation would shift every landmark that was placed exactly.
+        truth = random_arm_pose(16)
+        truth[0] = rotvec([0, 30, 10])
+        landmarks, validity = landmarks_from(skeleton, truth)
+        validity = validity.copy()
+        validity[14] = False   # right elbow invalid, right wrist still valid
+
+        out = round_trip(skeleton, landmarks, validity)
+
+        for mp_idx in (11, 12, 13, 15):
+            np.testing.assert_allclose(out[mp_idx], landmarks[mp_idx], atol=1e-9)
+
     def test_invalid_landmarks_are_excluded_from_the_fit(self, skeleton):
         landmarks, validity = landmarks_from(skeleton, random_arm_pose(5))
         corrupted = landmarks.copy()

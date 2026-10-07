@@ -8,7 +8,9 @@
 - `05_Validation_Framework.md` — Describes checks for physical validity and task-level quality.
 - `06_Development_Roadmap.md` — Records implementation phases, status, and development plans.
 - `GLOSSARY.md` — Defines terminology used throughout the framework documentation.
+- `V1_Findings.md` — Presentation-ready summary of what V1 established: the result, findings, decisions, and open questions.
 - `V1_Problem_Scope.md` — Scopes the MediaPipe ↔ SMPL-X round-trip conversion task and its success criteria.
+- `V1_Review_Assessment.md` — Empirical test of the external V1 approach review: claim verdicts, missed errors, and recommended next steps (2026-10-05).
 - `V1_2_Hand_Roundtrip_Plan.md` — Proposed V1.2 MediaPipe ↔ MANO/SMPL-X hand conversion plan, mapping, metrics, and implementation gates.
 - `V1_2_Assumptions.md` — V1.2 assumption ledger, dependency map, verification order, and failure traces.
 - `V1_2_Feasibility_Probes.md` — Measurements of the hand model assets and MediaPipe hand data taken before V1.2 implementation.

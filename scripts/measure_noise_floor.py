@@ -2,9 +2,11 @@
 """
 Step 1 of the V1 round-trip scope: measure MediaPipe's own noise floor.
 
-The V1 success gate is "round-trip error at or below MediaPipe's frame-to-frame
-noise." That threshold must be measured, not guessed. This script measures it
-from the cached clips in data/test_output/.
+Originally this was to set V1's success gate: "round-trip error at or below
+MediaPipe's frame-to-frame noise." It no longer does. Jitter is a different
+statistic from round-trip error -- a constant offset has none -- so the result is
+a reference scale only; the gate became the rigid-skeleton floor reported by
+measure_round_trip.py (docs/V1_Problem_Scope.md, Section 2 and Step 9).
 
 Two independent estimators are used, because each fails in a different way and
 agreement between them is the evidence that the number is real:
@@ -211,8 +213,10 @@ def main() -> None:
     ratio = summary["z"][1] / summary["xy"][1] if summary["xy"][1] else float("nan")
     print("\n" + "=" * 64)
     print(f"z is {ratio:.1f}x noisier than x/y")
-    print(f"PROPOSED V1 ERROR BUDGET: {budget:.2f}% of shoulder width "
+    print(f"JITTER REFERENCE: {budget:.2f}% of shoulder width "
           f"(~{budget / 100 * 0.3159 * 1000:.1f} mm at SMPL-X scale)")
+    print("  A reference scale, not a pass/fail gate: jitter is a different statistic from")
+    print("  round-trip error. The V1 gate is the rigid-skeleton floor (measure_round_trip.py).")
     print("=" * 64)
 
 

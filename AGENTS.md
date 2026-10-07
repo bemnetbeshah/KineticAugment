@@ -40,6 +40,7 @@ Run the test suite with `pytest`. The documented phase checks can also be run wi
 - [`models/smplx/index.md`](models/smplx/index.md)
 - [`models/vposer/index.md`](models/vposer/index.md)
 - [`scripts/index.md`](scripts/index.md)
+- [`scripts/review_checks/index.md`](scripts/review_checks/index.md) — frozen V1 review evidence; per-cluster subfolders each have their own `index.md`
 - [`src/index.md`](src/index.md)
 - [`src/kinetic_augment/index.md`](src/kinetic_augment/index.md)
 - [`src/kinetic_augment/augmentations/index.md`](src/kinetic_augment/augmentations/index.md)

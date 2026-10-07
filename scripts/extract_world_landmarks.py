@@ -32,8 +32,8 @@ from pathlib import Path
 warnings.filterwarnings("ignore")
 os.environ.setdefault("GLOG_minloglevel", "3")
 
-import cv2
-import numpy as np
+import cv2  # noqa: E402 -- must follow the log-level setting above
+import numpy as np  # noqa: E402
 
 NUM_POSE_LANDMARKS = 33
 VIDEO_DIR = Path("data/sign_videos")
@@ -63,35 +63,43 @@ def extract(video_path: Path, holistic) -> tuple:
     return np.array(landmarks, dtype=np.float32), np.array(visibility, dtype=np.float32)
 
 
-def main() -> None:
+def extract_all(videos, output_dir: Path) -> None:
+    """
+    Extract each clip with its own Holistic instance.
+
+    Video mode is stateful -- a tracked region of interest and landmark smoothing.
+    A shared instance carries that state across clips, making a clip's landmarks
+    depend on which clip preceded it (up to 114 mm on the sample clips).
+    """
     import mediapipe as mp
 
-    videos = sorted(VIDEO_DIR.glob("*.mp4"))
-    if not videos:
-        raise SystemExit(f"No videos found under {VIDEO_DIR}")
-
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    holistic = mp.solutions.holistic.Holistic(
-        static_image_mode=False, model_complexity=1
-    )
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"{'clip':<10}{'frames':>8}{'detected':>10}{'median vis':>12}")
     print("-" * 40)
 
-    try:
-        for video in videos:
+    for video in videos:
+        with mp.solutions.holistic.Holistic(
+            static_image_mode=False, model_complexity=1
+        ) as holistic:
             landmarks, visibility = extract(video, holistic)
-            detected = np.isfinite(landmarks).all(axis=(1, 2))
+        detected = np.isfinite(landmarks).all(axis=(1, 2))
 
-            out = OUTPUT_DIR / f"{video.stem}_world.npz"
-            np.savez_compressed(out, landmarks=landmarks, visibility=visibility)
+        out = output_dir / f"{video.stem}_world.npz"
+        np.savez_compressed(out, landmarks=landmarks, visibility=visibility)
 
-            vis = visibility[detected, :NUM_POSE_LANDMARKS]
-            print(f"{video.stem:<10}{len(landmarks):>8}{detected.sum():>9}/{len(landmarks)}"
-                  f"{np.median(vis) if vis.size else float('nan'):>11.2f}")
-    finally:
-        holistic.close()
+        vis = visibility[detected, :NUM_POSE_LANDMARKS]
+        print(f"{video.stem:<10}{len(landmarks):>8}{detected.sum():>9}/{len(landmarks)}"
+              f"{np.median(vis) if vis.size else float('nan'):>11.2f}")
 
+
+def main() -> None:
+    videos = sorted(VIDEO_DIR.glob("*.mp4"))
+    if not videos:
+        raise SystemExit(f"No videos found under {VIDEO_DIR}")
+
+    extract_all(videos, OUTPUT_DIR)
     print(f"\nWrote {len(videos)} files to {OUTPUT_DIR}/*_world.npz")
 
 
