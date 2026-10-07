@@ -17,6 +17,8 @@
 - `V1_2_Implementation_Plan.md` — Task-by-task implementation plan for the V1.2 hand round-trip feasibility slice (P0–P3).
 - `V1_2_Findings.md` — Measured V1.2 hand round-trip results, assumption status and next steps.
 - `V1_2_Implementation_Evidence.md` — Measurements taken while implementing V1.2 (synthetic gates, batch coupling, extraction determinism), kept with their provenance.
+- `V1_3_Face_Design.md` — Approved V1.3 design: SMPL-X neck, head and jaw from FaceLandmarker, signed hand-to-face distances with ASL-LEX regions, and the face stream.
+- `Week_2_Findings.md` — Round trip on 20 unseen clips, what its error is made of (systematic vs varying), and the agreed plan for metrics and smoothing (2026-10-07).
 - `media/` — Images and placeholder assets referenced by documentation.
 - `index.md` — Index of the documentation pages and media folder.
 - `research-guide/` — Source-grounded research onboarding, verification status, and practical learning roadmap.
