@@ -6,16 +6,16 @@ the chin (ledger O16). The image carries the missing depth cue: a hand's world l
 metric and its image landmarks are in pixels, so their ratio is the hand's own pixels per metre,
 and a pinhole camera turns pixels per metre into depth (`Z = f / scale`). The head's scale comes
 from the head projection of task 13. With both depths and both image positions, the wrist can be
-placed relative to the nose in camera axes.
+placed relative to the head in camera axes.
 
 Assumptions: pinhole camera, principal point at the image centre, a nominal focal length from a
 vertical field of view (MediaPipe's face-geometry default, 63 degrees), a hand and a head that
 are each shallow compared with their distance from the camera (weak perspective per object), and
 camera axes aligned with the pose-world axes (ledger O11, measured about 1 degree).
 
-Reach. The body is re-fitted with fixed bone lengths and MediaPipe's elbows and shoulders, so the
-SMPL-X wrist may not get to the target; `wrist_reached` (residual within `REACH_TOLERANCE`) says
-whether it did. 3-D contact on a corrected hand that did not reach is not trustworthy: the arm
+Reach. The body is re-fitted with fixed bone lengths, MediaPipe's shoulder and elbow directions
+and the first pass's translation, so the SMPL-X wrist may not get to the target; `wrist_reached`
+(residual within `REACH_TOLERANCE`) says whether it did. 3-D contact on a corrected hand that did not reach is not trustworthy: the arm
 cannot reach the target, so the SMPL-X hand ends up somewhere else (V1.3 task 14, 01986 frames
 14-21 show chin contact with 11-14 cm residual while the image has the hand 9-16 cm away).
 A wrist can only be placed when the fit has the same side's shoulder and elbow; a hand without
@@ -76,15 +76,22 @@ class WristTargets:
     depth_ratio: np.ndarray  # (2,) Z_hand / Z_head; NaN where unavailable
 
 
-def wrist_targets(nose_px, nose_world, head_scale, hand_world, hand_px, width, height,
+def wrist_targets(head_px, head_world, head_scale, hand_world, hand_px, width, height,
                   fov_deg=DEFAULT_VERTICAL_FOV_DEG, arm_valid=None) -> WristTargets:
     """
-    World wrist targets from the image: each wrist's offset from the nose, in camera axes, added
-    to the nose's world position.
+    World wrist targets from the image: each wrist's offset from the head, in camera axes, added
+    to the head's world position.
+
+    Depth and position refer to matching points. The head scale (a similarity of the rigid
+    points) is the depth of the rigid points' centroid, and the hand scale (a similarity of its
+    21 landmarks) is the depth of the hand's centroid. So the head reference is that centroid,
+    and the hand's centroid is back-projected at `Z_hand`; the wrist is then that point plus the
+    wrist's offset from the hand centroid in the hand's own metric world landmarks. Using the nose
+    tip or the wrist directly would apply a centroid depth to a point a few cm nearer.
 
     Args:
-        nose_px: (2,) or (3,) image position of the nose tip, pixels.
-        nose_world: (3,) world position of the nose tip on the first-pass posed mesh.
+        head_px: (2,) or (3,) image position of the rigid-point centroid, pixels.
+        head_world: (3,) world position of the same centroid on the first-pass posed mesh.
         head_scale: pixels per metre at the head (`ProjectedHead.scale`).
         hand_world: (2, 21, 3) world landmarks per side, metres; NaN where absent.
         hand_px: (2, 21, 2) image landmarks per side in pixels; NaN where absent.
@@ -97,18 +104,17 @@ def wrist_targets(nose_px, nose_world, head_scale, hand_world, hand_px, width, h
     the ratio is still reported when both depths exist.
     """
     out = WristTargets(np.full((SIDES, 3), np.nan), np.zeros(SIDES, bool), np.full(SIDES, np.nan))
-    nose_px = np.asarray(nose_px, dtype=np.float64)[:2]
-    nose_world = np.asarray(nose_world, dtype=np.float64)
-    if not (np.isfinite(nose_px).all() and np.isfinite(nose_world).all()
+    head_px = np.asarray(head_px, dtype=np.float64)[:2]
+    head_world = np.asarray(head_world, dtype=np.float64)
+    if not (np.isfinite(head_px).all() and np.isfinite(head_world).all()
             and np.isfinite(head_scale) and head_scale > 0):
         return out
     focal, cx, cy = focal_px(height, fov_deg), width / 2.0, height / 2.0
     z_head = focal / head_scale
-    nose_cam = camera_point(nose_px[0], nose_px[1], z_head, focal, cx, cy)
+    head_cam = camera_point(head_px[0], head_px[1], z_head, focal, cx, cy)
     for s in range(SIDES):
         scale = hand_scale_px_per_m(hand_world[s], hand_px[s])
-        wrist = np.asarray(hand_px[s][0], dtype=np.float64)[:2]
-        if not (np.isfinite(scale) and np.isfinite(wrist).all()):
+        if not np.isfinite(scale):
             continue
         z_hand = focal / scale
         out.depth_ratio[s] = z_hand / z_head
@@ -116,7 +122,10 @@ def wrist_targets(nose_px, nose_world, head_scale, hand_world, hand_px, width, h
             continue
         if not DEPTH_RATIO_RANGE[0] <= out.depth_ratio[s] <= DEPTH_RATIO_RANGE[1]:
             continue
-        wrist_cam = camera_point(wrist[0], wrist[1], z_hand, focal, cx, cy)
-        out.target[s] = nose_world + (wrist_cam - nose_cam)
+        world = np.asarray(hand_world[s], dtype=np.float64)
+        centre_px = np.asarray(hand_px[s], dtype=np.float64)[:, :2].mean(axis=0)
+        centre_cam = camera_point(centre_px[0], centre_px[1], z_hand, focal, cx, cy)
+        wrist_cam = centre_cam + (world[0] - world.mean(axis=0))
+        out.target[s] = head_world + (wrist_cam - head_cam)
         out.corrected[s] = True
     return out

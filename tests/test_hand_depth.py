@@ -25,7 +25,8 @@ def project(point):
 
 def synthetic_hand(wrist_cam, rng):
     """21 hand points (metres) around a wrist: world offsets, camera-frame positions."""
-    offsets = rng.uniform(-0.05, 0.05, (21, 3))
+    # The wrist is the hand's near, outer end: its centroid lies up to 4 cm behind and to one side.
+    offsets = rng.uniform(-0.05, 0.05, (21, 3)) + np.array([0.02, 0.03, 0.04])
     offsets[0] = 0.0
     return offsets, wrist_cam + offsets
 
@@ -54,56 +55,60 @@ def test_hand_scale_is_nan_for_an_absent_hand():
     assert np.isnan(hand_scale_px_per_m(world, np.full((21, 2), np.nan)))
 
 
-def scene(wrist_cam, z_head=1.0, nose_cam=None):
+def scene(wrist_cam, z_head=1.0, head_cam=None):
     rng = np.random.default_rng(1)
-    nose_cam = np.array([0.0, 0.0, z_head]) if nose_cam is None else nose_cam
+    head_cam = np.array([0.0, 0.0, z_head]) if head_cam is None else head_cam
     offsets, cam = synthetic_hand(wrist_cam, rng)
     hand_world = np.full((2, 21, 3), np.nan)
     hand_px = np.full((2, 21, 2), np.nan)
     hand_world[1] = offsets
     hand_px[1] = [project(p) for p in cam]
-    return nose_cam, hand_world, hand_px
+    return head_cam, hand_world, hand_px
 
 
-def test_wrist_targets_recover_the_offset_from_the_nose():
-    nose_cam = np.array([0.02, -0.05, 1.0])
-    wrist_cam = nose_cam + np.array([0.03, 0.12, -0.15])  # lower and 15 cm nearer
-    nose_cam, hand_world, hand_px = scene(wrist_cam, nose_cam=nose_cam)
-    nose_world = np.array([0.4, -0.3, 0.1])               # arbitrary world position
-    targets = wrist_targets(project(nose_cam), nose_world, F / nose_cam[2], hand_world, hand_px,
+def test_wrist_targets_recover_the_offset_from_the_head_centroid():
+    # The head scale is the depth of the rigid-point centroid and the hand scale that of the
+    # hand's 21-point centroid; the wrist is placed from those centroids, not from the nose tip
+    # or the wrist, which sit a few cm nearer than their centroids.
+    head_cam = np.array([0.02, -0.05, 1.0])
+    wrist_cam = head_cam + np.array([0.03, 0.12, -0.15])  # lower and 15 cm nearer
+    head_cam, hand_world, hand_px = scene(wrist_cam, head_cam=head_cam)
+    head_world = np.array([0.4, -0.3, 0.1])               # arbitrary world position
+    targets = wrist_targets(project(head_cam), head_world, F / head_cam[2], hand_world, hand_px,
                             W, H)
     assert targets.corrected.tolist() == [False, True]
     assert np.isnan(targets.target[0]).all() and np.isnan(targets.depth_ratio[0])
-    np.testing.assert_allclose(targets.target[1] - nose_world, wrist_cam - nose_cam, atol=0.015)
-    assert targets.depth_ratio[1] == pytest.approx(wrist_cam[2] / nose_cam[2], abs=0.02)
+    np.testing.assert_allclose(targets.target[1] - head_world, wrist_cam - head_cam, atol=0.015)
+    hand_centroid_z = hand_world[1, :, 2].mean() + wrist_cam[2]
+    assert targets.depth_ratio[1] == pytest.approx(hand_centroid_z / head_cam[2], abs=0.02)
 
 
 def test_an_implausible_depth_ratio_is_left_uncorrected():
-    nose_cam = np.array([0.0, 0.0, 1.0])
-    nose_cam, hand_world, hand_px = scene(np.array([0.0, 0.1, 3.0]), nose_cam=nose_cam)
-    targets = wrist_targets(project(nose_cam), np.zeros(3), F / 1.0, hand_world, hand_px, W, H)
+    head_cam = np.array([0.0, 0.0, 1.0])
+    head_cam, hand_world, hand_px = scene(np.array([0.0, 0.1, 3.0]), head_cam=head_cam)
+    targets = wrist_targets(project(head_cam), np.zeros(3), F / 1.0, hand_world, hand_px, W, H)
     assert not targets.corrected.any() and np.isnan(targets.target).all()
     assert targets.depth_ratio[1] == pytest.approx(3.0, abs=0.1)
 
 
 def test_an_invalid_arm_leaves_that_side_uncorrected():
-    nose_cam, hand_world, hand_px = scene(np.array([0.0, 0.1, 0.9]))
-    nose_px = project(nose_cam)
-    both = wrist_targets(nose_px, np.zeros(3), F / 1.0, hand_world, hand_px, W, H)
+    head_cam, hand_world, hand_px = scene(np.array([0.0, 0.1, 0.9]))
+    head_px = project(head_cam)
+    both = wrist_targets(head_px, np.zeros(3), F / 1.0, hand_world, hand_px, W, H)
     assert both.corrected.tolist() == [False, True]  # only the right hand is present
-    gated = wrist_targets(nose_px, np.zeros(3), F / 1.0, hand_world, hand_px, W, H,
+    gated = wrist_targets(head_px, np.zeros(3), F / 1.0, hand_world, hand_px, W, H,
                           arm_valid=np.array([True, False]))  # right elbow or shoulder invalid
     assert not gated.corrected.any() and np.isnan(gated.target).all()
     assert np.isfinite(gated.depth_ratio[1])  # the ratio is still reported
-    kept = wrist_targets(nose_px, np.zeros(3), F / 1.0, hand_world, hand_px, W, H,
+    kept = wrist_targets(head_px, np.zeros(3), F / 1.0, hand_world, hand_px, W, H,
                          arm_valid=np.array([False, True]))
     assert kept.corrected.tolist() == [False, True]
 
 
 def test_missing_inputs_leave_both_hands_uncorrected():
-    nose_cam, hand_world, hand_px = scene(np.array([0.0, 0.1, 0.9]))
-    for nose_px, scale in ((np.full(2, np.nan), F), (project(nose_cam), np.nan)):
-        targets = wrist_targets(nose_px, np.zeros(3), scale, hand_world, hand_px, W, H)
+    head_cam, hand_world, hand_px = scene(np.array([0.0, 0.1, 0.9]))
+    for head_px, scale in ((np.full(2, np.nan), F), (project(head_cam), np.nan)):
+        targets = wrist_targets(head_px, np.zeros(3), scale, hand_world, hand_px, W, H)
         assert not targets.corrected.any()
         assert np.isnan(targets.depth_ratio).all()
 
@@ -140,7 +145,12 @@ def test_run_clip_depth_corrected_on_pilot_frames():
     assert not plain.wrist_reached.any()
     assert len(result.geometry) == 20 and len(result.image_geometry) == 20
     # Frames with no correction are exactly the first pass.
-    untouched = ~corrected.any(axis=1)
+    # The re-fit keeps the first pass's translation, so head and torso stay where the target
+    # was measured from.
+    touched = corrected.any(axis=1)
+    assert touched.any()
+    np.testing.assert_array_equal(result.transl[touched], plain.transl[touched])
+    untouched = ~touched
     np.testing.assert_array_equal(result.rotations[untouched], plain.rotations[untouched])
     for key, values in (("wrist_shift_m", result.wrist_shift_m),
                         ("wrist_residual_m", result.wrist_residual_m),

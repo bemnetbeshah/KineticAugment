@@ -7,7 +7,7 @@ same decoded frames. Hands are fitted with MANO and attached as the V1.2 viewer 
 """
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -15,7 +15,7 @@ import numpy as np
 from .assembly import attach_hands, attach_head, body_rotations, pose_mesh
 from .converter import fit_body
 from .face_correspondence import (
-    LEFT_EYE_OUTER, NOSE_TIP, RIGID, RIGHT_EYE_OUTER, load_face_correspondence,
+    LEFT_EYE_OUTER, RIGID, RIGHT_EYE_OUTER, load_face_correspondence,
 )
 from .face_regions import REGIONS, SUBREGIONS, build_head_surface
 from .hand_converter import fit_hand_shape, fit_hands, reconstruct_hand
@@ -121,8 +121,10 @@ def run_clip(hands, face, models: FaceModels, frames=None, depth_corrected=False
     A hand whose same-side shoulder or elbow is not valid in the pose is left uncorrected, since
     the body fit cannot place its wrist.
 
-    The re-fit keeps MediaPipe's elbows and shoulders and the bone lengths, so the SMPL-X wrist
-    may miss its target; `wrist_residual_m` measures the miss and `wrist_reached` flags residuals
+    The second pass keeps the first pass's body translation (so head and torso stay where the
+    target was measured from) and the bone lengths; the shoulder and elbow directions come from
+    MediaPipe, and only the forearm direction changes. The SMPL-X wrist may therefore miss its
+    target; `wrist_residual_m` measures the miss and `wrist_reached` flags residuals
     within `REACH_TOLERANCE`. 3-D contact on a corrected hand that was not reached is not
     trustworthy: the arm cannot reach the target, so the SMPL-X hand ends up somewhere else (for
     example 01986 frames 14-21 show chin contact at 11-14 cm residual with the hand 9-16 cm from
@@ -178,9 +180,9 @@ def run_clip(hands, face, models: FaceModels, frames=None, depth_corrected=False
                                          observed_face, hands.image[t], hands.width, hands.height)
         transl = body_fit.transl
         if depth_corrected and image_geometry is not None:
+            head_px, head_world = _head_centroid(models.corr, mesh, observed_face, head)
             targets = wrist_targets(
-                observed_face[NOSE_TIP], models.corr.points(mesh.vertices, (NOSE_TIP,))[0],
-                result.head_scale_px_per_m[i], hands.world[t],
+                head_px, head_world, result.head_scale_px_per_m[i], hands.world[t],
                 hands.image[t][..., :2] * np.array([hands.width, hands.height], np.float64),
                 hands.width, hands.height, fov_deg,
                 arm_valid=np.array([ok[t, list(arm)].all() for arm in POSE_ARMS]))
@@ -188,7 +190,7 @@ def run_clip(hands, face, models: FaceModels, frames=None, depth_corrected=False
             if targets.corrected.any():
                 second = _depth_pass(
                     result, i, t, targets, pose, ok, body, betas, models, surface, hand_fit_i,
-                    hand_recon_i, observed_face, outlines, template, ears, hands)
+                    hand_recon_i, observed_face, outlines, template, ears, hands, body_fit.transl)
                 if second is not None:
                     rotations, head, geometry, image_geometry, transl = second
         result.head_fits.append(head)
@@ -196,6 +198,21 @@ def run_clip(hands, face, models: FaceModels, frames=None, depth_corrected=False
         result.geometry.append(geometry)
         result.image_geometry.append(image_geometry)
     return result
+
+
+def _head_centroid(corr, mesh, observed_face, head):
+    """
+    Weighted centroid of the head's rigid points: observed (pixels) and on the posed mesh (world).
+
+    `project_head` fits its similarity with these weights, so its scale is the depth of this
+    centroid; it is the reference that `wrist_targets` measures wrists from.
+    """
+    weights = np.asarray(head.rigid_weights, dtype=np.float64)
+    weights = weights / weights.sum()
+    used = weights > 0
+    px = weights[used] @ observed_face[list(RIGID)][used][:, :2]
+    world = weights[used] @ corr.points(mesh.vertices, RIGID)[used]
+    return px, world
 
 
 def _assemble(body, betas, models, body_fit, hand_fit, hand_recon, observed_face, outlines,
@@ -209,7 +226,7 @@ def _assemble(body, betas, models, body_fit, hand_fit, hand_recon, observed_face
 
 
 def _depth_pass(result, i, t, targets, pose, ok, body, betas, models, surface, hand_fit,
-                hand_recon, observed_face, outlines, template, ears, hands):
+                hand_recon, observed_face, outlines, template, ears, hands, first_transl):
     """
     Second pass of one frame with the corrected wrists (see `run_clip`).
 
@@ -225,6 +242,10 @@ def _depth_pass(result, i, t, targets, pose, ok, body, betas, models, surface, h
         body_fit = fit_body(landmarks, valid, body)
     except ValueError:
         return None
+    # `fit_body` sets the translation to the mean arm residual, wrists included, so a wrist 0.1-
+    # 0.35 m away would move the whole body by 1-3 cm. The target was measured against the first
+    # pass's head, so the head and torso stay where they were.
+    body_fit = replace(body_fit, transl=first_transl)
     rotations, head, mesh, posed = _assemble(
         body, betas, models, body_fit, hand_fit, hand_recon, observed_face, outlines, template,
         ears)
