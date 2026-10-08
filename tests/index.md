@@ -18,6 +18,7 @@
 - `test_face_regions.py` — Tests vertex normals, full labelling of the head surface, and anchor points landing in their ASL-LEX regions.
 - `test_hand_face_geometry.py` — Tests exact closest-point-on-triangle, signed distance (forehead), and unposed-hand NaN and contact rules.
 - `test_image_proximity.py` — Tests image-space hand-to-head overlap, distance, region choice (front-most, back-facing ignored), hand point order and the head projection's scale and rotation.
+- `test_hand_depth.py` — Tests focal length, back-projection, hand scale, wrist targets on a synthetic perspective scene, and the depth-corrected pipeline on 20 pilot frames.
 - `test_face_pipeline.py` — Tests hand-near-face and the clip pipeline on 20 frames of a real pilot clip (valid head fits, residual, feature-file shapes).
 - `test_hand_converter.py` — Tests the hand fit: analytic start, real-model refinement, decoder, serialisation and shape.
 - `test_hand_observations.py` — Tests the left/right assignment and the hand clip file format.

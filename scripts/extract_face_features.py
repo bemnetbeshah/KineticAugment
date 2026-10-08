@@ -9,6 +9,10 @@ next to them.
 
 Usage:
     python scripts/extract_face_features.py [--landmark-dir data/test_output] [--clip 01991]
+        [--depth-corrected]
+
+--depth-corrected re-places each wrist from the image (task 14) and writes
+<clip>_face_features_dc.npz instead; the default output is unchanged.
 """
 
 import argparse
@@ -24,6 +28,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--landmark-dir", type=Path, default=Path("data/test_output"))
     parser.add_argument("--clip", action="append", help="clip id; repeatable (default: all)")
+    parser.add_argument("--depth-corrected", action="store_true",
+                        help="image-derived wrists; writes *_face_features_dc.npz")
     args = parser.parse_args()
     clips = args.clip or sorted(p.name[: -len("_face.npz")]
                                 for p in args.landmark_dir.glob("*_face.npz"))
@@ -32,8 +38,9 @@ def main() -> None:
         start = time.time()
         hands = load_hand_clip(args.landmark_dir / f"{clip}_hands.npz")
         face = load_face_clip(args.landmark_dir / f"{clip}_face.npz")
-        result = run_clip(hands, face, models)
-        path = args.landmark_dir / f"{clip}_face_features.npz"
+        result = run_clip(hands, face, models, depth_corrected=args.depth_corrected)
+        suffix = "_dc" if args.depth_corrected else ""
+        path = args.landmark_dir / f"{clip}_face_features{suffix}.npz"
         save_face_features(path, result, face)
         print(f"{clip}: {len(result.frames)} frames -> {path} ({time.time() - start:.0f} s)")
 

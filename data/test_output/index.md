@@ -18,3 +18,4 @@
 - `*_hands.npz` — MediaPipe hand world/image landmarks per anatomical side with the paired pose, for the V1.2 hand round trip.
 - `*_face.npz` — MediaPipe FaceLandmarker landmarks, blendshapes and head matrix per frame, frame-aligned with `*_hands.npz`, for the V1.3 face work.
 - `*_face_features.npz` — Per-frame V1.3 face features (neck/head/jaw fit and flags, signed hand-to-face distances, regions, contact, blendshapes) from `scripts/extract_face_features.py`.
+- `*_face_features_dc.npz` — The same features after the depth-corrected second pass (image-derived wrists), plus wrist target, corrected flag, depth ratio, residual and shift, from `extract_face_features.py --depth-corrected` (V1.3 task 14).

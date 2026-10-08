@@ -15,10 +15,11 @@ import numpy as np
 from .assembly import attach_hands, attach_head, body_rotations, pose_mesh
 from .converter import fit_body
 from .face_correspondence import (
-    LEFT_EYE_OUTER, RIGID, RIGHT_EYE_OUTER, load_face_correspondence,
+    LEFT_EYE_OUTER, NOSE_TIP, RIGID, RIGHT_EYE_OUTER, load_face_correspondence,
 )
 from .face_regions import REGIONS, SUBREGIONS, build_head_surface
 from .hand_converter import fit_hand_shape, fit_hands, reconstruct_hand
+from .hand_depth import DEFAULT_VERTICAL_FOV_DEG, wrist_targets
 from .hand_face_geometry import HAND_POINTS, HandFaceGeometry, hand_face_geometry
 from .hand_model import HandModel
 from .head_converter import (
@@ -34,6 +35,8 @@ VISIBILITY_THRESHOLD = 0.5  # matches measure_round_trip.py
 EARS = (7, 8)               # MediaPipe pose: left ear, right ear
 SIDES = ("left", "right")
 NECK_MODES = ("rest", "swing", "split")
+POSE_WRISTS = (15, 16)      # MediaPipe pose: left wrist, right wrist
+SMPLX_WRISTS = (20, 21)     # SMPL-X joints: left wrist, right wrist
 
 
 @dataclass
@@ -84,6 +87,12 @@ class ClipFaceResult:
     image_geometry: List[Optional[ImageProximity]] = field(default_factory=list)
     head_scale_px_per_m: np.ndarray = None       # (T,) px per metre at the head; NaN if none
     head_camera_rotation_deg: np.ndarray = None  # (T,) world->pixel rotation angle; NaN if none
+    # Depth correction (task 14); filled in every run, empty unless depth_corrected is set.
+    wrist_target: np.ndarray = None       # (T, 2, 3) image-derived world wrist; NaN if none
+    wrist_corrected: np.ndarray = None    # (T, 2) bool: the re-fit used the target
+    depth_ratio: np.ndarray = None        # (T, 2) Z_hand / Z_head; NaN where unavailable
+    wrist_residual_m: np.ndarray = None   # (T, 2) |SMPL-X wrist - target| after the re-fit
+    wrist_shift_m: np.ndarray = None      # (T, 2) |target - MediaPipe pose-world wrist|
 
 
 def _fit_hands(hands, mano, frames):
@@ -97,9 +106,16 @@ def _fit_hands(hands, mano, frames):
     return fits, recon
 
 
-def run_clip(hands, face, models: FaceModels, frames=None) -> ClipFaceResult:
+def run_clip(hands, face, models: FaceModels, frames=None, depth_corrected=False,
+             fov_deg=DEFAULT_VERTICAL_FOV_DEG) -> ClipFaceResult:
     """
     Fit and measure every frame (or `frames`, source indices) of one clip.
+
+    With `depth_corrected`, each frame whose head projection exists and where at least one hand's
+    wrist can be placed from the image (`hand_depth.wrist_targets`) gets a second pass: the pose
+    wrist is replaced by that target, the body is re-fitted with the same shaped skeleton, and
+    hands, head, mesh and both geometries are recomputed. Those frames then hold the second-pass
+    values; every other frame, and every frame with `depth_corrected` False, is the first pass.
 
     Raises:
         ValueError: the hand and face clips do not share frames.
@@ -119,7 +135,10 @@ def run_clip(hands, face, models: FaceModels, frames=None) -> ClipFaceResult:
     n = len(frames)
     result = ClipFaceResult([], np.full((n, 55, 3), np.nan), np.full((n, 3), np.nan), betas,
                             [], np.zeros(n, bool), np.zeros(n, bool), frames, [],
-                            np.full(n, np.nan), np.full(n, np.nan))
+                            np.full(n, np.nan), np.full(n, np.nan),
+                            np.full((n, 2, 3), np.nan), np.zeros((n, 2), bool),
+                            np.full((n, 2), np.nan), np.full((n, 2), np.nan),
+                            np.full((n, 2), np.nan))
     for i, t in enumerate(frames):
         outlines = hand_outlines(hands.image[t], hands.width, hands.height)
         observed_face = face_px[t] if face.valid[t] else None
@@ -136,21 +155,77 @@ def run_clip(hands, face, models: FaceModels, frames=None) -> ClipFaceResult:
             result.image_geometry.append(None)
             continue
         result.body_ok[i] = True
-        rotations, posed = attach_hands(
-            body_rotations(body_fit), body.parents,
-            {side: hand_fits[side][i] for side in SIDES},
-            {side: hand_recon[side][i] for side in SIDES}, models.smplx_hands)
+        hand_fit_i = {side: hand_fits[side][i] for side in SIDES}
+        hand_recon_i = {side: hand_recon[side][i] for side in SIDES}
         ears = pose[t, list(EARS)].mean(axis=0) if ok[t, list(EARS)].all() else None
-        head = fit_head(observed_face, outlines, rotations, body_fit.transl, template, ears)
-        rotations = attach_head(rotations, head)
-        mesh = pose_mesh(body, rotations, betas, body_fit.transl)
+        rotations, head, mesh, posed = _assemble(
+            body, betas, models, body_fit, hand_fit_i, hand_recon_i, observed_face, outlines,
+            template, ears)
+        geometry = hand_face_geometry(mesh, surface, posed)
+        image_geometry = _image_geometry(result, i, mesh, surface, models.corr, head,
+                                         observed_face, hands.image[t], hands.width, hands.height)
+        transl = body_fit.transl
+        if depth_corrected and image_geometry is not None:
+            targets = wrist_targets(
+                observed_face[NOSE_TIP], models.corr.points(mesh.vertices, (NOSE_TIP,))[0],
+                result.head_scale_px_per_m[i], hands.world[t],
+                hands.image[t][..., :2] * np.array([hands.width, hands.height], np.float64),
+                hands.width, hands.height, fov_deg)
+            result.depth_ratio[i] = targets.depth_ratio
+            if targets.corrected.any():
+                second = _depth_pass(
+                    result, i, t, targets, pose, ok, body, betas, models, surface, hand_fit_i,
+                    hand_recon_i, observed_face, outlines, template, ears, hands)
+                if second is not None:
+                    rotations, head, geometry, image_geometry, transl = second
         result.head_fits.append(head)
-        result.rotations[i], result.transl[i] = rotations, body_fit.transl
-        result.geometry.append(hand_face_geometry(mesh, surface, posed))
-        result.image_geometry.append(
-            _image_geometry(result, i, mesh, surface, models.corr, head, observed_face,
-                            hands.image[t], hands.width, hands.height))
+        result.rotations[i], result.transl[i] = rotations, transl
+        result.geometry.append(geometry)
+        result.image_geometry.append(image_geometry)
     return result
+
+
+def _assemble(body, betas, models, body_fit, hand_fit, hand_recon, observed_face, outlines,
+              template, ears):
+    """Hands, then head, attached to one body fit; returns rotations, head, mesh, hands posed."""
+    rotations, posed = attach_hands(body_rotations(body_fit), body.parents, hand_fit,
+                                    hand_recon, models.smplx_hands)
+    head = fit_head(observed_face, outlines, rotations, body_fit.transl, template, ears)
+    rotations = attach_head(rotations, head)
+    return rotations, head, pose_mesh(body, rotations, betas, body_fit.transl), posed
+
+
+def _depth_pass(result, i, t, targets, pose, ok, body, betas, models, surface, hand_fit,
+                hand_recon, observed_face, outlines, template, ears, hands):
+    """
+    Second pass of one frame with the corrected wrists (see `run_clip`).
+
+    Fills the wrist target, corrected, residual and shift fields of `result` row `i` and
+    returns (rotations, head, geometry, image geometry, transl), or None if the body cannot be
+    re-fitted.
+    """
+    landmarks, valid = pose[t].copy(), ok[t].copy()
+    for s, wrist in enumerate(POSE_WRISTS):
+        if targets.corrected[s]:
+            landmarks[wrist], valid[wrist] = targets.target[s], True
+    try:
+        body_fit = fit_body(landmarks, valid, body)
+    except ValueError:
+        return None
+    rotations, head, mesh, posed = _assemble(
+        body, betas, models, body_fit, hand_fit, hand_recon, observed_face, outlines, template,
+        ears)
+    geometry = hand_face_geometry(mesh, surface, posed)
+    image_geometry = _image_geometry(result, i, mesh, surface, models.corr, head, observed_face,
+                                     hands.image[t], hands.width, hands.height)
+    result.wrist_target[i] = targets.target
+    result.wrist_corrected[i] = targets.corrected
+    for s in np.flatnonzero(targets.corrected):
+        result.wrist_residual_m[i, s] = np.linalg.norm(
+            mesh.joints[SMPLX_WRISTS[s]] - targets.target[s])
+        result.wrist_shift_m[i, s] = np.linalg.norm(
+            targets.target[s] - pose[t, POSE_WRISTS[s]])
+    return rotations, head, geometry, image_geometry, body_fit.transl
 
 
 def _image_geometry(result, i, mesh, surface, corr, head, observed_face, hand_image,
@@ -206,6 +281,9 @@ def save_face_features(path, result: ClipFaceResult, face) -> None:
         **image,
         head_scale_px_per_m=result.head_scale_px_per_m,
         head_camera_rotation_deg=result.head_camera_rotation_deg,
+        wrist_target=result.wrist_target, wrist_corrected=result.wrist_corrected,
+        depth_ratio=result.depth_ratio, wrist_residual_m=result.wrist_residual_m,
+        wrist_shift_m=result.wrist_shift_m,
         hand_near_face=result.hand_near_face, body_ok=result.body_ok,
         blendshapes=face.blendshapes[result.frames],
         betas=result.betas,
