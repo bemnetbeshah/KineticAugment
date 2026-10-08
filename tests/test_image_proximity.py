@@ -155,3 +155,29 @@ def test_project_head_ignores_zero_weight_points():
     out = project_head(rng.normal(size=(6, 3)), np.array([[0, 1, 2]]), rigid_world, rigid_px,
                        weights)
     assert out.scale == pytest.approx(800.0) and out.rotation_deg == pytest.approx(0.0, abs=1e-6)
+
+
+def test_neck_triangles_are_left_out_of_the_image_test():
+    from kinetic_augment.body_model.face_regions import REGIONS
+
+    chin, neck = REGIONS.index("Chin"), REGIONS.index("Neck")
+    # One face triangle (0..100 px) and a Neck triangle directly below it (150..250 px in y).
+    vertices = np.array([[0, 0, 0], [0, 0.1, 0], [0.1, 0, 0],
+                         [0, 0.15, 0], [0, 0.25, 0], [0.1, 0.15, 0]], float)
+    faces = np.array([[0, 1, 2], [3, 4, 5]])
+    head = projected_from(vertices, faces)
+    assert head.visible.all()
+    surface = HeadSurface(np.arange(6), faces, np.array([chin] * 3 + [neck] * 3, np.int8),
+                          np.full(6, NO_LABEL, np.int8))
+    out = image_proximity(hand_at([20.0, 170.0]), head, surface)  # over the Neck triangle
+    assert not out.overlap[0, 0] and not out.near[0, 0]
+    assert out.distance[0, 0] == pytest.approx(_face_gap([20.0, 170.0]) / SCALE)
+    assert out.region[0, 0] == chin
+
+
+def _face_gap(point):
+    """Pixel distance from a point to the face triangle (0,0)-(0,100)-(100,0)."""
+    a, b = np.array([0.0, 100.0]), np.array([100.0, 0.0])
+    p = np.asarray(point)
+    t = np.clip(((p - a) @ (b - a)) / ((b - a) @ (b - a)), 0, 1)
+    return float(np.linalg.norm(p - (a + t * (b - a))))

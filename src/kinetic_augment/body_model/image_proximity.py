@@ -13,6 +13,12 @@ the head's depth, and 2-D pixel gaps convert to metres only at that depth.
 Every measure here is 2-D: an overlap does not prove touching, because a hand can be held in
 front of the face (or behind it) and still cover the same pixels. Treat it as the image-space
 "where is the hand relative to the face" cue, not as contact.
+
+The Neck surface is left out on purpose. It runs some 10 cm below the chin to the shoulder base,
+and a 2-D test accepts any depth, so a hand in front of the throat or upper chest (ordinary
+signing space) would read as touching the neck. Overlap, distance, region and near therefore
+describe the face and head proper; a hand over the neck gets its true distance to the chin,
+under-chin and so on. Throat and neck locations are left to the 3-D `region` measure.
 """
 
 from dataclasses import dataclass
@@ -20,12 +26,13 @@ from dataclasses import dataclass
 import numpy as np
 
 from .alignment import apply_similarity, similarity_transform
-from .face_regions import NO_LABEL, HeadSurface
+from .face_regions import NO_LABEL, REGIONS, HeadSurface
 from .hand_face_geometry import CONTACT_DISTANCE, HAND_POINTS, closest_points_on_triangles
 
 # MediaPipe hand landmarks in HAND_POINTS order (palm is the wrist/middle-knuckle midpoint).
 WRIST, THUMB_TIP, INDEX_TIP, MIDDLE_TIP, RING_TIP, PINKY_TIP = 0, 4, 8, 12, 16, 20
 MIDDLE_KNUCKLE = 9
+NECK = REGIONS.index("Neck")
 _AREA_EPS = 1e-9  # pixels^2: edge-on triangles carry no 2-D area
 
 
@@ -110,8 +117,9 @@ def image_proximity(hand_px, projected: ProjectedHead, surface: HeadSurface) -> 
     nearest visible triangle divided by `projected.scale` (metres at the head's depth). The
     region of an overlapping point is that of the vertex nearest it in the front-most (smallest
     z) containing triangle; of a point outside, the vertex of the nearest triangle nearest the
-    closest point. With no visible triangle nothing is measured. This is a 2-D measure: overlap
-    does not prove touching, since a hand can be in front of the face.
+    closest point. Triangles whose three vertices are all Neck are excluded (see the module
+    docstring). With no usable triangle nothing is measured. This is a 2-D measure: overlap does
+    not prove touching, since a hand can be in front of the face.
     """
     shape = (2, len(HAND_POINTS))
     out = ImageProximity(np.full(shape, np.nan), np.zeros(shape, bool),
@@ -119,7 +127,9 @@ def image_proximity(hand_px, projected: ProjectedHead, surface: HeadSurface) -> 
                          np.zeros(shape, bool))
     points = np.asarray(hand_px, dtype=np.float64).reshape(-1, 2)
     present = np.isfinite(points).all(axis=1)
-    faces = np.asarray(surface.faces)[np.asarray(projected.visible)]
+    all_faces = np.asarray(surface.faces)
+    neck = (np.asarray(surface.region)[all_faces] == NECK).all(axis=1)
+    faces = all_faces[np.asarray(projected.visible) & ~neck]
     if not present.any() or not len(faces):
         return out
     pixels = np.asarray(projected.points, dtype=np.float64)
