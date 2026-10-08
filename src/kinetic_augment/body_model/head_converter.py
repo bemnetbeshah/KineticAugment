@@ -16,10 +16,13 @@ from typing import List
 
 import numpy as np
 from scipy.spatial import ConvexHull, QhullError
+from scipy.spatial.transform import Rotation
 
 from .alignment import apply_similarity, similarity_transform
-from .assembly import JAW, pose_mesh
-from .face_correspondence import JAW_PAIR, LEFT_EYE_OUTER, RIGHT_EYE_OUTER
+from .assembly import HEAD, JAW, NECK, global_rotations, pose_mesh
+from .face_correspondence import JAW_PAIR, LEFT_EYE_OUTER, RIGHT_EYE_OUTER, RIGID
+from .kinematics import forward_kinematics
+from .swing_ik import swing_rotation
 
 OCCLUSION_PAD = 0.15     # padding around a hand outline, fraction of the outer-eye-corner distance
 OUTLIER_FACTOR = 2.5     # residual above this many weighted medians is dropped
@@ -161,3 +164,174 @@ def fit_jaw_pitch(ratio: float, curve: JawCurve) -> float:
     # A tiny ramp makes the abscissa strictly increasing where the curve is flat (closed lips).
     xp = curve.gap_ratio + 1e-12 * np.arange(len(curve.gap_ratio))
     return float(np.interp(ratio, xp, curve.pitch_rad))
+
+
+NECK_YAW_SHARE = 0.4               # the atlanto-axial joint provides most cervical rotation
+FALLBACK_SHARES = (0.4, 0.7, 0.5)  # neck's share of (yaw, pitch, roll) when the ears are missing
+EULER_ORDER = "YXZ"                # SMPL-X rest: y up, x to the subject's left, z forward
+
+
+def _ear_vertices():
+    from smplx.vertex_ids import vertex_ids
+    return (vertex_ids["smplx"]["lear"], vertex_ids["smplx"]["rear"])
+
+
+EAR_VERTICES = _ear_vertices()
+
+
+def twist_angle(rotation: np.ndarray, axis: np.ndarray) -> float:
+    """Angle (radians) of the twist component of `rotation` about the unit `axis`."""
+    x, y, z, w = Rotation.from_matrix(rotation).as_quat()
+    return float(2.0 * np.arctan2(np.dot([x, y, z], axis), w))
+
+
+@dataclass
+class NeckSplit:
+    neck: np.ndarray            # (3,) neck local axis-angle
+    head: np.ndarray            # (3,) head local axis-angle
+    mode: str                   # "swing" (ears observed) or "split" (anatomical shares)
+    ear_residual_m: float       # |fitted - observed ear midpoint|; NaN without an observation
+    ear_residual_rest_m: float  # the same with the neck at rest and the head still oriented
+
+
+def split_neck_head(rotations, transl, skeleton, ear_rest, head_world,
+                    observed_ear_mid=None) -> NeckSplit:
+    """
+    Neck and head local rotations that reproduce `head_world` exactly (design §4.3).
+
+    With an observed ear midpoint, the neck swings so the SMPL-X ear midpoint lands on it and
+    takes NECK_YAW_SHARE of the head's twist about the neck bone; otherwise it takes
+    FALLBACK_SHARES of the relative yaw, pitch and roll. The head takes the exact remainder.
+    """
+    rot = np.array(rotations, dtype=np.float64)
+    rot[[NECK, HEAD]] = 0.0
+    parents = skeleton.parents
+    torso = global_rotations(rot, parents)[parents[NECK]]
+    p_neck = (forward_kinematics(rot, skeleton) + np.asarray(transl))[NECK]
+    rest = skeleton.rest_joints
+    bone = rest[HEAD] - rest[NECK]
+    axis = bone / np.linalg.norm(bone)
+    ear_offset = np.asarray(ear_rest) - rest[HEAD]
+    relative = torso.T @ head_world
+
+    def ear_mid(neck_local):
+        return p_neck + torso @ neck_local @ bone + head_world @ ear_offset
+
+    observed = observed_ear_mid is not None and np.isfinite(observed_ear_mid).all()
+    if observed:
+        target = np.asarray(observed_ear_mid) - p_neck - head_world @ ear_offset
+        swing_world = swing_rotation(torso @ axis, target / np.linalg.norm(target))
+        swing = torso.T @ swing_world @ torso
+        twist = Rotation.from_rotvec(NECK_YAW_SHARE * twist_angle(relative, axis) * axis)
+        neck = swing @ twist.as_matrix()
+        mode = "swing"
+    else:
+        angles = Rotation.from_matrix(relative).as_euler(EULER_ORDER)
+        neck = Rotation.from_euler(EULER_ORDER, angles * np.array(FALLBACK_SHARES)).as_matrix()
+        mode = "split"
+    head = (torso @ neck).T @ head_world
+
+    def residual(neck_local):
+        if not observed:
+            return float("nan")
+        return float(np.linalg.norm(ear_mid(neck_local) - observed_ear_mid))
+
+    return NeckSplit(Rotation.from_matrix(neck).as_rotvec(),
+                     Rotation.from_matrix(head).as_rotvec(), mode,
+                     residual(neck), residual(np.eye(3)))
+
+
+@dataclass
+class HeadTemplate:
+    """Everything `fit_head` needs from one body shape, computed once per clip."""
+
+    skeleton: object         # SMPLXSkeleton in the clip's shape
+    corr: object             # FaceCorrespondence
+    rigid_rest: np.ndarray   # (17, 3) rigid points on the rest mesh, metres
+    ear_rest: np.ndarray     # (3,) SMPL-X ear midpoint at rest
+    jaw: JawCurve
+
+
+def head_template(skeleton, corr) -> HeadTemplate:
+    rest = pose_mesh(skeleton, np.zeros((55, 3)), skeleton.betas, np.zeros(3)).vertices
+    return HeadTemplate(skeleton, corr, corr.points(rest, RIGID),
+                        rest[list(EAR_VERTICES)].mean(axis=0), jaw_curve(skeleton, corr))
+
+
+@dataclass
+class HeadFit:
+    """
+    SMPL-X neck, head and jaw for one frame; expression stays zero.
+
+    `valid` is False when no face was observed (everything at rest). `reliable` is False when too
+    few rigid points survived occlusion or the fit residual is too large; the rotation is kept.
+    `jaw_reliable` is False when a hand covers the mouth (jaw at rest).
+    """
+
+    neck_pose: np.ndarray
+    head_pose: np.ndarray
+    jaw_pose: np.ndarray
+    head_world: np.ndarray = None       # (3, 3) fitted global head rotation; NaN if none
+    rigid_weights: np.ndarray = None    # (17,) final rigid-point weights
+    valid: bool = True
+    reliable: bool = True
+    jaw_reliable: bool = True
+    rms_fraction: float = float("nan")
+    points_used: int = 0
+    neck_mode: str = "rest"
+    ear_residual_m: float = float("nan")
+    ear_residual_rest_m: float = float("nan")
+
+
+def _rest_fit(**flags) -> HeadFit:
+    return HeadFit(np.zeros(3), np.zeros(3), np.zeros(3), head_world=np.full((3, 3), np.nan),
+                   rigid_weights=np.zeros(len(RIGID)), **flags)
+
+
+def fit_head(face_px, outlines, rotations, transl, template: HeadTemplate,
+             observed_ear_mid=None) -> HeadFit:
+    """
+    Fit one frame's neck, head and jaw.
+
+    Args:
+        face_px: (478, 3) FaceLandmarker landmarks in pixels (`FaceClip.pixels()[t]`), or None.
+            Only the rigid points and the jaw pair must be finite.
+        outlines: this frame's hand outlines in pixels (`hand_outlines`).
+        rotations: (55, 3) body rotations; neck, head and jaw entries are ignored.
+        transl: (3,) body translation.
+        template: `head_template` for the clip's body shape.
+        observed_ear_mid: (3,) midpoint of the pose-world ears, or None.
+    """
+    needed = list(RIGID) + list(JAW_PAIR)
+    if face_px is None or not np.isfinite(np.asarray(face_px)[needed]).all():
+        return _rest_fit(valid=False, reliable=False, jaw_reliable=False)
+    face_px = np.asarray(face_px, dtype=np.float64)
+    reference = float(np.linalg.norm(face_px[RIGHT_EYE_OUTER] - face_px[LEFT_EYE_OUTER]))
+    pad = OCCLUSION_PAD * reference
+    rigid = face_px[list(RIGID)]
+    weights = (~occluded(rigid[:, :2], outlines, pad)).astype(np.float64)
+    fitted = head_rotation(template.rigid_rest, rigid, weights, reference)
+    if not np.isfinite(fitted.rotation).all():
+        return _rest_fit(valid=True, reliable=False, jaw_reliable=False,
+                         points_used=fitted.points_used)
+
+    split = split_neck_head(rotations, transl, template.skeleton, template.ear_rest,
+                            fitted.rotation, observed_ear_mid)
+    jaw_hidden = occluded(face_px[list(JAW_PAIR), :2], outlines, pad).any()
+    if jaw_hidden:
+        jaw = np.zeros(3)
+    else:
+        ratio = lip_gap_ratio(face_px[JAW_PAIR[0]], face_px[JAW_PAIR[1]],
+                              face_px[RIGHT_EYE_OUTER], face_px[LEFT_EYE_OUTER])
+        jaw = fit_jaw_pitch(ratio, template.jaw) * JAW_AXIS
+    return HeadFit(
+        neck_pose=split.neck, head_pose=split.head, jaw_pose=jaw,
+        head_world=fitted.rotation, rigid_weights=fitted.weights,
+        valid=True,
+        reliable=fitted.points_used >= MIN_RIGID_POINTS
+        and fitted.rms_fraction <= MAX_RMS_FRACTION,
+        jaw_reliable=not jaw_hidden,
+        rms_fraction=fitted.rms_fraction, points_used=fitted.points_used,
+        neck_mode=split.mode, ear_residual_m=split.ear_residual_m,
+        ear_residual_rest_m=split.ear_residual_rest_m,
+    )

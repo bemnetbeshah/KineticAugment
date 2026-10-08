@@ -140,3 +140,110 @@ def test_fit_jaw_pitch_clamps_to_the_grid(curve):
 
     assert fit_jaw_pitch(-1.0, curve) == 0.0
     assert np.isclose(np.degrees(fit_jaw_pitch(10.0, curve)), 30.0)
+
+
+SCALE, OFFSET = 3000.0, np.array([300.0, 150.0, 40.0])
+
+
+def posed_body_rotations():
+    """A y-down world like MediaPipe's: the body turned upside down, slightly rotated."""
+    rotations = np.zeros((55, 3))
+    rotations[0] = (Rotation.from_rotvec([np.pi, 0, 0])
+                    * Rotation.from_rotvec([0.05, 0.3, -0.04])).as_rotvec()
+    rotations[16:22] = 0.3 * np.random.default_rng(4).normal(size=(6, 3))  # arms
+    return rotations
+
+
+def observe(body, corr, rotations, transl):
+    """Pixel landmarks (478, 3; NaN off the embedding) and the world ear midpoint."""
+    from kinetic_augment.body_model.assembly import pose_mesh
+    from kinetic_augment.body_model.head_converter import EAR_VERTICES
+
+    mesh = pose_mesh(body, rotations, body.betas, transl)
+    face_px = np.full((478, 3), np.nan)
+    face_px[corr.mp_indices] = SCALE * corr.points(mesh.vertices) + OFFSET
+    return face_px, mesh.vertices[list(EAR_VERTICES)].mean(axis=0), mesh
+
+
+@pytest.fixture(scope="module")
+def template(body, corr):
+    from kinetic_augment.body_model.head_converter import head_template
+    return head_template(body, corr)
+
+
+@requires_face_assets
+@pytest.mark.parametrize("with_ears", [True, False])
+def test_fit_head_recovers_head_orientation_and_jaw(body, corr, template, with_ears):
+    from kinetic_augment.body_model.assembly import HEAD, attach_head, global_rotations
+    from kinetic_augment.body_model.head_converter import fit_head
+
+    truth = posed_body_rotations()
+    truth[12] = [0.15, 0.25, -0.05]
+    truth[15] = [0.1, -0.2, 0.08]
+    truth[22] = [np.radians(9.0), 0, 0]
+    transl = np.array([0.02, -0.1, 0.3])
+    face_px, ears, _ = observe(body, corr, truth, transl)
+    body_only = truth.copy()
+    body_only[[12, 15, 22]] = 0.0
+
+    fit = fit_head(face_px, [], body_only, transl, template, ears if with_ears else None)
+    assert fit.valid and fit.reliable and fit.jaw_reliable
+    assert fit.neck_mode == ("swing" if with_ears else "split")
+    got = global_rotations(attach_head(body_only, fit), body.parents)[HEAD]
+    want = global_rotations(truth, body.parents)[HEAD]
+    assert angle_deg(got, want) < 0.5
+    assert abs(np.degrees(fit.jaw_pose[0]) - 9.0) < 1.0
+    if with_ears:
+        # The ear vertices are partly skinned to the neck and moved by pose correctives, so the
+        # rigid-head ear model is approximate: millimetres, not exact.
+        assert fit.ear_residual_m < 0.005
+
+
+@requires_face_assets
+def test_neck_swing_leaves_the_arms_alone(body, corr, template):
+    from kinetic_augment.body_model.assembly import attach_head
+    from kinetic_augment.body_model.head_converter import fit_head
+    from kinetic_augment.body_model.kinematics import forward_kinematics
+
+    truth = posed_body_rotations()
+    truth[12] = [0.3, 0.0, 0.1]
+    face_px, ears, _ = observe(body, corr, truth, np.zeros(3))
+    body_only = truth.copy()
+    body_only[12] = 0.0
+    fit = fit_head(face_px, [], body_only, np.zeros(3), template, ears)
+    before = forward_kinematics(body_only, body)[16:22]
+    after = forward_kinematics(attach_head(body_only, fit), body)[16:22]
+    np.testing.assert_allclose(after, before, atol=1e-12)
+
+
+@requires_face_assets
+def test_no_face_gives_an_invalid_rest_fit(template):
+    from kinetic_augment.body_model.head_converter import fit_head
+
+    fit = fit_head(None, [], posed_body_rotations(), np.zeros(3), template)
+    assert not fit.valid and not fit.reliable and not fit.jaw_reliable
+    assert not fit.neck_pose.any() and not fit.head_pose.any() and not fit.jaw_pose.any()
+
+
+@requires_face_assets
+def test_a_hand_over_the_mouth_keeps_the_jaw_at_rest(body, corr, template):
+    from kinetic_augment.body_model.head_converter import fit_head
+
+    truth = posed_body_rotations()
+    truth[22] = [np.radians(15.0), 0, 0]
+    face_px, ears, _ = observe(body, corr, truth, np.zeros(3))
+    mouth = face_px[[13, 14], :2].mean(axis=0)
+    square = [mouth + np.array([[-5.0, -5.0], [5.0, -5.0], [5.0, 5.0], [-5.0, 5.0]])]
+    fit = fit_head(face_px, square, truth, np.zeros(3), template, ears)
+    assert not fit.jaw_reliable and not fit.jaw_pose.any()
+
+
+@requires_face_assets
+def test_a_hand_over_most_of_the_face_is_unreliable(body, corr, template):
+    from kinetic_augment.body_model.head_converter import fit_head
+
+    face_px, ears, _ = observe(body, corr, posed_body_rotations(), np.zeros(3))
+    lo, hi = np.nanmin(face_px[:, :2], axis=0), np.nanmax(face_px[:, :2], axis=0)
+    cover = [np.array([lo - 50, [hi[0] + 50, lo[1] - 50], hi + 50, [lo[0] - 50, hi[1] + 50]])]
+    fit = fit_head(face_px, cover, posed_body_rotations(), np.zeros(3), template, ears)
+    assert fit.valid and not fit.reliable
