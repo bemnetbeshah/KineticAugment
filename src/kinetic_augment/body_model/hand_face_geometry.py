@@ -5,9 +5,10 @@ Signed distances from hand points to the head and neck surface, with location la
 Per hand: the wrist joint, the five fingertip vertices, and the palm centre (midpoint of the
 wrist and the middle-finger knuckle). Each point's distance is to the nearest surface triangle,
 signed by that triangle's outward normal (negative = inside the head); near concave regions such
-as the ear the sign can be wrong for deep penetrations, and a point nearest the open rim of the
-surface (neck bottom, eye sockets) is positive (see `signed_distances`). Contact is |d| < 2 cm (self-contact
-work's definition). The region is that of the nearest triangle vertex to the closest point.
+as the ear the sign can be wrong for deep penetrations, and a point nearest an open edge of
+the surface (the neck rim and the mouth opening) is positive (see `signed_distances`). Contact
+is |d| < 2 cm (self-contact work's definition). The region is that of the nearest triangle
+vertex to the closest point.
 """
 
 from dataclasses import dataclass
@@ -114,10 +115,10 @@ def signed_distances(points, vertices, faces):
     Distance to the mesh, negative behind the nearest triangle's outward normal, except that a
     point whose closest point lies on an open (boundary) edge of the mesh is positive.
 
-    The head surface is open at the bottom of the neck and at the eye sockets. Beyond such a
-    rim the nearest triangle's normal says nothing about inside or outside (a hand hanging at
-    the side would read as deep inside the head), so a point nearest the rim is outside the
-    surface's coverage and counts as outside.
+    The head surface is open at the bottom of the neck and at the mouth opening. Beyond such
+    an edge the nearest triangle's normal says nothing about inside or outside (a hand hanging
+    at the side would read as deep inside the head), so a point nearest an open edge is outside
+    the surface's coverage and counts as outside.
     """
     vertices = np.asarray(vertices, dtype=np.float64)
     points = np.asarray(points, dtype=np.float64)
