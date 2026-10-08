@@ -19,7 +19,7 @@ from .face_correspondence import (
 )
 from .face_regions import REGIONS, SUBREGIONS, build_head_surface
 from .hand_converter import fit_hand_shape, fit_hands, reconstruct_hand
-from .hand_depth import DEFAULT_VERTICAL_FOV_DEG, wrist_targets
+from .hand_depth import DEFAULT_VERTICAL_FOV_DEG, REACH_TOLERANCE, wrist_targets
 from .hand_face_geometry import HAND_POINTS, HandFaceGeometry, hand_face_geometry
 from .hand_model import HandModel
 from .head_converter import (
@@ -37,6 +37,7 @@ SIDES = ("left", "right")
 NECK_MODES = ("rest", "swing", "split")
 POSE_WRISTS = (15, 16)      # MediaPipe pose: left wrist, right wrist
 SMPLX_WRISTS = (20, 21)     # SMPL-X joints: left wrist, right wrist
+POSE_ARMS = ((11, 13), (12, 14))  # MediaPipe pose: (shoulder, elbow) of the left, right arm
 
 
 @dataclass
@@ -93,6 +94,7 @@ class ClipFaceResult:
     depth_ratio: np.ndarray = None        # (T, 2) Z_hand / Z_head; NaN where unavailable
     wrist_residual_m: np.ndarray = None   # (T, 2) |SMPL-X wrist - target| after the re-fit
     wrist_shift_m: np.ndarray = None      # (T, 2) |target - MediaPipe pose-world wrist|
+    wrist_reached: np.ndarray = None      # (T, 2) bool: corrected and residual <= REACH_TOLERANCE
 
 
 def _fit_hands(hands, mano, frames):
@@ -116,6 +118,16 @@ def run_clip(hands, face, models: FaceModels, frames=None, depth_corrected=False
     wrist is replaced by that target, the body is re-fitted with the same shaped skeleton, and
     hands, head, mesh and both geometries are recomputed. Those frames then hold the second-pass
     values; every other frame, and every frame with `depth_corrected` False, is the first pass.
+    A hand whose same-side shoulder or elbow is not valid in the pose is left uncorrected, since
+    the body fit cannot place its wrist.
+
+    The re-fit keeps MediaPipe's elbows and shoulders and the bone lengths, so the SMPL-X wrist
+    may miss its target; `wrist_residual_m` measures the miss and `wrist_reached` flags residuals
+    within `REACH_TOLERANCE`. 3-D contact on a corrected hand that was not reached is not
+    trustworthy: the arm cannot reach the target, so the SMPL-X hand ends up somewhere else (for
+    example 01986 frames 14-21 show chin contact at 11-14 cm residual with the hand 9-16 cm from
+    the face in the image). The geometry itself is not changed; consumers and the viewer should
+    use `wrist_reached` to qualify it.
 
     Raises:
         ValueError: the hand and face clips do not share frames.
@@ -138,7 +150,7 @@ def run_clip(hands, face, models: FaceModels, frames=None, depth_corrected=False
                             np.full(n, np.nan), np.full(n, np.nan),
                             np.full((n, 2, 3), np.nan), np.zeros((n, 2), bool),
                             np.full((n, 2), np.nan), np.full((n, 2), np.nan),
-                            np.full((n, 2), np.nan))
+                            np.full((n, 2), np.nan), np.zeros((n, 2), bool))
     for i, t in enumerate(frames):
         outlines = hand_outlines(hands.image[t], hands.width, hands.height)
         observed_face = face_px[t] if face.valid[t] else None
@@ -170,7 +182,8 @@ def run_clip(hands, face, models: FaceModels, frames=None, depth_corrected=False
                 observed_face[NOSE_TIP], models.corr.points(mesh.vertices, (NOSE_TIP,))[0],
                 result.head_scale_px_per_m[i], hands.world[t],
                 hands.image[t][..., :2] * np.array([hands.width, hands.height], np.float64),
-                hands.width, hands.height, fov_deg)
+                hands.width, hands.height, fov_deg,
+                arm_valid=np.array([ok[t, list(arm)].all() for arm in POSE_ARMS]))
             result.depth_ratio[i] = targets.depth_ratio
             if targets.corrected.any():
                 second = _depth_pass(
@@ -225,6 +238,7 @@ def _depth_pass(result, i, t, targets, pose, ok, body, betas, models, surface, h
             mesh.joints[SMPLX_WRISTS[s]] - targets.target[s])
         result.wrist_shift_m[i, s] = np.linalg.norm(
             targets.target[s] - pose[t, POSE_WRISTS[s]])
+        result.wrist_reached[i, s] = result.wrist_residual_m[i, s] <= REACH_TOLERANCE
     return rotations, head, geometry, image_geometry, body_fit.transl
 
 
@@ -283,7 +297,7 @@ def save_face_features(path, result: ClipFaceResult, face) -> None:
         head_camera_rotation_deg=result.head_camera_rotation_deg,
         wrist_target=result.wrist_target, wrist_corrected=result.wrist_corrected,
         depth_ratio=result.depth_ratio, wrist_residual_m=result.wrist_residual_m,
-        wrist_shift_m=result.wrist_shift_m,
+        wrist_shift_m=result.wrist_shift_m, wrist_reached=result.wrist_reached,
         hand_near_face=result.hand_near_face, body_ok=result.body_ok,
         blendshapes=face.blendshapes[result.frames],
         betas=result.betas,

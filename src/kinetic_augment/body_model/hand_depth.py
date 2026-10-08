@@ -12,6 +12,14 @@ Assumptions: pinhole camera, principal point at the image centre, a nominal foca
 vertical field of view (MediaPipe's face-geometry default, 63 degrees), a hand and a head that
 are each shallow compared with their distance from the camera (weak perspective per object), and
 camera axes aligned with the pose-world axes (ledger O11, measured about 1 degree).
+
+Reach. The body is re-fitted with fixed bone lengths and MediaPipe's elbows and shoulders, so the
+SMPL-X wrist may not get to the target; `wrist_reached` (residual within `REACH_TOLERANCE`) says
+whether it did. 3-D contact on a corrected hand that did not reach is not trustworthy: the arm
+cannot reach the target, so the SMPL-X hand ends up somewhere else (V1.3 task 14, 01986 frames
+14-21 show chin contact with 11-14 cm residual while the image has the hand 9-16 cm away).
+A wrist can only be placed when the fit has the same side's shoulder and elbow; a hand without
+them is left uncorrected.
 """
 
 from dataclasses import dataclass
@@ -22,6 +30,7 @@ from .alignment import similarity_transform
 
 DEFAULT_VERTICAL_FOV_DEG = 63.0
 DEPTH_RATIO_RANGE = (0.5, 1.5)  # plausible Z_hand / Z_head; outside it the correction is skipped
+REACH_TOLERANCE = 0.03          # m; residual up to this: the SMPL-X wrist reached the target
 SIDES = 2
 
 
@@ -68,7 +77,7 @@ class WristTargets:
 
 
 def wrist_targets(nose_px, nose_world, head_scale, hand_world, hand_px, width, height,
-                  fov_deg=DEFAULT_VERTICAL_FOV_DEG) -> WristTargets:
+                  fov_deg=DEFAULT_VERTICAL_FOV_DEG, arm_valid=None) -> WristTargets:
     """
     World wrist targets from the image: each wrist's offset from the nose, in camera axes, added
     to the nose's world position.
@@ -80,10 +89,12 @@ def wrist_targets(nose_px, nose_world, head_scale, hand_world, hand_px, width, h
         hand_world: (2, 21, 3) world landmarks per side, metres; NaN where absent.
         hand_px: (2, 21, 2) image landmarks per side in pixels; NaN where absent.
         width, height: image size in pixels.
+        arm_valid: (2,) bool, whether each side's shoulder and elbow are usable in the pose
+            (`fit_body` cannot place a wrist without them); None means both are.
 
     A hand is left uncorrected (target NaN) when any input it needs is missing or its depth ratio
-    `Z_hand / Z_head` falls outside `DEPTH_RATIO_RANGE`; the ratio is still reported when both
-    depths exist.
+    `Z_hand / Z_head` falls outside `DEPTH_RATIO_RANGE`, or its `arm_valid` is False;
+    the ratio is still reported when both depths exist.
     """
     out = WristTargets(np.full((SIDES, 3), np.nan), np.zeros(SIDES, bool), np.full(SIDES, np.nan))
     nose_px = np.asarray(nose_px, dtype=np.float64)[:2]
@@ -101,6 +112,8 @@ def wrist_targets(nose_px, nose_world, head_scale, hand_world, hand_px, width, h
             continue
         z_hand = focal / scale
         out.depth_ratio[s] = z_hand / z_head
+        if arm_valid is not None and not arm_valid[s]:
+            continue
         if not DEPTH_RATIO_RANGE[0] <= out.depth_ratio[s] <= DEPTH_RATIO_RANGE[1]:
             continue
         wrist_cam = camera_point(wrist[0], wrist[1], z_hand, focal, cx, cy)

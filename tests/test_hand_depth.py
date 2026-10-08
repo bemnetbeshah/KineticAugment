@@ -6,7 +6,8 @@ import numpy as np
 import pytest
 
 from kinetic_augment.body_model.hand_depth import (
-    DEFAULT_VERTICAL_FOV_DEG, camera_point, focal_px, hand_scale_px_per_m, wrist_targets,
+    DEFAULT_VERTICAL_FOV_DEG, REACH_TOLERANCE, camera_point, focal_px, hand_scale_px_per_m,
+    wrist_targets,
 )
 from tests.face_assets import MODEL_DIR, requires_face_assets
 
@@ -85,6 +86,20 @@ def test_an_implausible_depth_ratio_is_left_uncorrected():
     assert targets.depth_ratio[1] == pytest.approx(3.0, abs=0.1)
 
 
+def test_an_invalid_arm_leaves_that_side_uncorrected():
+    nose_cam, hand_world, hand_px = scene(np.array([0.0, 0.1, 0.9]))
+    nose_px = project(nose_cam)
+    both = wrist_targets(nose_px, np.zeros(3), F / 1.0, hand_world, hand_px, W, H)
+    assert both.corrected.tolist() == [False, True]  # only the right hand is present
+    gated = wrist_targets(nose_px, np.zeros(3), F / 1.0, hand_world, hand_px, W, H,
+                          arm_valid=np.array([True, False]))  # right elbow or shoulder invalid
+    assert not gated.corrected.any() and np.isnan(gated.target).all()
+    assert np.isfinite(gated.depth_ratio[1])  # the ratio is still reported
+    kept = wrist_targets(nose_px, np.zeros(3), F / 1.0, hand_world, hand_px, W, H,
+                         arm_valid=np.array([False, True]))
+    assert kept.corrected.tolist() == [False, True]
+
+
 def test_missing_inputs_leave_both_hands_uncorrected():
     nose_cam, hand_world, hand_px = scene(np.array([0.0, 0.1, 0.9]))
     for nose_px, scale in ((np.full(2, np.nan), F), (project(nose_cam), np.nan)):
@@ -117,6 +132,12 @@ def test_run_clip_depth_corrected_on_pilot_frames():
     assert np.isfinite(result.wrist_residual_m[corrected]).all()
     assert np.isfinite(result.wrist_shift_m[corrected]).all()
     assert np.isnan(result.wrist_residual_m[~corrected]).all()
+    reached = result.wrist_reached
+    assert reached.shape == (20, 2) and reached.dtype == bool
+    assert not reached[~corrected].any()
+    np.testing.assert_array_equal(
+        reached[corrected], result.wrist_residual_m[corrected] <= REACH_TOLERANCE)
+    assert not plain.wrist_reached.any()
     assert len(result.geometry) == 20 and len(result.image_geometry) == 20
     # Frames with no correction are exactly the first pass.
     untouched = ~corrected.any(axis=1)
@@ -132,3 +153,4 @@ def test_run_clip_depth_corrected_on_pilot_frames():
         data = np.load(Path(tmp) / "x_dc.npz")
         assert data["wrist_target"].shape == (20, 2, 3)
         assert data["wrist_corrected"].shape == (20, 2)
+        np.testing.assert_array_equal(data["wrist_reached"], reached)
