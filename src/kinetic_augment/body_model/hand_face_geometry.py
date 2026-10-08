@@ -5,7 +5,8 @@ Signed distances from hand points to the head and neck surface, with location la
 Per hand: the wrist joint, the five fingertip vertices, and the palm centre (midpoint of the
 wrist and the middle-finger knuckle). Each point's distance is to the nearest surface triangle,
 signed by that triangle's outward normal (negative = inside the head); near concave regions such
-as the ear the sign can be wrong for deep penetrations. Contact is |d| < 2 cm (self-contact
+as the ear the sign can be wrong for deep penetrations, and a point nearest the open rim of the
+surface (neck bottom, eye sockets) is positive (see `signed_distances`). Contact is |d| < 2 cm (self-contact
 work's definition). The region is that of the nearest triangle vertex to the closest point.
 """
 
@@ -89,13 +90,44 @@ def closest_points_on_triangles(points, triangles):
     return result[rows, nearest], nearest, distance[rows, nearest]
 
 
+def _boundary_edges(faces) -> np.ndarray:
+    """(E, 2) vertex pairs of the edges used by exactly one triangle."""
+    faces = np.asarray(faces, dtype=np.int64)
+    edges = np.sort(np.concatenate([faces[:, [0, 1]], faces[:, [1, 2]], faces[:, [2, 0]]]), axis=1)
+    unique, counts = np.unique(edges, axis=0, return_counts=True)
+    return unique[counts == 1]
+
+
+def _on_segments(points, a, b, tolerance=1e-9) -> np.ndarray:
+    """(P,) True where a point lies within `tolerance` of any segment a[i]-b[i]."""
+    if not len(a):
+        return np.zeros(len(points), dtype=bool)
+    ab = b - a
+    t = np.clip(_dot(points[:, None] - a[None], ab[None]) / np.maximum(_dot(ab, ab), 1e-24)[None],
+                0.0, 1.0)
+    nearest = a[None] + t[..., None] * ab[None]
+    return (np.linalg.norm(points[:, None] - nearest, axis=-1) < tolerance).any(axis=1)
+
+
 def signed_distances(points, vertices, faces):
-    """Distance to the mesh, negative behind the nearest triangle's outward normal."""
-    tri = np.asarray(vertices)[np.asarray(faces)]
+    """
+    Distance to the mesh, negative behind the nearest triangle's outward normal, except that a
+    point whose closest point lies on an open (boundary) edge of the mesh is positive.
+
+    The head surface is open at the bottom of the neck and at the eye sockets. Beyond such a
+    rim the nearest triangle's normal says nothing about inside or outside (a hand hanging at
+    the side would read as deep inside the head), so a point nearest the rim is outside the
+    surface's coverage and counts as outside.
+    """
+    vertices = np.asarray(vertices, dtype=np.float64)
+    points = np.asarray(points, dtype=np.float64)
+    tri = vertices[np.asarray(faces)]
     closest, face, distance = closest_points_on_triangles(points, tri)
     normal = np.cross(tri[face, 1] - tri[face, 0], tri[face, 2] - tri[face, 0])
-    sign = np.where(_dot(np.asarray(points) - closest, normal) < 0, -1.0, 1.0)
-    return sign * distance, closest, face
+    inside = _dot(points - closest, normal) < 0
+    rim = _boundary_edges(faces)
+    inside &= ~_on_segments(closest, vertices[rim[:, 0]], vertices[rim[:, 1]])
+    return np.where(inside, -1.0, 1.0) * distance, closest, face
 
 
 @dataclass

@@ -104,3 +104,29 @@ def test_points_inside_the_head_behind_the_eye_are_negative(head):
     pushed = mesh.vertices[eye_skin] - 0.01 * normals[eye_skin]
     signed, _, _ = signed_distances(pushed, mesh.vertices[ids], surface.faces)
     assert (signed < 0).mean() >= 0.9
+
+
+def test_point_nearest_an_open_edge_is_outside_whatever_side_of_the_plane():
+    faces = np.array([[0, 1, 2]])
+    points = np.array([[0.5, -1.0, -0.3], [0.5, -1.0, 0.3], [0.2, 0.2, -0.1]])
+    signed, _, _ = signed_distances(points, TRIANGLE[0], faces)
+    assert signed[0] > 0 and signed[1] > 0   # closest point on the open edge AB
+    assert signed[2] < 0                      # closest point interior: normal sign kept
+
+
+def test_edge_shared_by_two_triangles_is_not_open():
+    # a tent: the shared edge's neighbours fold, so a point below the ridge is inside
+    vertices = np.array([[0, 0, 0], [1, 0, 0], [0.5, 1, 0.3], [0.5, -1, 0.3]], float)
+    faces = np.array([[0, 1, 2], [1, 0, 3]])  # shared edge 0-1; both normals point up (+z)
+    signed, _, _ = signed_distances(np.array([[0.5, 0.0, -0.2]]), vertices, faces)
+    assert signed[0] < 0
+
+
+@requires_face_assets
+def test_points_below_the_open_neck_rim_are_outside(head):
+    _, _, surface, mesh, _ = head
+    ids = surface.vertex_ids
+    lowest = mesh.vertices[ids][np.argmin(mesh.vertices[ids][:, 1])]
+    points = lowest + np.array([[0, -d, 0] for d in (0.10, 0.30, 0.50)])
+    signed, _, _ = signed_distances(points, mesh.vertices[ids], surface.faces)
+    assert (signed > 0).all(), signed
