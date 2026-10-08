@@ -64,3 +64,12 @@ def correspondence_floor(canonical, rest_rigid) -> float:
     reference = np.linalg.norm(np.asarray(canonical)[RIGHT_EYE_OUTER]
                                - np.asarray(canonical)[LEFT_EYE_OUTER])
     return float(np.sqrt(np.mean(residual ** 2)) / reference)
+
+
+def gap_components(point, closest) -> tuple:
+    """
+    Split the gap between a point and its closest surface point into the camera-axis part
+    |Δz| and the image-plane part |Δxy| (MediaPipe world: z is the camera axis), in metres.
+    """
+    delta = np.asarray(point, dtype=np.float64) - np.asarray(closest, dtype=np.float64)
+    return float(abs(delta[2])), float(np.linalg.norm(delta[:2]))

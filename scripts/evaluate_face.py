@@ -7,7 +7,10 @@ Every metric is reported for hand-near-face frames and for the rest:
   2  fitted head rotation vs FaceLandmarker's, relative to each clip's mean (degrees)
   3  per-clip Spearman correlation, fitted jaw pitch vs the jawOpen blendshape
   4  ear-midpoint residual, % shoulder width, with the neck swing and with the neck at rest
-  5  fraction of frames with a hand point more than 1 cm inside the head
+  5  fraction of frames with a hand point more than 1 cm inside the head, plus how close hands
+     get: minimum signed distance, fraction of frames in contact, and (near-face frames only)
+     the gap between the closest hand point and its closest head point split into camera-axis
+     depth and image-plane parts
   6  fraction of frames flagged invalid / unreliable / jaw unreliable
 
 Usage:
@@ -22,14 +25,16 @@ import numpy as np
 from scipy.stats import spearmanr
 
 from kinetic_augment.body_model.assembly import pose_mesh
+from kinetic_augment.body_model.face_regions import build_head_surface
 from kinetic_augment.body_model.face_correspondence import RIGID
 from kinetic_augment.body_model.face_metrics import (
-    correspondence_floor, head_pose_errors_deg, load_obj_vertices,
+    correspondence_floor, gap_components, head_pose_errors_deg, load_obj_vertices,
 )
 from kinetic_augment.body_model.face_observations import load_face_clip
 from kinetic_augment.body_model.face_pipeline import (
     VISIBILITY_THRESHOLD, load_face_models, run_clip, save_face_features,
 )
+from kinetic_augment.body_model.hand_face_geometry import hand_points, signed_distances
 from kinetic_augment.body_model.hand_observations import load_hand_clip
 
 SHOULDERS = (11, 12)
@@ -47,7 +52,19 @@ def stats(values):
             "p95": float(np.percentile(values, 95)), "mean": float(values.mean())}
 
 
-def clip_rows(hands, face, result):
+def nearest_gap(result, i, body, surface):
+    """(|Δz|, |Δxy|) from the hand point nearest the head surface in frame i to that surface."""
+    g = result.geometry[i]
+    if g is None or not np.isfinite(g.distance).any():
+        return np.nan, np.nan
+    mesh = pose_mesh(body, result.rotations[i], result.betas, result.transl[i])
+    points = hand_points(mesh).reshape(-1, 3)
+    _, closest, _ = signed_distances(points, mesh.vertices[surface.vertex_ids], surface.faces)
+    nearest = np.nanargmin(np.abs(g.distance.reshape(-1)))
+    return gap_components(points[nearest], closest[nearest])
+
+
+def clip_rows(hands, face, result, body, surface):
     """Per-frame metric values for one clip, keyed by metric, plus the near-face split."""
     fits = result.head_fits
     pose = hands.pose_world.astype(np.float64)
@@ -61,12 +78,26 @@ def clip_rows(hands, face, result):
     penetrating = np.array([g is not None and bool(np.nanmin(np.append(g.distance, np.inf))
                                                    < PENETRATION) for g in result.geometry])
     posed = np.array([g is not None and np.isfinite(g.distance).any() for g in result.geometry])
+    n = len(fits)
+    min_distance = np.full(n, np.nan)
+    contact = np.full(n, np.nan)
+    gaps = np.full((n, 2), np.nan)
+    for i, g in enumerate(result.geometry):
+        if g is not None and np.isfinite(g.distance).any():
+            min_distance[i] = np.nanmin(g.distance)
+            contact[i] = float(g.contact.any())
+            if result.hand_near_face[i]:
+                gaps[i] = nearest_gap(result, i, body, surface)
     rows = {
         "rigid_rms_pct": 100 * np.array([f.rms_fraction for f in fits]),
         "head_pose_deg": head_pose,
         "ear_swing_pct": 100 * np.array([f.ear_residual_m for f in fits]) / width,
         "ear_rest_pct": 100 * np.array([f.ear_residual_rest_m for f in fits]) / width,
         "penetrating": np.where(posed, penetrating.astype(float), np.nan),
+        "min_distance_m": min_distance,
+        "contact": contact,
+        "gap_depth_m": gaps[:, 0],
+        "gap_plane_m": gaps[:, 1],
         "invalid": (~valid).astype(float),
         "unreliable": np.array([not f.reliable for f in fits], float),
         "jaw_unreliable": np.array([not f.jaw_reliable for f in fits], float),
@@ -102,7 +133,9 @@ def main() -> None:
         face = load_face_clip(args.landmark_dir / f"{clip}_face.npz")
         result = run_clip(hands, face, models)
         save_face_features(args.landmark_dir / f"{clip}_face_features.npz", result, face)
-        rows, near, jaw[clip] = clip_rows(hands, face, result)
+        body = models.skeleton.shaped(result.betas)
+        surface = build_head_surface(body, models.corr, models.model_dir)
+        rows, near, jaw[clip] = clip_rows(hands, face, result, body, surface)
         for key, values in rows.items():
             pooled["near"].setdefault(key, []).extend(values[near])
             pooled["far"].setdefault(key, []).extend(values[~near])

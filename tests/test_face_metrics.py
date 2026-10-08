@@ -4,7 +4,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 from kinetic_augment.body_model.face_metrics import (
-    GL_TO_IMAGE, correspondence_floor, head_pose_errors_deg, matrix_rotation,
+    GL_TO_IMAGE, correspondence_floor, gap_components, head_pose_errors_deg, matrix_rotation,
 )
 
 
@@ -37,3 +37,11 @@ def test_correspondence_floor_is_zero_for_a_similar_copy():
     from kinetic_augment.body_model.face_correspondence import RIGID
     canonical[list(RIGID)] = 100.0 * rest @ Rotation.from_rotvec([0, 0.3, 0]).as_matrix().T
     assert correspondence_floor(canonical, rest) < 1e-9
+
+
+def test_gap_components_separate_depth_from_image_plane():
+    closest = np.array([0.1, -0.2, 0.3])
+    depth, plane = gap_components(closest + [0.0, 0.0, 0.15], closest)
+    assert depth == np.float64(0.15) and plane < 1e-12
+    depth, plane = gap_components(closest + [0.03, -0.04, 0.0], closest)
+    assert depth < 1e-12 and abs(plane - 0.05) < 1e-12
