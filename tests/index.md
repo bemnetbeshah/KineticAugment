@@ -22,4 +22,5 @@
 - `test_hand_observations.py` — Tests the left/right assignment and the hand clip file format.
 - `test_extract_hand_landmarks.py` — Runs the hand extractor on pilot clips: clip-order independence, units, sides.
 - `test_extract_face_landmarks.py` — Integration test: real FaceLandmarker on a pilot clip (face found, frames align with hands, head-matrix layout).
+- `test_face_metrics.py` — Tests the gate metrics: matrix rotation scale removal, head-pose agreement, correspondence floor.
 - `index.md` — Index of automated test files.
