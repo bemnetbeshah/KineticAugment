@@ -2,6 +2,7 @@
 
 - `__init__.py` — Provides lazy accessors for SMPL-X and MediaPipe conversion classes.
 - `alignment.py` — Fits the similarity between two coordinate spaces for comparing poses.
+- `assembly.py` — Poses one SMPL-X body from the body, hand and head fits.
 - `converter.py` — Converts world body landmarks to SMPL-X parameters and back.
 - `face_correspondence.py` — MediaPipe face-mesh groups and their positions on the SMPL-X surface, via the FLAME embedding.
 - `joint_mapping.py` — Defines SMPL-X/MediaPipe joint indices, chains, and angle limits.

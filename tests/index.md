@@ -2,6 +2,7 @@
 
 - `__init__.py` — Marks the automated test directory as a Python package.
 - `test_alignment.py` — Tests least-squares similarity alignment between coordinate spaces.
+- `test_assembly.py` — Tests assembling one SMPL-X pose from the body, hand and head fits: palm alignment, layout, mesh joints.
 - `test_body_model.py` — Tests joint mappings, SMPL-X wrapper, and both landmark converters.
 - `test_converter.py` — Tests the V1 converter contract and its round trip through SMPL-X.
 - `test_extract_world_landmarks.py` — Tests that a clip's extracted landmarks do not depend on the clip processed before it.
