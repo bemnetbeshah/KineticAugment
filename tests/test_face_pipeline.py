@@ -1,0 +1,51 @@
+"""Tests for the clip pipeline: hand-near-face and a real pilot clip end to end."""
+
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from kinetic_augment.body_model.face_pipeline import hand_near_face
+from tests.face_assets import MODEL_DIR, requires_face_assets
+
+REPO = Path(__file__).resolve().parents[1]
+CLIP = REPO / "data" / "test_output" / "01991"
+
+
+def face_box(lo=100.0, hi=200.0):
+    face = np.full((478, 3), np.nan)
+    face[:4] = [[lo, lo, 0], [hi, lo, 0], [hi, hi, 0], [lo, hi, 0]]
+    return face
+
+
+def test_hand_near_face_detects_overlap_and_containment():
+    square = lambda c, r: np.array([[c - r, c - r], [c + r, c - r], [c + r, c + r], [c - r, c + r]])
+    face = face_box()
+    assert hand_near_face(face, [square(150.0, 10.0)], pad=5.0)    # hand inside the face box
+    assert hand_near_face(face, [square(150.0, 500.0)], pad=5.0)   # hand covers the whole face
+    assert hand_near_face(face, [square(208.0, 4.0)], pad=5.0)     # within the padding
+    assert not hand_near_face(face, [square(400.0, 10.0)], pad=5.0)
+    assert not hand_near_face(face, [], pad=5.0)
+
+
+@requires_face_assets
+def test_run_clip_on_pilot_frames(tmp_path):
+    hands_path, face_path = Path(f"{CLIP}_hands.npz"), Path(f"{CLIP}_face.npz")
+    if not (hands_path.exists() and face_path.exists()):
+        pytest.skip("pilot hand/face clips absent")
+    from kinetic_augment.body_model.face_observations import load_face_clip
+    from kinetic_augment.body_model.face_pipeline import (
+        load_face_models, run_clip, save_face_features,
+    )
+    from kinetic_augment.body_model.hand_observations import load_hand_clip
+
+    hands, face = load_hand_clip(hands_path), load_face_clip(face_path)
+    result = run_clip(hands, face, load_face_models(MODEL_DIR), frames=np.arange(0, 20))
+    assert len(result.head_fits) == 20 and result.rotations.shape == (20, 55, 3)
+    valid = [f for f in result.head_fits if f.valid]
+    assert len(valid) >= 15
+    assert np.median([f.rms_fraction for f in valid]) < 0.15
+    save_face_features(tmp_path / "x_face_features.npz", result, face)
+    data = np.load(tmp_path / "x_face_features.npz")
+    assert data["distance"].shape == (20, 2, 7)
+    assert data["blendshapes"].shape == (20, 52)

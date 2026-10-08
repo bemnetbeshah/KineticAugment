@@ -17,6 +17,7 @@
 - `test_head_converter.py` — Tests head occlusion and robust head rotation.
 - `test_face_regions.py` — Tests vertex normals, full labelling of the head surface, and anchor points landing in their ASL-LEX regions.
 - `test_hand_face_geometry.py` — Tests exact closest-point-on-triangle, signed distance (forehead), and unposed-hand NaN and contact rules.
+- `test_face_pipeline.py` — Tests hand-near-face and the clip pipeline on 20 frames of a real pilot clip (valid head fits, residual, feature-file shapes).
 - `test_hand_converter.py` — Tests the hand fit: analytic start, real-model refinement, decoder, serialisation and shape.
 - `test_hand_observations.py` — Tests the left/right assignment and the hand clip file format.
 - `test_extract_hand_landmarks.py` — Runs the hand extractor on pilot clips: clip-order independence, units, sides.
