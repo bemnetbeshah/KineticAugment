@@ -25,5 +25,6 @@
 - `test_phase5.py` — Runs evaluation metrics, datasets, classifiers, benchmarks, and integration checks.
 - `view_body_hand_round_trip.py` — Renders one clip's stitched body (SMPL-X) + hand (MANO) round trip beside MediaPipe's 2-D output, with the SMPL-X body figure posed from the round-trip parameters.
 - `view_face_round_trip.py` — Renders one clip's body + hands + face round trip (V1.3): MediaPipe 2-D with face landmarks, front and side views with the observed and SMPL-X face, nose and ears and hand-to-head lines, the posed SMPL-X mesh with the head tinted by region, error and hand-to-face distance strips; saves stills of the closest approach.
+- `view_proximity_round_trip.py` — Renders the hand-to-face proximity comparison video of a clip (V1.3): video with the projected SMPL-X head and per-hand readouts of image, original 3-D and depth-corrected 3-D distance, front and side views with original and corrected wrists, the corrected SMPL-X figure, and a strip of the three closest distances; saves stills where image near / corrected contact first occur.
 - `view_round_trip.py` — Renders per-clip videos of the V1 round trip: input vs SMPL-X reconstruction, joints coloured by error, error-over-time strip.
 - `index.md` — Index of setup, rendering, and phase-check scripts.
