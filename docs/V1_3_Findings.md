@@ -3,7 +3,7 @@
 **Date:** 2026-10-07. **Branch:** `feat/face-v1.3`. **Scope:** the phase-A verification gate of the
 [V1.3 face design](V1_3_Face_Design.md) (§7), run on the 20 clips of `data/round_trip_eval`.
 **Plan:** [V1.3 implementation plan](V1_3_Implementation_Plan.md). **Ledger:**
-[V1 problem scope §12](V1_Problem_Scope.md#12-assumptions-ledger), rows O10 to O16 and P23 to P25.
+[V1 problem scope §12](V1_Problem_Scope.md#12-assumptions-ledger), rows O10 to O16 and P23 to P24.
 
 Phase A fits a SMPL-X neck, head and jaw to MediaPipe FaceLandmarker output, places the fitted
 hands in the same frame, and measures signed distances from hand points to the head surface. The
@@ -55,9 +55,13 @@ in any of its 81 frames.
 
 ## 2. Setup notes that affect every number
 
-- Near-face invalid and unreliable fractions are 0 by construction: `hand_near_face` is only
-  computed on frames where a face was detected. The far-frame fractions (8.7 %) include every
-  frame with no detected face, 81 of which are clip 09849.
+- The near-face invalid fraction is 0 by construction: `hand_near_face` is only computed on
+  frames where a face was detected. The near-face unreliable fraction is not: it is 0.007 (1 of
+  143 frames, one with only 7 rigid points left). The far-frame invalid and unreliable
+  fractions (8.7 %) include every frame with no detected face, 81 of which are clip 09849.
+- Near frames are defined by bounding-box overlap, not by occlusion. Of the 143, 113 (79 %) kept
+  all 17 rigid points; 30 lost at least one, 18 lost two or more (counted from `points_used` in
+  the feature files).
 - Only frames with a posed hand count for penetration, minimum distance and contact: 676 of the
   1,093 far frames, and all 143 near frames.
 - Metric 2 uses the clip's mean rotation (a scipy chordal mean) as the reference for each side,
@@ -95,12 +99,16 @@ Both targets are met by a wide margin, in both splits. Three qualifications:
 - **Agreement, not independence.** The fitted head rotation and FaceLandmarker's facial
   transformation matrix are both computed from the same landmarks. Small angles show that the
   conventions line up, not that either rotation is correct.
-- **The conventions are tested, though.** A reviewer scored metric 2 on three real clips (63665,
-  69364, 57949) with the conventions wrong. As coded: 0.58 to 0.65 degrees median. Without the
-  axis flip: 3.2 to 10.6 degrees. With the rotation inverted: 7.8 to 12.6 degrees. The heads'
-  own motion in those clips was 3.9 to 6.5 degrees. So a wrong convention would not have passed
-  unnoticed (F2, §6).
-- **Mean, not median.** The reference rotation per clip is the chordal mean (§2).
+- **The matrix convention is tested, though.** A reviewer scored metric 2 on three real clips
+  (63665, 69364, 57949) with the conventions wrong. As coded: 0.58 to 0.65 degrees median.
+  Without the axis flip: 3.2 to 10.6 degrees. With the rotation inverted: 7.8 to 12.6 degrees.
+  The heads' own motion in those clips was 3.9 to 6.5 degrees. A wrong convention is therefore
+  distinguishable from the 0.6 degrees measured, although it would not necessarily fail the gate
+  (the no-flip median on the best clip, 3.2 degrees, is under the 5 degree target). This tests
+  FaceLandmarker's matrix convention and the OpenGL-to-image axis flip. It never involves the
+  pose-world frame, so the face-to-pose-world axis match in F2's wording is not tested (§6).
+- **Mean, not median.** The reference rotation per clip is the chordal mean (§2), not
+  the design's median.
 
 ### 3.3 Metric 3: jaw pitch against the `jawOpen` blendshape, Spearman rank correlation per clip (target at least 0.7)
 
@@ -168,8 +176,9 @@ forced positive (§7).
 | Jaw unreliable | Near | 143 | 0 | 1 | 0.259 |
 | | Far | 1,093 | 0 | 1 | 0.087 |
 
-The near-face invalid and unreliable figures are 0 by construction (§2), so the near and far
-values are not comparable for those two rows. The far 8.7 % is dominated by clip 09849 (81 of
+The near-face invalid figure is 0 by construction (§2), so near and far are not comparable for
+that row; the near-face unreliable figure (0.007, 1 of 143 frames) is a measurement, but near
+frames are only a subset in which a face was found. The far 8.7 % is dominated by clip 09849 (81 of
 1,093 far frames, no face detected), plus partial detection in 07389 (87.8 % of frames) and 57641
 (93.1 %). That is a detector coverage issue, not a fit failure. Jaw reliability is the one flag
 that is meaningful near the face: 25.9 % of near frames are jaw-unreliable, which is consistent
@@ -205,18 +214,22 @@ visibility of at least 0.5 changes no median by more than 0.008 m.
 Per clip, the near-face nose |dz| ranges from 0.099 m (12328) to 0.300 m (63665); 11 of 12 clips
 are between 0.15 and 0.30 m.
 
-**Result.** The gap is already present before fitting. On near frames the observed fingertip is
+**Result.** The gap is already present before fitting, in the raw pose-world observations as the
+pipeline consumes them. The diagnostic reuses the pipeline's own wrist-to-pose-wrist translation,
+so it cannot separate a pose-world depth error from an error in that placement rule. On near frames the observed fingertip is
 0.217 m from the observed nose along the camera axis, slightly more than the fitted scene's
 0.181 m (the two are not the same quantity: the fitted figure is from the nearest hand point to the
 closest head-surface point; this one is the index fingertip to the nose landmark). The ear
 midpoint reads further because the ears sit behind the nose; that offset is real anatomy and says
-nothing about the hand. Far from the face, MediaPipe's fingertip is still 0.15 m off the nose in
-depth, which suggests a systematic offset between where the pose model puts wrists and where it
-puts the head.
+nothing about the hand. The far-frame nose |dz| (0.152 m) is given for comparison only: hands in
+signing space naturally sit in front of the nose, so it supports no inference about an offset.
+This table counts every present hand on a near frame (152 hand-frames over the near frames), while the
+fitted gap takes the minimum over the hands' points per frame, so the 0.217 and 0.181 m figures
+are further apart in definition than they look.
 
-**Conclusion.** The gap comes from upstream: MediaPipe's pose-world depth for wrists relative to
-the head, or genuinely held-out hands. It is not added by the SMPL-X fitting or by our hand
-placement.
+**Conclusion.** The gap is already present in MediaPipe's own pose-world observations, before
+any SMPL-X fitting. The fitting does not create it. Whether it comes from pose-world depth for the
+wrists relative to the head, or from hands genuinely held in front of the face, is not decided.
 
 **What this does not settle.** "Near" is defined by overlap in the image, so a hand held 20 cm in
 front of the face and not touching it is near. The diagnostic cannot say how much of the 0.2 m is
@@ -230,8 +243,8 @@ holds no contact signs, or contact is lost to depth error, is the new open quest
 | ID | Verdict | Evidence |
 | --- | --- | --- |
 | F1 | Supported (Proven, P23) | Eye corners 1.25, 1.48, 1.48, 1.25 mm and nose tip 3.89 mm from SMPL-X's own landmarks (Task 1; limits were 6 and 8 mm). The FLAME triangle check also passed. Only these five points were compared with SMPL-X's landmarks; the other points of the 105 rest on the triangle check. |
-| F2 | Supported (Proven, P24) | Metric 2 on real data: 0.58 degrees near, 0.57 far. With the axis flip removed the reviewer's clips read 3.2 to 10.6 degrees; with the rotation inverted, 7.8 to 12.6. Both rotations come from the same landmarks, so this shows the conventions are consistent, not that the head orientation is independently correct. |
-| F3 | Supported (Proven, P25) | Rigid residual 2.27 % near against 2.14 % far; head pose p95 2.66 against 1.40 degrees. Near frames are 143 in 12 clips, and the check is agreement with MediaPipe's own matrix. |
+| F2 | Split. Matrix convention and axis flip: Proven (P24). Face axes against the pose-world axes: still open (O11) | Metric 2 on real data: 0.58 degrees near, 0.57 far. With the axis flip removed the reviewer's clips read 3.2 to 10.6 degrees; with the rotation inverted, 7.8 to 12.6. That settles FaceLandmarker's matrix convention and the flip. Metric 2 compares the fitted rotation with FaceLandmarker's own matrix and never involves the pose-world frame, so the (x·W, y·H, z·W) match to pose-world axes (the design's wording) is untested. The depth gap in O16 bears on it. Both rotations also come from the same landmarks, so agreement is not independent accuracy. |
+| F3 | Partly supported, still open (O12) | Rigid residual and agreement do not degrade on near frames: 2.27 % against 2.14 %; head pose p95 2.66 against 1.40 degrees (143 near frames, 12 clips). But near frames are bounding-box overlap, not occlusion: 113 of 143 (79 %) kept all 17 rigid points, 30 lost at least one, 18 lost two or more, and 1 was flagged unreliable. Agreement with MediaPipe's matrix cannot see damage that both estimates share, and expression is not measured. Independent accuracy under real occlusion and expression is untested. |
 | F4 | Partly supported, still open (O13) | The swing lowers the ear-midpoint residual: far 7.61 to 2.82 %, near 7.15 to 4.56 % (p95 about 9 to 10 %). The synthetic arms-unchanged test passes, but it is structurally trivial; arm metrics were not re-measured on real data in this gate. |
 | F5 | Partly supported, still open (O14) | Median 0.92 over 8 clips, but 69364 (0.496) and 63665 (0.687) are below 0.7, and 12 of 20 clips could not be scored. |
 | F6 | Not yet judged, still open (O15) | Region labelling is covered by tests and rendered in `docs/media/face_regions.png`. **The user still has to review the render.** The Eye count was inflated before eyeball meshes were dropped from the head surface; it is now 750. The Ear radius of 3.5 cm is generous (1,199 vertices) and takes some temple and jaw-hinge area. |
