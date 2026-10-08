@@ -15,7 +15,6 @@ from dataclasses import dataclass
 from typing import List
 
 import numpy as np
-from matplotlib.path import Path as Polygon
 from scipy.spatial import ConvexHull, QhullError
 
 from .alignment import apply_similarity, similarity_transform
@@ -54,12 +53,34 @@ def _segment_distance(points: np.ndarray, a: np.ndarray, b: np.ndarray) -> np.nd
     return np.linalg.norm(points - (a + t[:, None] * ab), axis=1)
 
 
+def points_in_polygon(points: np.ndarray, polygon: np.ndarray) -> np.ndarray:
+    """
+    Even-odd ray-casting point-in-polygon test for any simple polygon (convex or not).
+
+    Args:
+        points: (N, 2) query points.
+        polygon: (K, 2) polygon vertices in order, not repeating the first vertex.
+
+    Returns:
+        (N,) bool, True for points inside; points exactly on the boundary may go either way.
+    """
+    points = np.asarray(points, dtype=np.float64).reshape(-1, 2)
+    polygon = np.asarray(polygon, dtype=np.float64)
+    x, y = points[:, 0:1], points[:, 1:2]
+    x0, y0 = polygon[:, 0][None, :], polygon[:, 1][None, :]
+    x1, y1 = np.roll(polygon[:, 0], -1)[None, :], np.roll(polygon[:, 1], -1)[None, :]
+    straddles = (y0 > y) != (y1 > y)  # edge crosses the horizontal line through the point
+    with np.errstate(divide="ignore", invalid="ignore"):
+        x_cross = x0 + (y - y0) * (x1 - x0) / (y1 - y0)
+    return (straddles & (x < x_cross)).sum(axis=1) % 2 == 1
+
+
 def occluded(points: np.ndarray, outlines: List[np.ndarray], pad: float) -> np.ndarray:
     """(N,) True where a 2-D point is inside an outline or within `pad` pixels of one."""
     points = np.asarray(points, dtype=np.float64)
     hidden = np.zeros(len(points), dtype=bool)
     for outline in outlines:
-        inside = Polygon(outline).contains_points(points)
+        inside = points_in_polygon(points, outline)
         edge = np.min([_segment_distance(points, outline[i], outline[(i + 1) % len(outline)])
                        for i in range(len(outline))], axis=0)
         hidden |= inside | (edge <= pad)

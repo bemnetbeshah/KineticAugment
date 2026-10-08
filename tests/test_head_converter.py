@@ -7,7 +7,7 @@ import pytest
 from scipy.spatial.transform import Rotation
 
 from kinetic_augment.body_model.head_converter import (
-    HeadRotation, head_rotation, occluded,
+    HeadRotation, head_rotation, occluded, points_in_polygon,
 )
 
 PIXELS_PER_METRE = 4000.0
@@ -62,3 +62,27 @@ def test_occluded_marks_inside_and_near_points():
     np.testing.assert_array_equal(occluded(points, square, pad=10.0),
                                   [True, True, False, True])
     assert not occluded(points, [], pad=10.0).any()
+
+
+def test_points_in_polygon_convex_square():
+    square = np.array([[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]])
+    points = np.array([[5.0, 5.0], [15.0, 5.0], [5.0, -1.0], [-1.0, 5.0]])
+    np.testing.assert_array_equal(points_in_polygon(points, square),
+                                  [True, False, False, False])
+
+
+def test_points_in_polygon_non_convex_u_shape():
+    u_shape = np.array([[0.0, 0.0], [9.0, 0.0], [9.0, 9.0], [6.0, 9.0], [6.0, 3.0],
+                        [3.0, 3.0], [3.0, 9.0], [0.0, 9.0]])
+    points = np.array([[1.5, 6.0],   # left arm
+                       [7.5, 6.0],   # right arm
+                       [4.5, 6.0],   # notch between the arms
+                       [4.5, 1.5],   # base
+                       [4.5, 12.0]])  # above everything
+    np.testing.assert_array_equal(points_in_polygon(points, u_shape),
+                                  [True, True, False, True, False])
+
+
+def test_points_in_polygon_empty_points():
+    square = np.array([[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]])
+    assert points_in_polygon(np.empty((0, 2)), square).shape == (0,)
