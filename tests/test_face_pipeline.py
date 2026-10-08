@@ -49,3 +49,16 @@ def test_run_clip_on_pilot_frames(tmp_path):
     data = np.load(tmp_path / "x_face_features.npz")
     assert data["distance"].shape == (20, 2, 7)
     assert data["blendshapes"].shape == (20, 52)
+    for key in ("image_distance", "image_overlap", "image_region", "image_subregion",
+                "image_near"):
+        assert data[key].shape == (20, 2, 7), key
+    for key in ("head_scale_px_per_m", "head_camera_rotation_deg"):
+        assert data[key].shape == (20,), key
+    on_valid = np.array([f.valid and (f.rigid_weights > 0).sum() >= 3 for f in result.head_fits])
+    assert on_valid.sum() >= 15
+    rotation = data["head_camera_rotation_deg"]
+    assert np.isfinite(rotation[on_valid]).all()
+    assert np.isfinite(data["head_scale_px_per_m"][on_valid]).all()
+    absent = np.isnan(data["image_distance"])
+    assert (data["image_region"][absent] == -1).all() and not data["image_overlap"][absent].any()
+    print("median head_camera_rotation_deg:", np.median(rotation[on_valid]))

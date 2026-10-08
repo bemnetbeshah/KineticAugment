@@ -7,20 +7,25 @@ same decoded frames. Hands are fitted with MANO and attached as the V1.2 viewer 
 """
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 import numpy as np
 
 from .assembly import attach_hands, attach_head, body_rotations, pose_mesh
 from .converter import fit_body
-from .face_correspondence import LEFT_EYE_OUTER, RIGHT_EYE_OUTER, load_face_correspondence
+from .face_correspondence import (
+    LEFT_EYE_OUTER, RIGID, RIGHT_EYE_OUTER, load_face_correspondence,
+)
 from .face_regions import REGIONS, SUBREGIONS, build_head_surface
 from .hand_converter import fit_hand_shape, fit_hands, reconstruct_hand
 from .hand_face_geometry import HAND_POINTS, HandFaceGeometry, hand_face_geometry
 from .hand_model import HandModel
 from .head_converter import (
     OCCLUSION_PAD, HeadFit, fit_head, hand_outlines, head_template, points_in_polygon,
+)
+from .image_proximity import (
+    ImageProximity, image_hand_points, image_proximity, project_head,
 )
 from .shape import fit_shape
 from .skeleton import SMPLXSkeleton
@@ -76,6 +81,9 @@ class ClipFaceResult:
     hand_near_face: np.ndarray    # (T,) bool
     body_ok: np.ndarray           # (T,) bool
     frames: np.ndarray            # (T,) source frame indices
+    image_geometry: List[Optional[ImageProximity]] = field(default_factory=list)
+    head_scale_px_per_m: np.ndarray = None       # (T,) px per metre at the head; NaN if none
+    head_camera_rotation_deg: np.ndarray = None  # (T,) world->pixel rotation angle; NaN if none
 
 
 def _fit_hands(hands, mano, frames):
@@ -110,7 +118,8 @@ def run_clip(hands, face, models: FaceModels, frames=None) -> ClipFaceResult:
 
     n = len(frames)
     result = ClipFaceResult([], np.full((n, 55, 3), np.nan), np.full((n, 3), np.nan), betas,
-                            [], np.zeros(n, bool), np.zeros(n, bool), frames)
+                            [], np.zeros(n, bool), np.zeros(n, bool), frames, [],
+                            np.full(n, np.nan), np.full(n, np.nan))
     for i, t in enumerate(frames):
         outlines = hand_outlines(hands.image[t], hands.width, hands.height)
         observed_face = face_px[t] if face.valid[t] else None
@@ -124,6 +133,7 @@ def run_clip(hands, face, models: FaceModels, frames=None) -> ClipFaceResult:
         except ValueError:
             result.head_fits.append(fit_head(None, [], np.zeros((55, 3)), np.zeros(3), template))
             result.geometry.append(None)
+            result.image_geometry.append(None)
             continue
         result.body_ok[i] = True
         rotations, posed = attach_hands(
@@ -137,7 +147,23 @@ def run_clip(hands, face, models: FaceModels, frames=None) -> ClipFaceResult:
         result.head_fits.append(head)
         result.rotations[i], result.transl[i] = rotations, body_fit.transl
         result.geometry.append(hand_face_geometry(mesh, surface, posed))
+        result.image_geometry.append(
+            _image_geometry(result, i, mesh, surface, models.corr, head, observed_face,
+                            hands.image[t], hands.width, hands.height))
     return result
+
+
+def _image_geometry(result, i, mesh, surface, corr, head, observed_face, hand_image,
+                    width, height) -> Optional[ImageProximity]:
+    """Image-space proximity for one frame, or None without a usable head fit."""
+    if observed_face is None or (head.rigid_weights > 0).sum() < 3:
+        return None
+    projected = project_head(
+        mesh.vertices[surface.vertex_ids], surface.faces, corr.points(mesh.vertices, RIGID),
+        observed_face[list(RIGID)], head.rigid_weights)
+    result.head_scale_px_per_m[i] = projected.scale
+    result.head_camera_rotation_deg[i] = projected.rotation_deg
+    return image_proximity(image_hand_points(hand_image, width, height), projected, surface)
 
 
 def save_face_features(path, result: ClipFaceResult, face) -> None:
@@ -152,6 +178,14 @@ def save_face_features(path, result: ClipFaceResult, face) -> None:
         if g is not None:
             distance[i], region[i], subregion[i], contact[i] = (g.distance, g.region,
                                                                 g.subregion, g.contact)
+    image = {"image_distance": np.full(shape, np.nan), "image_overlap": np.zeros(shape, bool),
+             "image_region": np.full(shape, -1, np.int8),
+             "image_subregion": np.full(shape, -1, np.int8), "image_near": np.zeros(shape, bool)}
+    for i, g in enumerate(result.image_geometry):
+        if g is not None:
+            image["image_distance"][i], image["image_overlap"][i] = g.distance, g.overlap
+            image["image_region"][i], image["image_subregion"][i] = g.region, g.subregion
+            image["image_near"][i] = g.near
     meta = {"regions": list(REGIONS), "subregions": list(SUBREGIONS),
             "hand_points": list(HAND_POINTS), "neck_modes": list(NECK_MODES),
             "blendshape_names": list(face.blendshape_names)}
@@ -169,6 +203,9 @@ def save_face_features(path, result: ClipFaceResult, face) -> None:
         neck_mode=np.array([NECK_MODES.index(f.neck_mode) for f in fits], np.int8),
         ear_residual_m=np.array([f.ear_residual_m for f in fits]),
         distance=distance, region=region, subregion=subregion, contact=contact,
+        **image,
+        head_scale_px_per_m=result.head_scale_px_per_m,
+        head_camera_rotation_deg=result.head_camera_rotation_deg,
         hand_near_face=result.hand_near_face, body_ok=result.body_ok,
         blendshapes=face.blendshapes[result.frames],
         betas=result.betas,

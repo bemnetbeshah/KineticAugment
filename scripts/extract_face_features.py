@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Write per-clip face features (V1.3): fitted neck, head and jaw with their flags, signed
-hand-to-face distances with ASL-LEX regions and contact, and the blendshapes.
+hand-to-face distances with ASL-LEX regions and contact, image-space proximity to the projected
+head, and the blendshapes.
 
 Needs <clip>_hands.npz and <clip>_face.npz in --landmark-dir; writes <clip>_face_features.npz
 next to them.
