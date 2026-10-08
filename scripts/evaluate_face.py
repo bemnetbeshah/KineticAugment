@@ -72,8 +72,10 @@ def clip_rows(hands, face, result):
         "jaw_unreliable": np.array([not f.jaw_reliable for f in fits], float),
     }
     jaw_ok = valid & np.array([f.jaw_reliable for f in fits])
-    jaw_open = face.blendshapes[frames, list(face.blendshape_names).index("jawOpen")]
-    if jaw_ok.sum() >= MIN_JAW_FRAMES and np.nanstd(jaw_open[jaw_ok]) >= MIN_JAW_SPREAD:
+    names = list(face.blendshape_names)  # empty for a clip with no detected face
+    jaw_open = face.blendshapes[frames, names.index("jawOpen")] if "jawOpen" in names else None
+    if (jaw_open is not None and jaw_ok.sum() >= MIN_JAW_FRAMES
+            and np.nanstd(jaw_open[jaw_ok]) >= MIN_JAW_SPREAD):
         pitch = np.array([f.jaw_pose[0] for f in fits])
         jaw = float(spearmanr(pitch[jaw_ok], jaw_open[jaw_ok]).correlation)
     else:
