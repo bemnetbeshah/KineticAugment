@@ -81,3 +81,14 @@ def test_no_cheek_vertex_inside_the_lip_outline(setup):
     inside = points_in_polygon(points[:, :2], a.outer_lip[:, :2]) & ahead
     assert inside.any()
     assert not (surface.region[inside] == REGIONS.index("CheekNose")).any()
+
+
+@requires_face_assets
+def test_no_surface_vertex_is_eyeball_dominated(setup):
+    """Eyeball meshes sit inside the skull and would flip signed distances behind the eyes."""
+    from kinetic_augment.body_model.face_regions import EYE_JOINTS, REGIONS
+
+    skeleton, _, surface, _ = setup
+    weights = skeleton.model.lbs_weights.detach().numpy()[surface.vertex_ids]
+    assert not np.isin(weights.argmax(axis=1), EYE_JOINTS).any()
+    assert (surface.region == REGIONS.index("Eye")).any()

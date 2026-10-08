@@ -86,3 +86,21 @@ def test_unposed_hands_are_nan_and_contact_needs_two_centimetres(head):
     right = geometry.distance[1]
     assert np.isfinite(right).all()
     np.testing.assert_array_equal(geometry.contact[1], np.abs(right) < CONTACT_DISTANCE)
+
+
+@requires_face_assets
+def test_points_inside_the_head_behind_the_eye_are_negative(head):
+    from kinetic_augment.body_model.face_correspondence import LEFT_EYE, RIGHT_EYE
+    from kinetic_augment.body_model.face_regions import REGIONS
+
+    _, corr, surface, mesh, normals = head
+    ids = surface.vertex_ids
+    for eye in (LEFT_EYE, RIGHT_EYE):
+        centre = corr.points(mesh.vertices, tuple(eye)).mean(axis=0)
+        behind = np.array([centre - [0, 0, d] for d in (0.02, 0.03, 0.05)])
+        signed, _, _ = signed_distances(behind, mesh.vertices[ids], surface.faces)
+        assert (signed < 0).all(), signed
+    eye_skin = ids[surface.region == REGIONS.index("Eye")]
+    pushed = mesh.vertices[eye_skin] - 0.01 * normals[eye_skin]
+    signed, _, _ = signed_distances(pushed, mesh.vertices[ids], surface.faces)
+    assert (signed < 0).mean() >= 0.9

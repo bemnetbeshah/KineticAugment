@@ -1,8 +1,8 @@
 """
 The SMPL-X head and neck surface, labelled with ASL-LEX location codes (V1.3 design §5).
 
-The surface is every SMPL-X vertex in the FLAME vertex map and every triangle whose three
-vertices are in it. Regions follow ASL-LEX 2.0's head locations, plus Neck and Ear, with finer
+The surface is every SMPL-X vertex in the FLAME vertex map, except the eyeball meshes, and every
+triangle whose three vertices are kept. Regions follow ASL-LEX 2.0's head locations, plus Neck and Ear, with finer
 subregions underneath. They come from rules on the rest mesh -- the mapped MediaPipe landmarks,
 vertex normals and SMPL-X skinning weights -- so no further licensed asset is needed. Thresholds
 are provisional and are tuned by eye on `scripts/render_face_regions.py`'s image.
@@ -14,6 +14,11 @@ Tuning record (first render, thresholds as first written all passed the anchor t
 - Mouth required front-facing normals, but the inner-lip and mouth-interior vertices are not, so
   112 vertices inside the outer-lip outline fell through to CheekNose. Mouth is now inside the
   outer-lip outline (xy) and ahead of the ears, with no normal test.
+- The FLAME vertex map includes the eyeball meshes (1092 vertices, dominant joint 23 or 24).
+  They sit inside the skull and their outward normals point into it, so the signed distance of
+  a point inside the head behind the eye came out positive (+0.006 m at 2 cm, +0.036 m at
+  5 cm). They are now dropped from the surface; the skin around the eyes is still labelled Eye by
+  the eye-contour radius rule.
 
 Rest frame: y up, x toward the subject's left, z forward.
 """
@@ -140,12 +145,14 @@ class HeadSurface:
 def build_head_surface(skeleton, corr, model_dir="models") -> HeadSurface:
     """The labelled head and neck surface for one body shape."""
     vertex_ids = np.unique(load_flame_to_smplx(model_dir))
+    weights = skeleton.model.lbs_weights.detach().numpy()
+    vertex_ids = vertex_ids[~np.isin(weights[vertex_ids].argmax(axis=1), EYE_JOINTS)]
     rest = pose_mesh(skeleton, np.zeros((55, 3)), skeleton.betas, np.zeros(3)).vertices
     all_faces = np.asarray(skeleton.model.faces, dtype=np.int64)
     local = np.full(len(rest), -1, dtype=np.int64)
     local[vertex_ids] = np.arange(len(vertex_ids))
     keep = (local[all_faces] >= 0).all(axis=1)
     normals = vertex_normals(rest, all_faces)[vertex_ids]
-    dominant = skeleton.model.lbs_weights.detach().numpy()[vertex_ids].argmax(axis=1)
+    dominant = weights[vertex_ids].argmax(axis=1)
     region, sub = label_regions(rest[vertex_ids], normals, dominant, region_anchors(rest, corr))
     return HeadSurface(vertex_ids, local[all_faces[keep]], region, sub)
