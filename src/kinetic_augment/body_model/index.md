@@ -5,6 +5,7 @@
 - `assembly.py` — Poses one SMPL-X body from the body, hand and head fits.
 - `converter.py` — Converts world body landmarks to SMPL-X parameters and back.
 - `face_correspondence.py` — MediaPipe face-mesh groups and their positions on the SMPL-X surface, via the FLAME embedding.
+- `face_observations.py` — Holds per-clip MediaPipe FaceLandmarker observations (478 landmarks, 52 blendshapes, head matrix) and their `_face.npz` file format.
 - `joint_mapping.py` — Defines SMPL-X/MediaPipe joint indices, chains, and angle limits.
 - `kinematics.py` — Composes local joint rotations down the chain into world joint positions.
 - `shape.py` — Fits one plausible SMPL-X body shape per clip by minimising the round-trip error.

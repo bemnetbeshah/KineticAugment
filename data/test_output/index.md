@@ -16,3 +16,4 @@
 - `index.md` — Index of extracted arrays, analysis plots, and run summary in this folder.
 - `*_world.npz` — Metric MediaPipe world landmarks and visibility, used for body-model fitting; extracted one MediaPipe instance per clip.
 - `*_hands.npz` — MediaPipe hand world/image landmarks per anatomical side with the paired pose, for the V1.2 hand round trip.
+- `*_face.npz` — MediaPipe FaceLandmarker landmarks, blendshapes and head matrix per frame, frame-aligned with `*_hands.npz`, for the V1.3 face work.

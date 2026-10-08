@@ -8,6 +8,7 @@
 - `test_extract_world_landmarks.py` — Tests that a clip's extracted landmarks do not depend on the clip processed before it.
 - `face_assets.py` — Skip marks and paths for the licensed FLAME assets and the MediaPipe face assets.
 - `test_face_correspondence.py` — Tests the MediaPipe → SMPL-X face correspondence, including the F1 eye-corner and nose-tip check.
+- `test_face_observations.py` — Tests FaceClip pixel conversion, file round trip and schema check.
 - `test_kinematics.py` — Tests skeleton sources and forward kinematics against the real SMPL-X model.
 - `test_shape.py` — Tests the per-clip shape fit against the converter's own round-trip error and SMPL-X's shape prior.
 - `test_swing_ik.py` — Tests analytic swing inverse kinematics against known synthetic ground truth.
@@ -16,4 +17,5 @@
 - `test_hand_converter.py` — Tests the hand fit: analytic start, real-model refinement, decoder, serialisation and shape.
 - `test_hand_observations.py` — Tests the left/right assignment and the hand clip file format.
 - `test_extract_hand_landmarks.py` — Runs the hand extractor on pilot clips: clip-order independence, units, sides.
+- `test_extract_face_landmarks.py` — Integration test: real FaceLandmarker on a pilot clip (face found, frames align with hands, head-matrix layout).
 - `index.md` — Index of automated test files.
