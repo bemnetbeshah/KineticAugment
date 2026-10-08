@@ -14,6 +14,7 @@
 - `smplx_to_mp.py` — Converts SMPL-X pose parameters back to MediaPipe landmarks.
 - `swing_ik.py` — Solves SMPL-X joint rotations analytically from observed bone directions.
 - `smplx_wrapper.py` — Loads SMPL-X assets and runs model inference and parameter handling.
+- `face_regions.py` — SMPL-X head and neck surface labelled with ASL-LEX location regions and subregions from landmark, normal and skinning rules (V1.3).
 - `hand_model.py` — Evaluates MediaPipe's 21 hand landmarks on MANO or SMPL-X (joints plus fingertip vertices).
 - `head_converter.py` — Fits the SMPL-X neck, head and jaw to MediaPipe face landmarks.
 - `hand_converter.py` — Fits MANO / SMPL-X hand parameters to MediaPipe hand landmarks and rebuilds them from parameters alone.

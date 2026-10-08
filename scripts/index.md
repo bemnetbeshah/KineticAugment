@@ -13,6 +13,7 @@
 - `measure_round_trip.py` — Measures the shape-fitted identity round trip against the rigid-skeleton floor (the V1 gate), fitted and held out.
 - `render_augmented_from_yaml.py` — Applies YAML-configured augmentations to videos and renders overlays.
 - `render_landmarks.py` — Extracts landmarks, reconstructs motion with SMPL-X, and renders comparisons.
+- `render_face_regions.py` — Renders the SMPL-X head-region segmentation (front and side views) to `docs/media/face_regions.png` for visual review (V1.3).
 - `review_checks/` — Frozen verification scripts and outputs behind `docs/V1_Review_Assessment.md` (not project code).
 - `study_shape_fit.py` — Reproduces the Step 10 shape-fit evidence: prior, identifiability, ladder, design sweeps, and adaptive IK.
 - `test_phase1.py` — Checks joint mappings, landmark extraction, and MediaPipe-to-SMPL-X conversion.
