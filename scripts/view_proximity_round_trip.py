@@ -286,16 +286,17 @@ def render(clip, landmark_dir: Path, out_dir: Path, models, frame_range=None, st
     first, last = (frame_range[0] - 1, frame_range[1]) if frame_range else (0, n)
     fig = plt.figure(figsize=(24, 8.6), dpi=100)
     steps = np.arange(1, n + 1)
-    region_legend = [Patch(color=(1 - TINT) * SKIN + TINT * np.asarray(plt.get_cmap("tab10")(r))[:3],
-                           label=name) for r, name in enumerate(REGIONS)]
+    region_legend = [
+        Patch(color=(1 - TINT) * SKIN + TINT * np.asarray(plt.get_cmap("tab10")(r))[:3],
+              label=name) for r, name in enumerate(REGIONS)]
     top = np.nanmax(np.concatenate([s_orig, s_image, s_corr])) \
         if np.isfinite(np.concatenate([s_orig, s_image, s_corr])).any() else 10.0
-    strip_top = min(100 * top * 1.05, 40.0)
+    strip_top = min(100 * top * 1.05, 60.0)
 
     for t in range(first, last):
         fig.clf()
-        grid = fig.add_gridspec(2, 4, height_ratios=[7, 1.9], width_ratios=[1.7, 1, 1, 1], hspace=0.22,
-                                wspace=0.05,
+        grid = fig.add_gridspec(2, 4, height_ratios=[7, 1.9], width_ratios=[1.7, 1, 1, 1],
+                                hspace=0.22, wspace=0.05,
                                 left=0.045, right=0.98, top=0.95, bottom=0.07)
         ax_vid, ax_front, ax_side, ax_mesh = (fig.add_subplot(grid[0, i]) for i in range(4))
         ax_strip = fig.add_subplot(grid[1, :])
@@ -354,8 +355,9 @@ def render(clip, landmark_dir: Path, out_dir: Path, models, frame_range=None, st
                     bbox=dict(boxstyle="square,pad=0.15", fc="white", alpha=0.8, lw=0))
 
         # 2. front and 3. side view of the corrected pass, with the original wrist in grey.
-        for ax, view, lim, title in ((ax_front, "front", front, "front: input, original, corrected"),
-                                     (ax_side, "side", side_lim, "side (depth →)")):
+        for ax, view, lim, title in (
+                (ax_front, "front", front, "front: input, original, corrected"),
+                (ax_side, "side", side_lim, "side (depth →)")):
             draw_bones(ax, obs_pose[t], CONTEXT_BONES, view, "#7f9cc4", 1.2, alpha=0.6)
             draw_bones(ax, obs_pose[t], ARM_BONES, view, INPUT, 3.0, alpha=0.5,
                        label="MediaPipe input arms")
@@ -391,7 +393,8 @@ def render(clip, landmark_dir: Path, out_dir: Path, models, frame_range=None, st
             set_view(ax, lim, title)
         ax_front.scatter([], [], s=45, color=LIGHT_GREY, edgecolors="#555",
                          label="MediaPipe wrist + hand (original)")
-        ax_front.scatter([], [], s=50, color=TARGET_ORANGE, marker="x", label="wrist target (image)")
+        ax_front.scatter([], [], s=50, color=TARGET_ORANGE, marker="x",
+                         label="wrist target (image)")
         ax_front.plot([], [], color=GAP_GREY, label="closest hand pt → head (red: contact)")
         ax_front.legend(loc="lower left", fontsize=7, framealpha=0.85)
         shifts = []
@@ -477,7 +480,8 @@ def render(clip, landmark_dir: Path, out_dir: Path, models, frame_range=None, st
     print(f"  frames with image NEAR {summary['image_near_frames']}, corrected CONTACT "
           f"{summary['corr_contact_frames']} ({summary['corr_contact_trusted_frames']} reached), "
           f"original CONTACT {summary['orig_contact_frames']}; min cm orig/image/corr "
-          f"{summary['min_orig_cm']:.1f}/{summary['min_image_cm']:.1f}/{summary['min_corr_cm']:.1f}")
+          f"{summary['min_orig_cm']:.1f}/{summary['min_image_cm']:.1f}/"
+          f"{summary['min_corr_cm']:.1f}")
     print(f"  -> {out_path} ({written}/{summary['expected']} frames, {summary['seconds']:.0f} s)")
     return summary
 
