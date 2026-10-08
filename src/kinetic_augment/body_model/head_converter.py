@@ -18,6 +18,8 @@ import numpy as np
 from scipy.spatial import ConvexHull, QhullError
 
 from .alignment import apply_similarity, similarity_transform
+from .assembly import JAW, pose_mesh
+from .face_correspondence import JAW_PAIR, LEFT_EYE_OUTER, RIGHT_EYE_OUTER
 
 OCCLUSION_PAD = 0.15     # padding around a hand outline, fraction of the outer-eye-corner distance
 OUTLIER_FACTOR = 2.5     # residual above this many weighted medians is dropped
@@ -124,3 +126,38 @@ def head_rotation(template, observed, weights, reference_length: float) -> HeadR
         rotation, residual = fit(w)
     rms = float(np.sqrt((w @ residual ** 2) / w.sum())) / reference_length
     return HeadRotation(rotation, rms, int((w > 0).sum()), w)
+
+
+JAW_GRID_DEG = np.arange(0.0, 30.0 + 1e-9, 0.25)
+JAW_AXIS = np.array([1.0, 0.0, 0.0])  # SMPL-X jaw pitch; positive opens the mouth
+
+
+def lip_gap_ratio(upper, lower, right_outer, left_outer) -> float:
+    """Inner-lip gap over the outer-eye-corner distance: scale-free, so pixels or metres."""
+    return float(np.linalg.norm(np.asarray(upper) - lower)
+                 / np.linalg.norm(np.asarray(right_outer) - left_outer))
+
+
+@dataclass
+class JawCurve:
+    pitch_rad: np.ndarray  # (K,) jaw pitch grid
+    gap_ratio: np.ndarray  # (K,) lip-gap ratio at each pitch; non-decreasing
+
+
+def jaw_curve(skeleton, corr) -> JawCurve:
+    """Lip-gap ratio of the SMPL-X mesh over the jaw-pitch grid, for this body shape."""
+    names = JAW_PAIR + (RIGHT_EYE_OUTER, LEFT_EYE_OUTER)
+    gaps = []
+    for degrees in JAW_GRID_DEG:
+        rotations = np.zeros((55, 3))
+        rotations[JAW] = np.radians(degrees) * JAW_AXIS
+        vertices = pose_mesh(skeleton, rotations, skeleton.betas, np.zeros(3)).vertices
+        gaps.append(lip_gap_ratio(*corr.points(vertices, names)))
+    return JawCurve(np.radians(JAW_GRID_DEG), np.maximum.accumulate(np.array(gaps)))
+
+
+def fit_jaw_pitch(ratio: float, curve: JawCurve) -> float:
+    """Jaw pitch (radians) reproducing an observed lip-gap ratio, clamped to the grid."""
+    # A tiny ramp makes the abscissa strictly increasing where the curve is flat (closed lips).
+    xp = curve.gap_ratio + 1e-12 * np.arange(len(curve.gap_ratio))
+    return float(np.interp(ratio, xp, curve.pitch_rad))

@@ -86,3 +86,57 @@ def test_points_in_polygon_non_convex_u_shape():
 def test_points_in_polygon_empty_points():
     square = np.array([[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]])
     assert points_in_polygon(np.empty((0, 2)), square).shape == (0,)
+
+
+from tests.face_assets import MODEL_DIR, requires_face_assets  # noqa: E402
+
+BETAS = np.zeros(300)
+BETAS[[0, 2, 7]] = [0.8, -0.6, 1.2]
+
+
+@pytest.fixture(scope="module")
+def body():
+    from kinetic_augment.body_model.skeleton import SMPLXSkeleton
+    return SMPLXSkeleton(model_path=MODEL_DIR).shaped(BETAS)
+
+
+@pytest.fixture(scope="module")
+def corr():
+    from kinetic_augment.body_model.face_correspondence import load_face_correspondence
+    return load_face_correspondence(MODEL_DIR)
+
+
+@pytest.fixture(scope="module")
+def curve(body, corr):
+    from kinetic_augment.body_model.head_converter import jaw_curve
+    return jaw_curve(body, corr)
+
+
+@requires_face_assets
+def test_jaw_curve_opens_with_positive_pitch(curve):
+    from kinetic_augment.body_model.head_converter import JAW_GRID_DEG
+
+    assert len(curve.pitch_rad) == len(JAW_GRID_DEG)
+    assert np.all(np.diff(curve.gap_ratio) >= 0)
+    assert curve.gap_ratio[40] > curve.gap_ratio[0] + 0.05  # 10 degrees opens the lips visibly
+
+
+@requires_face_assets
+def test_fit_jaw_pitch_recovers_a_posed_jaw(body, corr, curve):
+    from kinetic_augment.body_model.assembly import JAW, pose_mesh
+    from kinetic_augment.body_model.head_converter import JAW_AXIS, fit_jaw_pitch, lip_gap_ratio
+
+    rotations = np.zeros((55, 3))
+    rotations[JAW] = np.radians(12.3) * JAW_AXIS
+    vertices = pose_mesh(body, rotations, body.betas, np.zeros(3)).vertices
+    upper, lower, right, left = corr.points(vertices, (13, 14, 33, 263))
+    pitch = fit_jaw_pitch(lip_gap_ratio(upper, lower, right, left), curve)
+    assert abs(np.degrees(pitch) - 12.3) < 1.0
+
+
+@requires_face_assets
+def test_fit_jaw_pitch_clamps_to_the_grid(curve):
+    from kinetic_augment.body_model.head_converter import fit_jaw_pitch
+
+    assert fit_jaw_pitch(-1.0, curve) == 0.0
+    assert np.isclose(np.degrees(fit_jaw_pitch(10.0, curve)), 30.0)
