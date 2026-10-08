@@ -1565,9 +1565,9 @@ Update it whenever a step proves or retracts something.
 | P18 | With the nose, the fitted body is upright on all 409 real frames | Step 8, Step 10 note |
 | P19 | A shared MediaPipe instance made stored landmarks depend on clip order, by up to 114 mm | Step 9 box |
 | P20 | MediaPipe disagrees with itself by more than the conversion loses: smoothing off 2.41%, static mode 9.22%, heavy model 25.47% | Step 10, context |
-| P21 | The MediaPipe→FLAME embedding transfers to SMPL-X: eye corners 1.25-1.48 mm and nose tip 3.89 mm from smplx's own landmarks (F1; five points compared; the rest rely on the triangle check) | V1.3 Task 1, [V1.3 findings](V1_3_Findings.md) §6 |
-| P22 | FaceLandmarker's axis conventions are consistent with the fit's: head-rotation agreement median 0.58° near / 0.57° far; 3.2-10.6° without the axis flip and 7.8-12.6° inverted on three clips. Agreement, not independence: both rotations come from the same landmarks (F2) | V1.3 findings §3.2, §6 |
-| P23 | The 17-point rigid set gives head rotation under expression and partial occlusion on these clips: rigid residual 2.27% near / 2.14% far, rotation p95 2.66° / 1.40° on 143 near frames in 12 clips (F3; agreement with MediaPipe's own matrix) | V1.3 findings §3.1, §3.2 |
+| P23 | The MediaPipe→FLAME embedding transfers to SMPL-X: eye corners 1.25-1.48 mm and nose tip 3.89 mm from smplx's own landmarks (F1; five points compared; the rest rely on the triangle check) | V1.3 Task 1, [V1.3 findings](V1_3_Findings.md) §6 |
+| P24 | FaceLandmarker's axis conventions are consistent with the fit's: head-rotation agreement median 0.58° near / 0.57° far; 3.2-10.6° without the axis flip and 7.8-12.6° inverted on three clips. Agreement, not independence: both rotations come from the same landmarks (F2) | V1.3 findings §3.2, §6 |
+| P25 | The 17-point rigid set gives head rotation under expression and partial occlusion on these clips: rigid residual 2.27% near / 2.14% far, rotation p95 2.66° / 1.40° on 143 near frames in 12 clips (F3; agreement with MediaPipe's own matrix) | V1.3 findings §3.1, §3.2 |
 
 ### Disproven, retracted or superseded
 
@@ -1609,9 +1609,9 @@ Update it whenever a step proves or retracts something.
 | O5 | The nose-less fallback root, and orphan correspondences (review assessment §4.6) | **Both fixed 2026-10-05** (Step 10, contract fixes) |
 | O6 | Are the elbow and shoulder joint-limit axes wrong (review assessment §4.2)? | Not re-verified; latent until augmentation is wired |
 | O7 | Is `z` noise 1.2× or about 1.9× that of x/y per axis (review assessment §4.7)? | Not re-verified; reference figures only |
-| O10 | F1: the MediaPipe→FLAME embedding transfers to SMPL-X correctly (V1.3 design §8) | **Proven**, now P21 |
-| O11 | F2: FaceLandmarker pixel axes (x·W, y·H, z·W) match the pose world axes | **Proven** as consistency of conventions, now P22 |
-| O12 | F3: the 17-point rigid set gives head rotation under expression and partial occlusion | **Proven** on these clips, now P23 |
+| O10 | F1: the MediaPipe→FLAME embedding transfers to SMPL-X correctly (V1.3 design §8) | **Proven**, now P23 |
+| O11 | F2: FaceLandmarker pixel axes (x·W, y·H, z·W) match the pose world axes | **Proven** as consistency of conventions, now P24 |
+| O12 | F3: the 17-point rigid set gives head rotation under expression and partial occlusion | **Proven** on these clips, now P25 |
 | O13 | F4: the neck swing to the observed ear midpoint fixes head placement without touching the arms | Partly supported: ear residual far 7.61% → 2.82%, near 7.15% → 4.56% of shoulder width (p95 ≈ 9-10%). Arms-unchanged only by a synthetic test; not re-measured on real data (V1.3 findings §3.4) |
 | O14 | F5: lip gap is a usable proxy for jaw pitch with expression at zero | Partly supported: Spearman median 0.92 over 8 of 20 clips; 69364 (0.496) and 63665 (0.687) below 0.7; 12 clips not scorable (V1.3 findings §3.3) |
 | O15 | F6: landmark rules on the rest template give sensible ASL-LEX regions | Tests pass and `docs/media/face_regions.png` rendered; **awaits the user's review of the render**. Eye 750 vertices after dropping eyeballs; Ear radius 3.5 cm is generous |

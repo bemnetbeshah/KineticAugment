@@ -3,7 +3,7 @@
 **Date:** 2026-10-07. **Branch:** `feat/face-v1.3`. **Scope:** the phase-A verification gate of the
 [V1.3 face design](V1_3_Face_Design.md) (§7), run on the 20 clips of `data/round_trip_eval`.
 **Plan:** [V1.3 implementation plan](V1_3_Implementation_Plan.md). **Ledger:**
-[V1 problem scope §12](V1_Problem_Scope.md#12-assumptions-ledger), rows O10 to O16 and P21 to P23.
+[V1 problem scope §12](V1_Problem_Scope.md#12-assumptions-ledger), rows O10 to O16 and P23 to P25.
 
 Phase A fits a SMPL-X neck, head and jaw to MediaPipe FaceLandmarker output, places the fitted
 hands in the same frame, and measures signed distances from hand points to the head surface. The
@@ -229,9 +229,9 @@ holds no contact signs, or contact is lost to depth error, is the new open quest
 
 | ID | Verdict | Evidence |
 | --- | --- | --- |
-| F1 | Supported (Proven, P21) | Eye corners 1.25, 1.48, 1.48, 1.25 mm and nose tip 3.89 mm from SMPL-X's own landmarks (Task 1; limits were 6 and 8 mm). The FLAME triangle check also passed. Only these five points were compared with SMPL-X's landmarks; the other points of the 105 rest on the triangle check. |
-| F2 | Supported (Proven, P22) | Metric 2 on real data: 0.58 degrees near, 0.57 far. With the axis flip removed the reviewer's clips read 3.2 to 10.6 degrees; with the rotation inverted, 7.8 to 12.6. Both rotations come from the same landmarks, so this shows the conventions are consistent, not that the head orientation is independently correct. |
-| F3 | Supported (Proven, P23) | Rigid residual 2.27 % near against 2.14 % far; head pose p95 2.66 against 1.40 degrees. Near frames are 143 in 12 clips, and the check is agreement with MediaPipe's own matrix. |
+| F1 | Supported (Proven, P23) | Eye corners 1.25, 1.48, 1.48, 1.25 mm and nose tip 3.89 mm from SMPL-X's own landmarks (Task 1; limits were 6 and 8 mm). The FLAME triangle check also passed. Only these five points were compared with SMPL-X's landmarks; the other points of the 105 rest on the triangle check. |
+| F2 | Supported (Proven, P24) | Metric 2 on real data: 0.58 degrees near, 0.57 far. With the axis flip removed the reviewer's clips read 3.2 to 10.6 degrees; with the rotation inverted, 7.8 to 12.6. Both rotations come from the same landmarks, so this shows the conventions are consistent, not that the head orientation is independently correct. |
+| F3 | Supported (Proven, P25) | Rigid residual 2.27 % near against 2.14 % far; head pose p95 2.66 against 1.40 degrees. Near frames are 143 in 12 clips, and the check is agreement with MediaPipe's own matrix. |
 | F4 | Partly supported, still open (O13) | The swing lowers the ear-midpoint residual: far 7.61 to 2.82 %, near 7.15 to 4.56 % (p95 about 9 to 10 %). The synthetic arms-unchanged test passes, but it is structurally trivial; arm metrics were not re-measured on real data in this gate. |
 | F5 | Partly supported, still open (O14) | Median 0.92 over 8 clips, but 69364 (0.496) and 63665 (0.687) are below 0.7, and 12 of 20 clips could not be scored. |
 | F6 | Not yet judged, still open (O15) | Region labelling is covered by tests and rendered in `docs/media/face_regions.png`. **The user still has to review the render.** The Eye count was inflated before eyeball meshes were dropped from the head surface; it is now 750. The Ear radius of 3.5 cm is generous (1,199 vertices) and takes some temple and jaw-hinge area. |
