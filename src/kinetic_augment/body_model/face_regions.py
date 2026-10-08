@@ -11,6 +11,9 @@ Tuning record (first render, thresholds as first written all passed the anchor t
 - Neck was `dominant_joint == 12` only. The render showed the 117 lowest vertices, skinned mostly
   to spine3 (joint 9), falling through to CheekNose (front) and HeadTop (back). Neck is now every
   vertex whose dominant joint is not head (15), jaw (22) or an eye (23, 24).
+- Mouth required front-facing normals, but the inner-lip and mouth-interior vertices are not, so
+  112 vertices inside the outer-lip outline fell through to CheekNose. Mouth is now inside the
+  outer-lip outline (xy) and ahead of the ears, with no normal test.
 
 Rest frame: y up, x toward the subject's left, z forward.
 """
@@ -104,7 +107,7 @@ def label_regions(
            | (_nearest(points, a.eye_contours) < EYE_RADIUS), "Eye")
     assign(~np.isin(dominant_joint, (HEAD_JOINT, JAW_JOINT) + EYE_JOINTS), "Neck")
     assign(_nearest(points, a.ears) < EAR_RADIUS, "Ear")
-    assign(front & points_in_polygon(points[:, :2], a.outer_lip[:, :2]), "Mouth")
+    assign(ahead & points_in_polygon(points[:, :2], a.outer_lip[:, :2]), "Mouth")
     x_lo, x_hi = np.sort(a.mouth_corners[:, 0])
     assign(front & (x >= x_lo) & (x <= x_hi)
            & (y >= a.upper_lip_top[1]) & (y <= a.subnasale[1]), "UpperLip")

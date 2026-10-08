@@ -66,3 +66,18 @@ def test_anchor_points_get_their_regions(setup):
     assert label_near(setup, rest[EAR_VERTICES[0]])[0] == "Ear"
     top = surface.vertex_ids[np.argmax(rest[surface.vertex_ids, 1])]
     assert label_near(setup, rest[top])[0] == "HeadTop"
+
+
+@requires_face_assets
+def test_no_cheek_vertex_inside_the_lip_outline(setup):
+    """Inner-lip and mouth-interior vertices are not front-facing but are still Mouth."""
+    from kinetic_augment.body_model.face_regions import REGIONS, region_anchors
+    from kinetic_augment.body_model.head_converter import points_in_polygon
+
+    _, corr, surface, rest = setup
+    a = region_anchors(rest, corr)
+    points = rest[surface.vertex_ids]
+    ahead = points[:, 2] > a.ears[:, 2].mean()
+    inside = points_in_polygon(points[:, :2], a.outer_lip[:, :2]) & ahead
+    assert inside.any()
+    assert not (surface.region[inside] == REGIONS.index("CheekNose")).any()
