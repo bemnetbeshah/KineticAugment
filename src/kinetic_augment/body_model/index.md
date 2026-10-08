@@ -15,6 +15,7 @@
 - `swing_ik.py` — Solves SMPL-X joint rotations analytically from observed bone directions.
 - `smplx_wrapper.py` — Loads SMPL-X assets and runs model inference and parameter handling.
 - `hand_model.py` — Evaluates MediaPipe's 21 hand landmarks on MANO or SMPL-X (joints plus fingertip vertices).
+- `head_converter.py` — Fits the SMPL-X neck, head and jaw to MediaPipe face landmarks.
 - `hand_converter.py` — Fits MANO / SMPL-X hand parameters to MediaPipe hand landmarks and rebuilds them from parameters alone.
 - `hand_observations.py` — Holds per-clip MediaPipe hand observations and assigns each detected hand its anatomical side.
 - `index.md` — Index of body-model mappings, converters, and wrapper code.
