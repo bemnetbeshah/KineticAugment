@@ -145,7 +145,7 @@ It is prior art to learn from, not a working baseline — it was never verified,
 | Deferred | Why |
 | --- | --- |
 | Hands (MANO, 21 landmarks/hand) | Roughly triples the difficulty: wrist coupling, finger twist ambiguity, and MediaPipe's separate hand coordinate frame. V2. |
-| Face (468 landmarks) | No correspondence to SMPL-X joints exists. Expression fitting is a separate problem. |
+| Face (468 landmarks) | Moved into scope by V1.3 ([design](V1_3_Face_Design.md)): head, neck and jaw from FaceLandmarker; expression stays out. |
 | Mesh vertices, collision geometry | Downstream of valid parameters. Nothing to do until V1 lands. |
 | Rewiring the augmentation pipeline | V1 delivers a verified converter. Integration is a separate change with its own risks. |
 | Temporal smoothing, real-time performance | Correctness first. Optimisation against an unverified result is wasted work. |
@@ -1606,3 +1606,9 @@ Update it whenever a step proves or retracts something.
 | O5 | The nose-less fallback root, and orphan correspondences (review assessment §4.6) | **Both fixed 2026-10-05** (Step 10, contract fixes) |
 | O6 | Are the elbow and shoulder joint-limit axes wrong (review assessment §4.2)? | Not re-verified; latent until augmentation is wired |
 | O7 | Is `z` noise 1.2× or about 1.9× that of x/y per axis (review assessment §4.7)? | Not re-verified; reference figures only |
+| O10 | F1: the MediaPipe→FLAME embedding transfers to SMPL-X correctly (V1.3 design §8) | Triangle check passed; eye corners 1.25-1.48 mm, nose tip 3.89 mm from smplx's landmarks (Task 1) |
+| O11 | F2: FaceLandmarker pixel axes (x·W, y·H, z·W) match the pose world axes | Untested |
+| O12 | F3: the 17-point rigid set gives head rotation under expression and partial occlusion | Untested |
+| O13 | F4: the neck swing to the observed ear midpoint fixes head placement without touching the arms | Untested |
+| O14 | F5: lip gap is a usable proxy for jaw pitch with expression at zero | Untested |
+| O15 | F6: landmark rules on the rest template give sensible ASL-LEX regions | Untested |
