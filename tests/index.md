@@ -10,6 +10,7 @@
 - `test_face_correspondence.py` — Tests the MediaPipe → SMPL-X face correspondence, including the F1 eye-corner and nose-tip check.
 - `test_face_observations.py` — Tests FaceClip pixel conversion, file round trip and schema check.
 - `test_face_stream.py` — Tests reversible similarity attachment of observed full-face landmarks to head-local coordinates.
+- `test_face_features.py` — Tests feature archive schema, stream preflight validation, geometry masks, and crossing hand outlines.
 - `test_kinematics.py` — Tests skeleton sources and forward kinematics against the real SMPL-X model.
 - `test_shape.py` — Tests the per-clip shape fit against the converter's own round-trip error and SMPL-X's shape prior.
 - `test_swing_ik.py` — Tests analytic swing inverse kinematics against known synthetic ground truth.
