@@ -63,10 +63,11 @@ handling; they do not validate absolute metric depth or contact labels.
 
 With attachment enabled and disabled over the same full-clip fit context, the first three
 geometry-valid frames matched exactly on two pilot clips. For 01986 (frames 10–12) and 01991
-(frames 0–2), maximum absolute differences were zero for body rotations, body translation, and
-hand-to-face distance. The initial comparison that refit only three frames was discarded because
-the hand-shape fit depends on the selected frame set; both accepted comparisons used every clip
-frame in both runs.
+(frames 0–2), body-valid and geometry-valid masks and all per-value finite masks matched. Both
+probes compared 495 finite rotation entries and 9 translation entries; hand-to-face distance
+compared 35 finite entries on 01986 and 21 on 01991. Every maximum absolute difference was zero.
+The initial comparison that refit only three frames was discarded because the hand-shape fit
+depends on the selected frame set; both accepted comparisons used every clip frame in both runs.
 
 The depth-corrected regression on 01986 frames 14–21 produced 16 corrected-but-unreached hand
 rows, and all 16 had invalid geometry masks. A separate controlled copy removed pose-world
@@ -76,9 +77,11 @@ that row.
 
 The collator and classifier optimization probe used four synthetic sequences, synthetic labels,
 and body/hand, face, and head streams. All collated values and logits were finite and an optimizer
-step completed. This verifies the training wiring only. I found no usable WLASL or equivalent
-label annotation files under the project or parent research workspace, so **no meaningful real
-recognition accuracy was measured**.
+step completed. This verifies the training wiring only. A bounded filename inventory of the
+current worktree `data` and parent project `data` directories (following scoped symlinks) found
+zero matching WLASL/annotation/label/gloss JSON, CSV, TSV, or Parquet files. The exact roots,
+filter, and command are recorded in the evidence JSON and Task 5 report. Therefore **no meaningful
+real recognition accuracy was measured**.
 
 ## Feature contract and training
 

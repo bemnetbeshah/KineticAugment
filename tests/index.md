@@ -13,6 +13,7 @@
 - `test_face_features.py` — Tests feature archive schema, stream preflight validation, geometry masks, and crossing hand outlines.
 - `test_face_training_dataset.py` — Tests face feature training streams, synchronized temporal operations, collation, and WLASL split mapping.
 - `test_face_classifier.py` — Tests masked temporal encoding, trainer integration, and synthetic facial signal learning.
+- `test_face_integration_validation.py` — Tests that attachment on/off comparisons reject validity or finite-value mask loss.
 - `test_kinematics.py` — Tests skeleton sources and forward kinematics against the real SMPL-X model.
 - `test_shape.py` — Tests the per-clip shape fit against the converter's own round-trip error and SMPL-X's shape prior.
 - `test_swing_ik.py` — Tests analytic swing inverse kinematics against known synthetic ground truth.

@@ -46,8 +46,10 @@ preserving observed face points. The image-face adapter kept 52 values available
 body/hand values. The 4-sequence, three-stream classifier probe had finite collated tensors and
 logits and completed an optimizer update with synthetic labels only.
 
-No usable WLASL or equivalent sign label annotations were found in the project or parent research
-workspace. Therefore the task reports **no meaningful real recognition accuracy**.
+A bounded inventory of the current worktree and parent project `data` directories found no
+matching WLASL or equivalent annotation filenames. The search roots and exact command are recorded
+in the Fix round 1 section below. Therefore the task reports **no meaningful real recognition
+accuracy** for these clips.
 
 ## Verification
 
@@ -82,3 +84,57 @@ Black is not installed in this environment.
   discarded. Both reported comparisons refit all clip frames with attachment toggled, then compare
   the same finite geometry rows.
 - The untracked `data/round_trip_eval` symlink remains intact. No production source was modified.
+
+## Fix round 1: strict body/hand regression masks
+
+The reviewer identified that the original on/off comparison ignored non-finite deltas and did not
+compare geometry validity or finite masks. The comparison now requires identical body validity,
+geometry validity, and per-value finite masks before it can pass. It reports finite compared counts
+for rotations, translation, and distance. A focused negative test drops a hand validity bit and
+sets a hand value to NaN; the comparison fails. A second test covers actual pipeline-shaped arrays:
+`(T, 55, 3, 3)` rotations, `(T, 3)` translation, and `(T, 2, 7)` distances with `(T,)` and
+`(T, 2)` masks.
+
+The corrected selected-clip run reused the same full-clip fit context for attachment-on and
+off. Both clips passed with exact matching masks and zero numeric deltas. 01986 frames 10–12
+compared 495 rotation, 9 translation, and 35 distance finite entries. 01991 frames 0–2 compared
+495 rotation, 9 translation, and 21 distance entries. The full 25-clip fit and full test suite were
+not rerun for this validation-only fix.
+
+A bounded annotation filename inventory followed only the current worktree's `data` root and the
+parent project's `/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/data` root. Both were
+searched with scoped symlinks followed; zero matching WLASL/annotation/label/gloss JSON, CSV, TSV,
+or Parquet paths were found. This supports the bounded statement that no usable labels were
+located in these data directories; it is not a claim about the wider workspace.
+
+Exact final verification commands and output:
+
+```text
+$ rtk proxy env PYTHONPATH=src .venv/bin/python -m pytest tests/test_face_integration_validation.py -q --tb=long
+============================= test session starts ==============================
+collected 3 items
+
+tests/test_face_integration_validation.py ...                            [100%]
+
+============================== 3 passed in 0.10s ===============================
+
+$ rtk proxy env PYTHONPATH=src .venv/bin/python scripts/validate_face_integration.py --clip 01986 --clip 01991 --output-dir /tmp/face-v1.3-validation-fix-round1
+WARNING: You are using a MANO model, with only 10 shape coefficients.
+WARNING: You are using a MANO model, with only 10 shape coefficients.
+validated 2 clips / 132 frames; wrote /tmp/face-v1.3-validation-fix-round1/face_integration_validation.json
+
+$ rtk proxy rg --files --hidden --no-ignore --follow data /Users/bemnetbeshah/Workspace/cv-research/KineticAugment/data | rtk proxy rg -i '(wlasl|annot|label|gloss).*(\.json|\.csv|\.tsv|\.parquet)$|(^|/)(annotations?|labels?)(/|\.)' || true
+(no matching paths)
+
+$ rtk proxy .venv/bin/python -m py_compile scripts/validate_face_integration.py tests/test_face_integration_validation.py
+(no output; exit 0)
+
+$ rtk proxy git diff --check
+(no output; exit 0)
+```
+
+Two earlier attempts at the selected-clip run exposed an invalid broadcast shape for frame masks;
+no evidence from those runs was accepted. The focused test was extended to exercise the real
+pipeline dimensions, and the final run above passed after correcting the call sites. The round-one
+machine-readable results are in `docs/V1_3_Face_Integration_Evidence.json`; the detailed two-clip
+runtime report is `/tmp/face-v1.3-validation-fix-round1/face_integration_validation.json`.

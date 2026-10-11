@@ -29,8 +29,60 @@
     "total_pipeline_seconds": 245.177
   },
   "annotation_search": {
-    "scope": "project and parent cv-research workspace",
-    "usable_wlasl_or_equivalent_label_annotation_files_found": 0
+    "command": "rtk proxy rg --files --hidden --no-ignore --follow data /Users/bemnetbeshah/Workspace/cv-research/KineticAugment/data | rtk proxy rg -i '(wlasl|annot|label|gloss).*(\\.json|\\.csv|\\.tsv|\\.parquet)$|(^|/)(annotations?|labels?)(/|\\.)' || true",
+    "command_output": "(no matching paths)",
+    "filename_filter": "case-insensitive WLASL/annot/label/gloss names with JSON/CSV/TSV/Parquet extensions or annotation(s)/label(s) path components",
+    "matching_file_count": 0,
+    "matching_files": [],
+    "meaningful_recognition_accuracy_measured": false,
+    "scope": "bounded data-directory filename inventory; scoped symlinks followed",
+    "searched_roots": [
+      "/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/.claude/worktrees/face-v1.3/data",
+      "/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/data"
+    ]
+  },
+  "attachment_on_off_regression_fix_round1": {
+    "clips": [
+      {
+        "body_valid_mask_equal": true,
+        "clip": "01986",
+        "distance_finite_compared": 35,
+        "frames": [
+          10,
+          11,
+          12
+        ],
+        "geometry_valid_mask_equal": true,
+        "max_distance_delta_m": 0.0,
+        "max_rotation_delta": 0.0,
+        "max_translation_delta_m": 0.0,
+        "pass": true,
+        "rotation_finite_compared": 495,
+        "translation_finite_compared": 9
+      },
+      {
+        "body_valid_mask_equal": true,
+        "clip": "01991",
+        "distance_finite_compared": 21,
+        "frames": [
+          0,
+          1,
+          2
+        ],
+        "geometry_valid_mask_equal": true,
+        "max_distance_delta_m": 0.0,
+        "max_rotation_delta": 0.0,
+        "max_translation_delta_m": 0.0,
+        "pass": true,
+        "rotation_finite_compared": 495,
+        "translation_finite_compared": 9
+      }
+    ],
+    "comparison_gate_test": "tests/test_face_integration_validation.py; 3 passed",
+    "negative_case": "a lost hand validity bit plus a non-finite hand value causes pass=false",
+    "processed_clips": 2,
+    "processed_frames": 132,
+    "source": "/tmp/face-v1.3-validation-fix-round1/face_integration_validation.json"
   },
   "coverage": {
     "clip_count": 25,

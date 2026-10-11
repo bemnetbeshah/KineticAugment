@@ -16,3 +16,4 @@
 - `task-5-report.md` — Real-cache coverage, final suite verification, empirical measurements, and self-review for Task 5.
 - `task-5-full-suite.log` — Full pytest output from the one required final-suite run.
 - `task-5-extraction-graphics.log` — Graphics-enabled rerun of the six MediaPipe extraction tests after NSOpenGL sandbox failures.
+- `task-5-fix-round1.log` — Exact focused mask-regression test, selected-clip probe, bounded annotation inventory, and static-check output.

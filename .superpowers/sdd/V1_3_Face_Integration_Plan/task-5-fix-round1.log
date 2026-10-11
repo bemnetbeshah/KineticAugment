@@ -1,0 +1,22 @@
+Focused validator test command:
+rtk proxy env PYTHONPATH=src .venv/bin/python -m pytest tests/test_face_integration_validation.py -q --tb=long
+Final output: 3 passed in 0.10s.
+
+Selected real clip command:
+rtk proxy env PYTHONPATH=src .venv/bin/python scripts/validate_face_integration.py --clip 01986 --clip 01991 --output-dir /tmp/face-v1.3-validation-fix-round1
+Final output:
+WARNING: You are using a MANO model, with only 10 shape coefficients.
+WARNING: You are using a MANO model, with only 10 shape coefficients.
+validated 2 clips / 132 frames; wrote /tmp/face-v1.3-validation-fix-round1/face_integration_validation.json
+
+Bounded annotation filename inventory command:
+rtk proxy rg --files --hidden --no-ignore --follow data /Users/bemnetbeshah/Workspace/cv-research/KineticAugment/data | rtk proxy rg -i '(wlasl|annot|label|gloss).*(\.json|\.csv|\.tsv|\.parquet)$|(^|/)(annotations?|labels?)(/|\.)' || true
+Output: no matching paths; matching count 0. Searched roots were current worktree/data and parent project data, with scoped symlinks followed.
+
+Syntax check:
+rtk proxy .venv/bin/python -m py_compile scripts/validate_face_integration.py tests/test_face_integration_validation.py
+Output: no output, exit 0.
+
+Whitespace check:
+rtk proxy git diff --check
+Output: no output, exit 0.

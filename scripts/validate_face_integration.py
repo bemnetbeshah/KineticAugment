@@ -64,10 +64,54 @@ def finite_stats(values):
     }
 
 
-def finite_max_delta(a, b):
-    delta = np.abs(np.asarray(a, dtype=np.float64) - np.asarray(b, dtype=np.float64))
-    finite = delta[np.isfinite(delta)]
-    return float(finite.max()) if len(finite) else None
+def compare_regression_values(
+    reference, candidate, reference_valid=None, candidate_valid=None, atol=1e-10
+):
+    """Compare arrays only after requiring identical validity and finite-value masks."""
+    reference = np.asarray(reference, dtype=np.float64)
+    candidate = np.asarray(candidate, dtype=np.float64)
+    same_shape = reference.shape == candidate.shape
+    if not same_shape:
+        return {
+            "same_shape": False,
+            "valid_mask_equal": False,
+            "finite_mask_equal": False,
+            "compared_finite_count": 0,
+            "max_abs_delta": None,
+            "pass": False,
+        }
+
+    def expanded_valid(mask):
+        if mask is None:
+            return np.ones(reference.shape, dtype=bool)
+        mask = np.asarray(mask, dtype=bool)
+        if mask.ndim < reference.ndim and mask.shape == reference.shape[: mask.ndim]:
+            mask = mask.reshape(mask.shape + (1,) * (reference.ndim - mask.ndim))
+        return np.broadcast_to(mask, reference.shape)
+
+    ref_valid = expanded_valid(reference_valid)
+    cand_valid = expanded_valid(candidate_valid)
+    ref_finite = np.isfinite(reference)
+    cand_finite = np.isfinite(candidate)
+    valid_equal = np.array_equal(ref_valid, cand_valid)
+    finite_equal = np.array_equal(ref_finite, cand_finite)
+    comparable = ref_valid & cand_valid & ref_finite & cand_finite
+    count = int(comparable.sum())
+    delta = (
+        float(np.max(np.abs(reference[comparable] - candidate[comparable])))
+        if count
+        else None
+    )
+    return {
+        "same_shape": True,
+        "valid_mask_equal": valid_equal,
+        "finite_mask_equal": finite_equal,
+        "compared_finite_count": count,
+        "max_abs_delta": delta,
+        "pass": bool(
+            valid_equal and finite_equal and count > 0 and delta is not None and delta <= atol
+        ),
+    }
 
 
 def archive_metrics(features, result):
@@ -362,30 +406,48 @@ def main():
                 for row in probe_rows
             ]
         )
-        body_ok_equal = np.array_equal(
-            reference_result.body_ok[probe_rows], detached_result.body_ok[probe_rows]
+        reference_body_ok = reference_result.body_ok[probe_rows]
+        detached_body_ok = detached_result.body_ok[probe_rows]
+        body_ok_equal = np.array_equal(reference_body_ok, detached_body_ok)
+        reference_geometry_valid = reference_result.geometry_valid[probe_rows]
+        detached_geometry_valid = detached_result.geometry_valid[probe_rows]
+        rotation_comparison = compare_regression_values(
+            reference_result.rotations[probe_rows],
+            detached_result.rotations[probe_rows],
+            reference_body_ok,
+            detached_body_ok,
         )
-        rotation_delta = finite_max_delta(
-            reference_result.rotations[probe_rows], detached_result.rotations[probe_rows]
+        translation_comparison = compare_regression_values(
+            reference_result.transl[probe_rows],
+            detached_result.transl[probe_rows],
+            reference_body_ok,
+            detached_body_ok,
         )
-        translation_delta = finite_max_delta(
-            reference_result.transl[probe_rows], detached_result.transl[probe_rows]
+        distance_comparison = compare_regression_values(
+            reference_distances,
+            detached_distances,
+            reference_geometry_valid[:, :, None],
+            detached_geometry_valid[:, :, None],
         )
-        distance_delta = finite_max_delta(reference_distances, detached_distances)
+        geometry_valid_equal = np.array_equal(
+            reference_geometry_valid, detached_geometry_valid
+        )
         regression_results.append(
             {
                 "clip": clip,
                 "frames": probe_frames.tolist(),
                 "body_ok_equal": body_ok_equal,
-                "body_rotations_max_abs_delta": rotation_delta,
-                "translation_max_abs_delta_m": translation_delta,
-                "hand_face_distance_max_abs_delta_m": distance_delta,
+                "geometry_valid_mask_equal": geometry_valid_equal,
+                "body_rotations": rotation_comparison,
+                "translation_m": translation_comparison,
+                "hand_face_distance_m": distance_comparison,
                 "face_attachment_disabled": bool(not detached_result.face_attachment_valid.any()),
                 "pass": bool(
                     body_ok_equal
-                    and (rotation_delta or 0.0) <= 1e-10
-                    and (translation_delta or 0.0) <= 1e-10
-                    and (distance_delta or 0.0) <= 1e-10
+                    and geometry_valid_equal
+                    and rotation_comparison["pass"]
+                    and translation_comparison["pass"]
+                    and distance_comparison["pass"]
                 ),
             }
         )
