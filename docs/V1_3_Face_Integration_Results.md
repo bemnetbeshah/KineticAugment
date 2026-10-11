@@ -183,3 +183,17 @@ rtk proxy env PYTHONPATH=src .venv/bin/python -m pytest \
 
 The full-suite counts above are retained historical evidence; this final fix was verified with the
 focused adapter, classifier, and validator command documented above.
+
+## Final review and remaining decision
+
+Every implementation task received an independent review. The final whole-branch review covered
+`347b059..19454c1`; its mixed no-face batch finding was fixed in `a340878`. The scoped final
+re-review found all findings addressed and no new breakage. The final focused run passed 19 tests,
+and all 25 saved real archives passed multimodal and body-only batching and finite optimization.
+Temporary task reports were removed from the worktree after review; committed historical test logs
+remain in Git history. The commands and results needed to reproduce the delivered checks are above.
+
+The implementation preserves observations and adds the trainable facial branch. Joint camera/depth
+optimization remains deferred because no independent metric reference was available. The cost of
+that decision is that absolute hand-to-face depth stays uncertain and would need separate work;
+contact diagnostics remain excluded from the default classifier and are not certified labels.
