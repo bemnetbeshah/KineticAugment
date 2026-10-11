@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/bemnetbeshah/Workspace/cv-research/KineticAugment/.claude/worktrees/face-v1.3
+configfile: pyproject.toml
+plugins: platformdirs-4.12.2, cov-7.1.0, anyio-4.15.1
+collected 12 items
+
+tests/test_face_classifier.py ....                                       [ 33%]
+tests/test_face_training_dataset.py ........                             [100%]
+
+============================== 12 passed in 1.70s ==============================

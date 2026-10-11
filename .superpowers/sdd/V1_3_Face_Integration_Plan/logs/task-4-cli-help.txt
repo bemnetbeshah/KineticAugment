@@ -1,0 +1,26 @@
+usage: train_face_streams.py [-h] --feature-root FEATURE_ROOT
+                             --annotation-root ANNOTATION_ROOT
+                             [--annotation-file ANNOTATION_FILE]
+                             [--subset {wlasl100,wlasl300,wlasl1000,wlasl2000}]
+                             [--face-space {image,head_local}]
+                             [--epochs EPOCHS] [--batch-size BATCH_SIZE]
+                             [--seed SEED] [--output OUTPUT] [--body-only]
+
+Train the masked temporal face-stream classifier on official WLASL splits. The
+validation split is used for early stopping. This example does not load or
+tune on test data.
+
+options:
+  -h, --help            show this help message and exit
+  --feature-root FEATURE_ROOT
+                        Face feature archive directory
+  --annotation-root ANNOTATION_ROOT
+                        Directory containing WLASL JSON
+  --annotation-file ANNOTATION_FILE
+  --subset {wlasl100,wlasl300,wlasl1000,wlasl2000}
+  --face-space {image,head_local}
+  --epochs EPOCHS
+  --batch-size BATCH_SIZE
+  --seed SEED
+  --output OUTPUT       Optional checkpoint path
+  --body-only           Run a body_hands-only ablation
