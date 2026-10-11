@@ -187,8 +187,32 @@ def test_archive_round_trip_preserves_legacy_fields_and_validates_schema(tmp_pat
 
     with np.load(path, allow_pickle=False) as archive:
         arrays = {key: archive[key] for key in archive.files}
-    arrays["meta"] = np.array('{"schema":99}')
     broken = tmp_path / "bad.npz"
+    for missing_key in ("blendshapes", "fps", "neck_pose", "distance", "image_distance"):
+        incomplete = dict(arrays)
+        del incomplete[missing_key]
+        np.savez(broken, **incomplete)
+        with pytest.raises(ValueError, match=missing_key):
+            load_face_features(broken)
+
+    for malformed_key, malformed_value in (
+        ("blendshapes", np.zeros((n, 51))),
+        ("fps", np.array([25.0])),
+        ("distance", np.zeros((n, 2, 6))),
+    ):
+        malformed = dict(arrays)
+        malformed[malformed_key] = malformed_value
+        np.savez(broken, **malformed)
+        with pytest.raises(ValueError, match=malformed_key):
+            load_face_features(broken)
+
+    non_object_meta = dict(arrays)
+    non_object_meta["meta"] = np.array('[{"schema":1}]')
+    np.savez(broken, **non_object_meta)
+    with pytest.raises(ValueError, match="JSON object"):
+        load_face_features(broken)
+
+    arrays["meta"] = np.array('{"schema":99}')
     np.savez(broken, **arrays)
     with pytest.raises(ValueError, match="schema"):
         load_face_features(broken)

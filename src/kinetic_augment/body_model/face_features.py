@@ -206,8 +206,10 @@ def load_face_features(path):
             raise ValueError("{}: missing feature metadata".format(path))
         try:
             meta = json.loads(str(data["meta"].item()))
-        except (TypeError, json.JSONDecodeError) as exc:
+        except (TypeError, ValueError) as exc:
             raise ValueError("{}: invalid feature metadata".format(path)) from exc
+        if not isinstance(meta, dict):
+            raise ValueError("{}: feature metadata must be a JSON object".format(path))
         if meta.get("schema") != FACE_FEATURE_SCHEMA:
             raise ValueError(
                 "{}: face feature schema {}, expected {}".format(
@@ -221,36 +223,68 @@ def load_face_features(path):
 
 
 def _validate_archive_shapes(path, data):
-    required = {
-        "frames": (None,),
-        "face_landmarks": (None, 478, 3),
-        "face_pixels": (None, 478, 3),
-        "face_stream_local": (None, 478, 3),
-        "head_transform": (None, 4, 4),
-        "face_pixel_to_world": (None, 4, 4),
-        "face_observed": (None,),
-        "face_attachment_valid": (None,),
-        "face_point_valid": (None, 478),
-        "face_point_visible": (None, 478),
-        "head_world_rotation": (None, 3, 3),
-        "head_relative_rotation": (None, 3, 3),
-        "pose_image": (None, 33, 3),
-        "pose_world": (None, 33, 3),
-        "pose_visibility": (None, 33),
-        "hand_image": (None, 2, 21, 3),
-        "hand_world": (None, 2, 21, 3),
-        "hand_present": (None, 2),
-        "geometry_valid": (None, 2),
-        "timestamp_ms": (None,),
+    time_shapes = {
+        "frames": (),
+        "neck_pose": (3,),
+        "head_pose": (3,),
+        "jaw_pose": (3,),
+        "valid": (),
+        "reliable": (),
+        "jaw_reliable": (),
+        "rms_fraction": (),
+        "points_used": (),
+        "neck_mode": (),
+        "ear_residual_m": (),
+        "distance": (2, 7),
+        "region": (2, 7),
+        "subregion": (2, 7),
+        "contact": (2, 7),
+        "image_distance": (2, 7),
+        "image_overlap": (2, 7),
+        "image_region": (2, 7),
+        "image_subregion": (2, 7),
+        "image_near": (2, 7),
+        "head_scale_px_per_m": (),
+        "head_camera_rotation_deg": (),
+        "wrist_target": (2, 3),
+        "wrist_corrected": (2,),
+        "depth_ratio": (2,),
+        "wrist_residual_m": (2,),
+        "wrist_shift_m": (2,),
+        "wrist_reached": (2,),
+        "hand_near_face": (),
+        "body_ok": (),
+        "blendshapes": (52,),
+        "face_landmarks": (478, 3),
+        "face_pixels": (478, 3),
+        "face_stream_local": (478, 3),
+        "head_transform": (4, 4),
+        "face_pixel_to_world": (4, 4),
+        "face_observed": (),
+        "face_attachment_valid": (),
+        "face_point_valid": (478,),
+        "face_point_visible": (478,),
+        "head_world_rotation": (3, 3),
+        "head_relative_rotation": (3, 3),
+        "pose_image": (33, 3),
+        "pose_world": (33, 3),
+        "pose_visibility": (33,),
+        "hand_image": (2, 21, 3),
+        "hand_world": (2, 21, 3),
+        "hand_present": (2,),
+        "geometry_valid": (2,),
+        "contact_valid": (2, 7),
+        "timestamp_ms": (),
     }
+    static_shapes = {"betas": (300,), "width": (), "height": (), "fps": ()}
     n = len(data.get("frames", ()))
-    for key, shape in required.items():
-        if key not in data or data[key].shape != (n,) + shape[1:]:
+    for key, shape in time_shapes.items():
+        if key not in data or data[key].shape != (n,) + shape:
             raise ValueError("{}: {} has invalid or missing shape".format(path, key))
-    if np.asarray(data.get("contact_valid", ())).shape != (n, 2, 7):
-        raise ValueError("{}: contact_valid has invalid or missing shape".format(path))
-    if (
-        int(np.asarray(data.get("width", -1)).item()) <= 0
-        or int(np.asarray(data.get("height", -1)).item()) <= 0
-    ):
+    for key, shape in static_shapes.items():
+        if key not in data or data[key].shape != shape:
+            raise ValueError("{}: {} has invalid or missing shape".format(path, key))
+    if data["width"].item() <= 0 or data["height"].item() <= 0:
         raise ValueError("{}: image dimensions must be positive".format(path))
+    if not np.isfinite(data["fps"].item()) or data["fps"].item() <= 0:
+        raise ValueError("{}: fps must be positive and finite".format(path))
