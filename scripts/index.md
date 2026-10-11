@@ -1,5 +1,6 @@
 # Scripts index
 
+- `audit_face_training.py` — Read-only synthetic, cache and optional fresh-fit probes supporting the V1.3 training-data audit; writes a separate JSON evidence file.
 - `convert_mano.py` — Converts licensed MANO .pkl files to chumpy-free .npz and fixes the left-hand shapedirs bug.
 - `demo_smplx_augmentation.py` — Demo of SMPL-X-space augmentation (elbow bend, arm raise, body shape) via fit_body → edit → reconstruct_body; renders videos and measures each edit.
 - `diagnose_residual.py` — Diagnoses round-trip error below the rigid-skeleton floor (MediaPipe non-rigidity).
