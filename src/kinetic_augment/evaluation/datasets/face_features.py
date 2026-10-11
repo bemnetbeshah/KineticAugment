@@ -124,6 +124,7 @@ class FaceTrainingSample:
             if right < len(source_t) and source_t[right] == time:
                 frames[row] = self.source_frames[right]
                 source_times[row] = self.source_time_ms[right]
+                interpolated[row] = self.interpolated[right]
                 for name in out:
                     out[name][row] = self.streams[name][right]
                     out_masks[name][row] = self.masks[name][right]

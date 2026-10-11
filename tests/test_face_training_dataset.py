@@ -115,6 +115,9 @@ def test_select_and_resample_keep_all_streams_on_one_grid_and_guard_gaps():
     assert not resampled.masks["face"][1].any()  # missing span across 40..200 is not filled
     assert not resampled.masks["face"][2].any()  # no extrapolation
     assert resampled.source_frames[0].tolist() == [0, 2]
+    chained = resampled.resample([20], max_gap_ms=100)
+    assert chained.interpolated.tolist() == [True]
+    np.testing.assert_array_equal(chained.source_frames, resampled.source_frames[:1])
     with pytest.raises(ValueError, match="strictly increasing"):
         sample.resample([40, 40])
     with pytest.raises(ValueError, match="strictly increasing"):
