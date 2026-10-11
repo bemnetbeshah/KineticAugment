@@ -13,3 +13,6 @@
 - `task-4-report.md` — Task 4 masked temporal classifier, trainer integration, verification, and self-review.
 - `logs/task-4-focused-tests.txt` — Saved focused classifier and Task 3 adapter test output.
 - `logs/task-4-cli-help.txt` — Saved example CLI help output.
+- `task-5-report.md` — Real-cache coverage, final suite verification, empirical measurements, and self-review for Task 5.
+- `task-5-full-suite.log` — Full pytest output from the one required final-suite run.
+- `task-5-extraction-graphics.log` — Graphics-enabled rerun of the six MediaPipe extraction tests after NSOpenGL sandbox failures.

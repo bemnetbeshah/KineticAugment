@@ -19,6 +19,10 @@ observations and features, and primary research linked below. The current branch
 image proximity and optional depth correction added after the supplied findings. Those additions
 are included in this audit. No production fitting code was changed.
 
+Follow-up integration coverage after Tasks 1–5 is recorded in
+[V1.3 Face Integration Results](V1_3_Face_Integration_Results.md); this audit remains the historical
+review of recognition-data and geometry assumptions.
+
 ## 1. What was tested
 
 The [probe script](../scripts/audit_face_training.py) and

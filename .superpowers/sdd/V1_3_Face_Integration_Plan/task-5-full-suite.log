@@ -1,0 +1,1096 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/bemnetbeshah/Workspace/cv-research/KineticAugment/.claude/worktrees/face-v1.3
+configfile: pyproject.toml
+testpaths: tests
+plugins: platformdirs-4.12.2, cov-7.1.0, anyio-4.15.1
+collected 286 items
+
+tests/test_alignment.py ............                                     [  4%]
+tests/test_assembly.py ......                                            [  6%]
+tests/test_body_model.py .................................               [ 17%]
+tests/test_converter.py .............x..........                         [ 26%]
+tests/test_extract_face_landmarks.py EEE                                 [ 27%]
+tests/test_extract_hand_landmarks.py FF                                  [ 27%]
+tests/test_extract_world_landmarks.py F                                  [ 28%]
+tests/test_face_classifier.py ....                                       [ 29%]
+tests/test_face_correspondence.py ......                                 [ 31%]
+tests/test_face_features.py ......                                       [ 33%]
+tests/test_face_metrics.py ....                                          [ 35%]
+tests/test_face_observations.py ...                                      [ 36%]
+tests/test_face_pipeline.py ..                                           [ 37%]
+tests/test_face_regions.py .....                                         [ 38%]
+tests/test_face_stream.py .........                                      [ 41%]
+tests/test_face_training_dataset.py ........                             [ 44%]
+tests/test_hand_converter.py ..................................          [ 56%]
+tests/test_hand_depth.py .........                                       [ 59%]
+tests/test_hand_face_geometry.py ..............                          [ 64%]
+tests/test_hand_model.py .......................                         [ 72%]
+tests/test_hand_observations.py .........                                [ 75%]
+tests/test_head_converter.py .................                           [ 81%]
+tests/test_image_proximity.py ...........                                [ 85%]
+tests/test_kinematics.py ....................                            [ 92%]
+tests/test_shape.py .........                                            [ 95%]
+tests/test_swing_ik.py ............                                      [100%]
+
+==================================== ERRORS ====================================
+____________ ERROR at setup of test_a_face_is_found_on_most_frames _____________
+
+    @pytest.fixture(scope="module")
+    def face():
+        from extract_face_landmarks import extract_face
+>       return extract_face(VIDEO, MEDIAPIPE_DIR / "face_landmarker.task")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_extract_face_landmarks.py:28:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+video_path = PosixPath('/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/.claude/worktrees/face-v1.3/data/sign_videos/01991.mp4')
+model_path = PosixPath('/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/.claude/worktrees/face-v1.3/models/mediapipe/face_landmarker.task')
+
+    def extract_face(video_path: Path, model_path: Path = MODEL) -> FaceClip:
+        """Run a fresh FaceLandmarker over every frame of one clip."""
+        import mediapipe as mp
+        from mediapipe.tasks.python import BaseOptions
+        from mediapipe.tasks.python.vision import (
+            FaceLandmarker, FaceLandmarkerOptions, RunningMode,
+        )
+
+        options = FaceLandmarkerOptions(base_options=BaseOptions(model_asset_path=str(model_path)),
+                                        running_mode=RunningMode.VIDEO, **SETTINGS)
+        capture = cv2.VideoCapture(str(video_path))
+        width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = float(capture.get(cv2.CAP_PROP_FPS))
+        rows, stamps, last = [], [], -1
+>       with FaceLandmarker.create_from_options(options) as landmarker:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+scripts/extract_face_landmarks.py:75:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'mediapipe.tasks.python.vision.face_landmarker.FaceLandmarker'>
+options = FaceLandmarkerOptions(base_options=BaseOptions(model_asset_path='/Users/bemnetbeshah/Workspace/cv-research/KineticAugm...racking_confidence=0.5, output_face_blendshapes=True, output_facial_transformation_matrixes=True, result_callback=None)
+
+    @classmethod
+    def create_from_options(
+        cls, options: FaceLandmarkerOptions
+    ) -> 'FaceLandmarker':
+      """Creates the `FaceLandmarker` object from face landmarker options.
+
+      Args:
+        options: Options for the face landmarker task.
+
+      Returns:
+        `FaceLandmarker` object that's created from `options`.
+
+      Raises:
+        ValueError: If failed to create `FaceLandmarker` object from
+          `FaceLandmarkerOptions` such as missing the model.
+        RuntimeError: If other types of error occurred.
+      """
+
+      def packets_callback(output_packets: Mapping[str, packet_module.Packet]):
+        if output_packets[_IMAGE_OUT_STREAM_NAME].is_empty():
+          return
+
+        image = packet_getter.get_image(output_packets[_IMAGE_OUT_STREAM_NAME])
+        if output_packets[_IMAGE_OUT_STREAM_NAME].is_empty():
+          return
+
+        if output_packets[_NORM_LANDMARKS_STREAM_NAME].is_empty():
+          empty_packet = output_packets[_NORM_LANDMARKS_STREAM_NAME]
+          options.result_callback(
+              FaceLandmarkerResult([], [], []),
+              image,
+              empty_packet.timestamp.value // _MICRO_SECONDS_PER_MILLISECOND,
+          )
+          return
+
+        face_landmarks_result = _build_landmarker_result(output_packets)
+        timestamp = output_packets[_NORM_LANDMARKS_STREAM_NAME].timestamp
+        options.result_callback(
+            face_landmarks_result,
+            image,
+            timestamp.value // _MICRO_SECONDS_PER_MILLISECOND,
+        )
+
+      output_streams = [
+          ':'.join([_NORM_LANDMARKS_TAG, _NORM_LANDMARKS_STREAM_NAME]),
+          ':'.join([_IMAGE_TAG, _IMAGE_OUT_STREAM_NAME]),
+      ]
+
+      if options.output_face_blendshapes:
+        output_streams.append(
+            ':'.join([_BLENDSHAPES_TAG, _BLENDSHAPES_STREAM_NAME])
+        )
+      if options.output_facial_transformation_matrixes:
+        output_streams.append(
+            ':'.join([_FACE_GEOMETRY_TAG, _FACE_GEOMETRY_STREAM_NAME])
+        )
+
+      task_info = _TaskInfo(
+          task_graph=_TASK_GRAPH_NAME,
+          input_streams=[
+              ':'.join([_IMAGE_TAG, _IMAGE_IN_STREAM_NAME]),
+              ':'.join([_NORM_RECT_TAG, _NORM_RECT_STREAM_NAME]),
+          ],
+          output_streams=output_streams,
+          task_options=options,
+      )
+>     return cls(
+          task_info.generate_graph_config(
+              enable_flow_limiting=options.running_mode
+              == _RunningMode.LIVE_STREAM
+          ),
+          options.running_mode,
+          packets_callback if options.result_callback else None,
+      )
+
+.venv/lib/python3.11/site-packages/mediapipe/tasks/python/vision/face_landmarker.py:3104:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <mediapipe.tasks.python.vision.face_landmarker.FaceLandmarker object at 0x13219ab90>
+graph_config = node {
+  calculator: "mediapipe.tasks.vision.face_landmarker.FaceLandmarkerGraph"
+  input_stream: "IMAGE:image_in"
+  i...output_stream: "IMAGE:image_out"
+output_stream: "BLENDSHAPES:blendshapes"
+output_stream: "FACE_GEOMETRY:face_geometry"
+
+running_mode = <VisionTaskRunningMode.VIDEO: 'VIDEO'>, packet_callback = None
+
+    def __init__(
+        self,
+        graph_config: calculator_pb2.CalculatorGraphConfig,
+        running_mode: _RunningMode,
+        packet_callback: Optional[
+            Callable[[Mapping[str, packet_module.Packet]], None]
+        ] = None,
+    ) -> None:
+      """Initializes the `BaseVisionTaskApi` object.
+
+      Args:
+        graph_config: The mediapipe vision task graph config proto.
+        running_mode: The running mode of the mediapipe vision task.
+        packet_callback: The optional packet callback for getting results
+          asynchronously in the live stream mode.
+
+      Raises:
+        ValueError: The packet callback is not properly set based on the task's
+        running mode.
+      """
+      if running_mode == _RunningMode.LIVE_STREAM:
+        if packet_callback is None:
+          raise ValueError(
+              'The vision task is in live stream mode, a user-defined result '
+              'callback must be provided.'
+          )
+      elif packet_callback:
+        raise ValueError(
+            'The vision task is in image or video mode, a user-defined result '
+            'callback should not be provided.'
+        )
+>     self._runner = _TaskRunner.create(graph_config, packet_callback)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     RuntimeError: Service "kGpuService", required by node mediapipe_tasks_vision_face_landmarker_facelandmarkergraph__mediapipe_tasks_vision_face_detector_facedetectorgraph__mediapipe_tasks_components_processors_imagepreprocessinggraph__ImageToTensorCalculator, was not provided and cannot be created: Could not create an NSOpenGLPixelFormat
+
+.venv/lib/python3.11/site-packages/mediapipe/tasks/python/vision/core/base_vision_task_api.py:70: RuntimeError
+---------------------------- Captured stderr setup -----------------------------
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+W0000 00:00:1791749104.966337 25426189 gl_context_nsgl.cc:85] failed to create pixel format; trying without acceleration
+I0000 00:00:1791749104.967044 25426189 task_runner.cc:85] GPU suport is not available: INTERNAL: Could not create an NSOpenGLPixelFormat
+W0000 00:00:1791749104.975634 25426189 face_landmarker_graph.cc:174] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+W0000 00:00:1791749104.995530 25426189 gl_context_nsgl.cc:85] failed to create pixel format; trying without acceleration
+W0000 00:00:1791749104.995556 25426189 gl_context_nsgl.cc:85] failed to create pixel format; trying without acceleration
+___________ ERROR at setup of test_frames_line_up_with_the_hand_clip ___________
+
+    @pytest.fixture(scope="module")
+    def face():
+        from extract_face_landmarks import extract_face
+>       return extract_face(VIDEO, MEDIAPIPE_DIR / "face_landmarker.task")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_extract_face_landmarks.py:28:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+video_path = PosixPath('/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/.claude/worktrees/face-v1.3/data/sign_videos/01991.mp4')
+model_path = PosixPath('/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/.claude/worktrees/face-v1.3/models/mediapipe/face_landmarker.task')
+
+    def extract_face(video_path: Path, model_path: Path = MODEL) -> FaceClip:
+        """Run a fresh FaceLandmarker over every frame of one clip."""
+        import mediapipe as mp
+        from mediapipe.tasks.python import BaseOptions
+        from mediapipe.tasks.python.vision import (
+            FaceLandmarker, FaceLandmarkerOptions, RunningMode,
+        )
+
+        options = FaceLandmarkerOptions(base_options=BaseOptions(model_asset_path=str(model_path)),
+                                        running_mode=RunningMode.VIDEO, **SETTINGS)
+        capture = cv2.VideoCapture(str(video_path))
+        width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = float(capture.get(cv2.CAP_PROP_FPS))
+        rows, stamps, last = [], [], -1
+>       with FaceLandmarker.create_from_options(options) as landmarker:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+scripts/extract_face_landmarks.py:75:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'mediapipe.tasks.python.vision.face_landmarker.FaceLandmarker'>
+options = FaceLandmarkerOptions(base_options=BaseOptions(model_asset_path='/Users/bemnetbeshah/Workspace/cv-research/KineticAugm...racking_confidence=0.5, output_face_blendshapes=True, output_facial_transformation_matrixes=True, result_callback=None)
+
+    @classmethod
+    def create_from_options(
+        cls, options: FaceLandmarkerOptions
+    ) -> 'FaceLandmarker':
+      """Creates the `FaceLandmarker` object from face landmarker options.
+
+      Args:
+        options: Options for the face landmarker task.
+
+      Returns:
+        `FaceLandmarker` object that's created from `options`.
+
+      Raises:
+        ValueError: If failed to create `FaceLandmarker` object from
+          `FaceLandmarkerOptions` such as missing the model.
+        RuntimeError: If other types of error occurred.
+      """
+
+      def packets_callback(output_packets: Mapping[str, packet_module.Packet]):
+        if output_packets[_IMAGE_OUT_STREAM_NAME].is_empty():
+          return
+
+        image = packet_getter.get_image(output_packets[_IMAGE_OUT_STREAM_NAME])
+        if output_packets[_IMAGE_OUT_STREAM_NAME].is_empty():
+          return
+
+        if output_packets[_NORM_LANDMARKS_STREAM_NAME].is_empty():
+          empty_packet = output_packets[_NORM_LANDMARKS_STREAM_NAME]
+          options.result_callback(
+              FaceLandmarkerResult([], [], []),
+              image,
+              empty_packet.timestamp.value // _MICRO_SECONDS_PER_MILLISECOND,
+          )
+          return
+
+        face_landmarks_result = _build_landmarker_result(output_packets)
+        timestamp = output_packets[_NORM_LANDMARKS_STREAM_NAME].timestamp
+        options.result_callback(
+            face_landmarks_result,
+            image,
+            timestamp.value // _MICRO_SECONDS_PER_MILLISECOND,
+        )
+
+      output_streams = [
+          ':'.join([_NORM_LANDMARKS_TAG, _NORM_LANDMARKS_STREAM_NAME]),
+          ':'.join([_IMAGE_TAG, _IMAGE_OUT_STREAM_NAME]),
+      ]
+
+      if options.output_face_blendshapes:
+        output_streams.append(
+            ':'.join([_BLENDSHAPES_TAG, _BLENDSHAPES_STREAM_NAME])
+        )
+      if options.output_facial_transformation_matrixes:
+        output_streams.append(
+            ':'.join([_FACE_GEOMETRY_TAG, _FACE_GEOMETRY_STREAM_NAME])
+        )
+
+      task_info = _TaskInfo(
+          task_graph=_TASK_GRAPH_NAME,
+          input_streams=[
+              ':'.join([_IMAGE_TAG, _IMAGE_IN_STREAM_NAME]),
+              ':'.join([_NORM_RECT_TAG, _NORM_RECT_STREAM_NAME]),
+          ],
+          output_streams=output_streams,
+          task_options=options,
+      )
+>     return cls(
+          task_info.generate_graph_config(
+              enable_flow_limiting=options.running_mode
+              == _RunningMode.LIVE_STREAM
+          ),
+          options.running_mode,
+          packets_callback if options.result_callback else None,
+      )
+
+.venv/lib/python3.11/site-packages/mediapipe/tasks/python/vision/face_landmarker.py:3104:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <mediapipe.tasks.python.vision.face_landmarker.FaceLandmarker object at 0x13219ab90>
+graph_config = node {
+  calculator: "mediapipe.tasks.vision.face_landmarker.FaceLandmarkerGraph"
+  input_stream: "IMAGE:image_in"
+  i...output_stream: "IMAGE:image_out"
+output_stream: "BLENDSHAPES:blendshapes"
+output_stream: "FACE_GEOMETRY:face_geometry"
+
+running_mode = <VisionTaskRunningMode.VIDEO: 'VIDEO'>, packet_callback = None
+
+    def __init__(
+        self,
+        graph_config: calculator_pb2.CalculatorGraphConfig,
+        running_mode: _RunningMode,
+        packet_callback: Optional[
+            Callable[[Mapping[str, packet_module.Packet]], None]
+        ] = None,
+    ) -> None:
+      """Initializes the `BaseVisionTaskApi` object.
+
+      Args:
+        graph_config: The mediapipe vision task graph config proto.
+        running_mode: The running mode of the mediapipe vision task.
+        packet_callback: The optional packet callback for getting results
+          asynchronously in the live stream mode.
+
+      Raises:
+        ValueError: The packet callback is not properly set based on the task's
+        running mode.
+      """
+      if running_mode == _RunningMode.LIVE_STREAM:
+        if packet_callback is None:
+          raise ValueError(
+              'The vision task is in live stream mode, a user-defined result '
+              'callback must be provided.'
+          )
+      elif packet_callback:
+        raise ValueError(
+            'The vision task is in image or video mode, a user-defined result '
+            'callback should not be provided.'
+        )
+>     self._runner = _TaskRunner.create(graph_config, packet_callback)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     RuntimeError: Service "kGpuService", required by node mediapipe_tasks_vision_face_landmarker_facelandmarkergraph__mediapipe_tasks_vision_face_detector_facedetectorgraph__mediapipe_tasks_components_processors_imagepreprocessinggraph__ImageToTensorCalculator, was not provided and cannot be created: Could not create an NSOpenGLPixelFormat
+
+.venv/lib/python3.11/site-packages/mediapipe/tasks/python/vision/core/base_vision_task_api.py:70: RuntimeError
+___ ERROR at setup of test_head_matrix_puts_the_face_in_front_of_the_camera ____
+
+    @pytest.fixture(scope="module")
+    def face():
+        from extract_face_landmarks import extract_face
+>       return extract_face(VIDEO, MEDIAPIPE_DIR / "face_landmarker.task")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_extract_face_landmarks.py:28:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+video_path = PosixPath('/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/.claude/worktrees/face-v1.3/data/sign_videos/01991.mp4')
+model_path = PosixPath('/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/.claude/worktrees/face-v1.3/models/mediapipe/face_landmarker.task')
+
+    def extract_face(video_path: Path, model_path: Path = MODEL) -> FaceClip:
+        """Run a fresh FaceLandmarker over every frame of one clip."""
+        import mediapipe as mp
+        from mediapipe.tasks.python import BaseOptions
+        from mediapipe.tasks.python.vision import (
+            FaceLandmarker, FaceLandmarkerOptions, RunningMode,
+        )
+
+        options = FaceLandmarkerOptions(base_options=BaseOptions(model_asset_path=str(model_path)),
+                                        running_mode=RunningMode.VIDEO, **SETTINGS)
+        capture = cv2.VideoCapture(str(video_path))
+        width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = float(capture.get(cv2.CAP_PROP_FPS))
+        rows, stamps, last = [], [], -1
+>       with FaceLandmarker.create_from_options(options) as landmarker:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+scripts/extract_face_landmarks.py:75:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'mediapipe.tasks.python.vision.face_landmarker.FaceLandmarker'>
+options = FaceLandmarkerOptions(base_options=BaseOptions(model_asset_path='/Users/bemnetbeshah/Workspace/cv-research/KineticAugm...racking_confidence=0.5, output_face_blendshapes=True, output_facial_transformation_matrixes=True, result_callback=None)
+
+    @classmethod
+    def create_from_options(
+        cls, options: FaceLandmarkerOptions
+    ) -> 'FaceLandmarker':
+      """Creates the `FaceLandmarker` object from face landmarker options.
+
+      Args:
+        options: Options for the face landmarker task.
+
+      Returns:
+        `FaceLandmarker` object that's created from `options`.
+
+      Raises:
+        ValueError: If failed to create `FaceLandmarker` object from
+          `FaceLandmarkerOptions` such as missing the model.
+        RuntimeError: If other types of error occurred.
+      """
+
+      def packets_callback(output_packets: Mapping[str, packet_module.Packet]):
+        if output_packets[_IMAGE_OUT_STREAM_NAME].is_empty():
+          return
+
+        image = packet_getter.get_image(output_packets[_IMAGE_OUT_STREAM_NAME])
+        if output_packets[_IMAGE_OUT_STREAM_NAME].is_empty():
+          return
+
+        if output_packets[_NORM_LANDMARKS_STREAM_NAME].is_empty():
+          empty_packet = output_packets[_NORM_LANDMARKS_STREAM_NAME]
+          options.result_callback(
+              FaceLandmarkerResult([], [], []),
+              image,
+              empty_packet.timestamp.value // _MICRO_SECONDS_PER_MILLISECOND,
+          )
+          return
+
+        face_landmarks_result = _build_landmarker_result(output_packets)
+        timestamp = output_packets[_NORM_LANDMARKS_STREAM_NAME].timestamp
+        options.result_callback(
+            face_landmarks_result,
+            image,
+            timestamp.value // _MICRO_SECONDS_PER_MILLISECOND,
+        )
+
+      output_streams = [
+          ':'.join([_NORM_LANDMARKS_TAG, _NORM_LANDMARKS_STREAM_NAME]),
+          ':'.join([_IMAGE_TAG, _IMAGE_OUT_STREAM_NAME]),
+      ]
+
+      if options.output_face_blendshapes:
+        output_streams.append(
+            ':'.join([_BLENDSHAPES_TAG, _BLENDSHAPES_STREAM_NAME])
+        )
+      if options.output_facial_transformation_matrixes:
+        output_streams.append(
+            ':'.join([_FACE_GEOMETRY_TAG, _FACE_GEOMETRY_STREAM_NAME])
+        )
+
+      task_info = _TaskInfo(
+          task_graph=_TASK_GRAPH_NAME,
+          input_streams=[
+              ':'.join([_IMAGE_TAG, _IMAGE_IN_STREAM_NAME]),
+              ':'.join([_NORM_RECT_TAG, _NORM_RECT_STREAM_NAME]),
+          ],
+          output_streams=output_streams,
+          task_options=options,
+      )
+>     return cls(
+          task_info.generate_graph_config(
+              enable_flow_limiting=options.running_mode
+              == _RunningMode.LIVE_STREAM
+          ),
+          options.running_mode,
+          packets_callback if options.result_callback else None,
+      )
+
+.venv/lib/python3.11/site-packages/mediapipe/tasks/python/vision/face_landmarker.py:3104:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <mediapipe.tasks.python.vision.face_landmarker.FaceLandmarker object at 0x13219ab90>
+graph_config = node {
+  calculator: "mediapipe.tasks.vision.face_landmarker.FaceLandmarkerGraph"
+  input_stream: "IMAGE:image_in"
+  i...output_stream: "IMAGE:image_out"
+output_stream: "BLENDSHAPES:blendshapes"
+output_stream: "FACE_GEOMETRY:face_geometry"
+
+running_mode = <VisionTaskRunningMode.VIDEO: 'VIDEO'>, packet_callback = None
+
+    def __init__(
+        self,
+        graph_config: calculator_pb2.CalculatorGraphConfig,
+        running_mode: _RunningMode,
+        packet_callback: Optional[
+            Callable[[Mapping[str, packet_module.Packet]], None]
+        ] = None,
+    ) -> None:
+      """Initializes the `BaseVisionTaskApi` object.
+
+      Args:
+        graph_config: The mediapipe vision task graph config proto.
+        running_mode: The running mode of the mediapipe vision task.
+        packet_callback: The optional packet callback for getting results
+          asynchronously in the live stream mode.
+
+      Raises:
+        ValueError: The packet callback is not properly set based on the task's
+        running mode.
+      """
+      if running_mode == _RunningMode.LIVE_STREAM:
+        if packet_callback is None:
+          raise ValueError(
+              'The vision task is in live stream mode, a user-defined result '
+              'callback must be provided.'
+          )
+      elif packet_callback:
+        raise ValueError(
+            'The vision task is in image or video mode, a user-defined result '
+            'callback should not be provided.'
+        )
+>     self._runner = _TaskRunner.create(graph_config, packet_callback)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     RuntimeError: Service "kGpuService", required by node mediapipe_tasks_vision_face_landmarker_facelandmarkergraph__mediapipe_tasks_vision_face_detector_facedetectorgraph__mediapipe_tasks_components_processors_imagepreprocessinggraph__ImageToTensorCalculator, was not provided and cannot be created: Could not create an NSOpenGLPixelFormat
+
+.venv/lib/python3.11/site-packages/mediapipe/tasks/python/vision/core/base_vision_task_api.py:70: RuntimeError
+=================================== FAILURES ===================================
+______________ test_a_clip_does_not_depend_on_the_clip_before_it _______________
+
+tmp_path = PosixPath('/private/var/folders/kh/q9j57tjd7kx3087v55g1r35h0000gn/T/pytest-of-bemnetbeshah/pytest-89/test_a_clip_does_not_depend_on0')
+
+    @needs_videos
+    def test_a_clip_does_not_depend_on_the_clip_before_it(tmp_path):
+        """
+        01991 extracted after 01992 equals 01991 extracted alone.
+
+        The order matters. A `Hands` tracker kept from 01992 changes 01991's hand landmarks, but
+        one kept from 01991 leaves 01992's unchanged, so only this order catches a `Hands`
+        detector shared between clips. A shared `Holistic` changes `pose_world` in either order.
+        """
+>       extract_all([VIDEOS / "01992.mp4", VIDEOS / "01991.mp4"], tmp_path / "after")
+
+tests/test_extract_hand_landmarks.py:38:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+videos = [PosixPath('/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/.claude/worktrees/face-v1.3/data/sign_videos/0199...ath('/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/.claude/worktrees/face-v1.3/data/sign_videos/01991.mp4')]
+output_dir = PosixPath('/private/var/folders/kh/q9j57tjd7kx3087v55g1r35h0000gn/T/pytest-of-bemnetbeshah/pytest-89/test_a_clip_does_not_depend_on0/after')
+
+    def extract_all(videos, output_dir) -> None:
+        """Extract each clip with its own Hands and Holistic instances."""
+        import mediapipe as mp
+
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        print(f"{'clip':<8}{'frames':>8}{'left':>7}{'right':>7}{'unassigned':>12}{'label agrees':>14}")
+        for video in videos:
+            video = Path(video)
+>           with mp.solutions.hands.Hands(**HANDS_SETTINGS) as hands, \
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    mp.solutions.holistic.Holistic(**HOLISTIC_SETTINGS) as holistic:
+
+scripts/extract_hand_landmarks.py:136:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <mediapipe.python.solutions.hands.Hands object at 0x139d8d2d0>
+static_image_mode = False, max_num_hands = 2, model_complexity = 1
+min_detection_confidence = 0.5, min_tracking_confidence = 0.5
+
+    def __init__(self,
+                 static_image_mode=False,
+                 max_num_hands=2,
+                 model_complexity=1,
+                 min_detection_confidence=0.5,
+                 min_tracking_confidence=0.5):
+      """Initializes a MediaPipe Hand object.
+
+      Args:
+        static_image_mode: Whether to treat the input images as a batch of static
+          and possibly unrelated images, or a video stream. See details in
+          https://solutions.mediapipe.dev/hands#static_image_mode.
+        max_num_hands: Maximum number of hands to detect. See details in
+          https://solutions.mediapipe.dev/hands#max_num_hands.
+        model_complexity: Complexity of the hand landmark model: 0 or 1.
+          Landmark accuracy as well as inference latency generally go up with the
+          model complexity. See details in
+          https://solutions.mediapipe.dev/hands#model_complexity.
+        min_detection_confidence: Minimum confidence value ([0.0, 1.0]) for hand
+          detection to be considered successful. See details in
+          https://solutions.mediapipe.dev/hands#min_detection_confidence.
+        min_tracking_confidence: Minimum confidence value ([0.0, 1.0]) for the
+          hand landmarks to be considered tracked successfully. See details in
+          https://solutions.mediapipe.dev/hands#min_tracking_confidence.
+      """
+>     super().__init__(
+          binary_graph_path=_BINARYPB_FILE_PATH,
+          side_inputs={
+              'model_complexity': model_complexity,
+              'num_hands': max_num_hands,
+              'use_prev_landmarks': not static_image_mode,
+          },
+          calculator_params={
+              'palmdetectioncpu__TensorsToDetectionsCalculator.min_score_thresh':
+                  min_detection_confidence,
+              'handlandmarkcpu__ThresholdingCalculator.threshold':
+                  min_tracking_confidence,
+          },
+          outputs=[
+              'multi_hand_landmarks', 'multi_hand_world_landmarks',
+              'multi_handedness'
+          ])
+
+.venv/lib/python3.11/site-packages/mediapipe/python/solutions/hands.py:114:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <mediapipe.python.solutions.hands.Hands object at 0x139d8d2d0>
+binary_graph_path = 'mediapipe/modules/hand_landmark/hand_landmark_tracking_cpu.binarypb'
+graph_config = None
+calculator_params = {'palmdetectioncpu__TensorsToDetectionsCalculator.min_score_thresh': 0.5, 'handlandmarkcpu__ThresholdingCalculator.threshold': 0.5}
+graph_options = None
+side_inputs = {'model_complexity': 1, 'num_hands': 2, 'use_prev_landmarks': True}
+outputs = ['multi_hand_landmarks', 'multi_hand_world_landmarks', 'multi_handedness']
+stream_type_hints = None
+
+    def __init__(
+        self,
+        binary_graph_path: Optional[str] = None,
+        graph_config: Optional[calculator_pb2.CalculatorGraphConfig] = None,
+        calculator_params: Optional[Mapping[str, Any]] = None,
+        graph_options: Optional[message.Message] = None,
+        side_inputs: Optional[Mapping[str, Any]] = None,
+        outputs: Optional[List[str]] = None,
+        stream_type_hints: Optional[Mapping[str, PacketDataType]] = None):
+      """Initializes the SolutionBase object.
+
+      Args:
+        binary_graph_path: The path to a binary mediapipe graph file (.binarypb).
+        graph_config: A CalculatorGraphConfig proto message or its text proto
+          format.
+        calculator_params: A mapping from the
+          {calculator_name}.{options_field_name} str to the field value.
+        graph_options: The graph options protobuf for the mediapipe graph.
+        side_inputs: A mapping from the side packet name to the packet raw data.
+        outputs: A list of the graph output stream names to observe. If the list
+          is empty, all the output streams listed in the graph config will be
+          automatically observed by default.
+        stream_type_hints: A mapping from the stream name to its packet type hint.
+
+      Raises:
+        FileNotFoundError: If the binary graph file can't be found.
+        RuntimeError: If the underlying calculator graph can't be successfully
+          initialized or started.
+        ValueError: If any of the following:
+          a) If not exactly one of 'binary_graph_path' or 'graph_config' arguments
+          is provided.
+          b) If the graph validation process contains error.
+          c) If the registered type name of the streams and side packets can't be
+          found.
+          d) If the calculator options of the calculator listed in
+          calculator_params is not allowed to be modified.
+          e) If the calculator options field is a repeated field but the field
+          value to be set is not iterable.
+          f) If not all calculator params are valid.
+      """
+      if bool(binary_graph_path) == bool(graph_config):
+        raise ValueError(
+            "Must provide exactly one of 'binary_graph_path' or 'graph_config'.")
+      # MediaPipe package root path
+      root_path = os.sep.join(os.path.abspath(__file__).split(os.sep)[:-3])
+      resource_util.set_resource_dir(root_path)
+      validated_graph = validated_graph_config.ValidatedGraphConfig()
+      if binary_graph_path:
+        validated_graph.initialize(
+            binary_graph_path=os.path.join(root_path, binary_graph_path))
+      else:
+        validated_graph.initialize(graph_config=graph_config)
+
+      canonical_graph_config_proto = self._initialize_graph_interface(
+          validated_graph, side_inputs, outputs, stream_type_hints)
+      if calculator_params:
+        self._modify_calculator_options(canonical_graph_config_proto,
+                                        calculator_params)
+      if graph_options:
+        self._set_extension(canonical_graph_config_proto.graph_options,
+                            graph_options)
+
+      self._graph = calculator_graph.CalculatorGraph(
+          graph_config=canonical_graph_config_proto)
+      self._simulated_timestamp = 0
+      self._graph_outputs = {}
+
+      def callback(stream_name: str, output_packet: packet.Packet) -> None:
+        self._graph_outputs[stream_name] = output_packet
+
+      for stream_name in self._output_stream_type_info.keys():
+        self._graph.observe_output_stream(stream_name, callback, True)
+
+      self._input_side_packets = {
+          name: self._make_packet(self._side_input_type_info[name], data)
+          for name, data in (side_inputs or {}).items()
+      }
+>     self._graph.start_run(self._input_side_packets)
+E     RuntimeError: Service "kGpuService", required by node palmdetectioncpu__ImageToTensorCalculator, was not provided and cannot be created: Could not create an NSOpenGLPixelFormat
+
+.venv/lib/python3.11/site-packages/mediapipe/python/solution_base.py:263: RuntimeError
+----------------------------- Captured stdout call -----------------------------
+clip      frames   left  right  unassigned  label agrees
+----------------------------- Captured stderr call -----------------------------
+W0000 00:00:1791749105.125276 25426189 gl_context_nsgl.cc:85] failed to create pixel format; trying without acceleration
+________________ test_hands_are_metric_sided_and_missing_as_nan ________________
+
+tmp_path = PosixPath('/private/var/folders/kh/q9j57tjd7kx3087v55g1r35h0000gn/T/pytest-of-bemnetbeshah/pytest-89/test_hands_are_metric_sided_an0')
+
+    @needs_videos
+    def test_hands_are_metric_sided_and_missing_as_nan(tmp_path):
+>       extract_all([VIDEOS / "01992.mp4"], tmp_path)
+
+tests/test_extract_hand_landmarks.py:48:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+videos = [PosixPath('/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/.claude/worktrees/face-v1.3/data/sign_videos/01992.mp4')]
+output_dir = PosixPath('/private/var/folders/kh/q9j57tjd7kx3087v55g1r35h0000gn/T/pytest-of-bemnetbeshah/pytest-89/test_hands_are_metric_sided_an0')
+
+    def extract_all(videos, output_dir) -> None:
+        """Extract each clip with its own Hands and Holistic instances."""
+        import mediapipe as mp
+
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        print(f"{'clip':<8}{'frames':>8}{'left':>7}{'right':>7}{'unassigned':>12}{'label agrees':>14}")
+        for video in videos:
+            video = Path(video)
+>           with mp.solutions.hands.Hands(**HANDS_SETTINGS) as hands, \
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    mp.solutions.holistic.Holistic(**HOLISTIC_SETTINGS) as holistic:
+
+scripts/extract_hand_landmarks.py:136:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <mediapipe.python.solutions.hands.Hands object at 0x1323171d0>
+static_image_mode = False, max_num_hands = 2, model_complexity = 1
+min_detection_confidence = 0.5, min_tracking_confidence = 0.5
+
+    def __init__(self,
+                 static_image_mode=False,
+                 max_num_hands=2,
+                 model_complexity=1,
+                 min_detection_confidence=0.5,
+                 min_tracking_confidence=0.5):
+      """Initializes a MediaPipe Hand object.
+
+      Args:
+        static_image_mode: Whether to treat the input images as a batch of static
+          and possibly unrelated images, or a video stream. See details in
+          https://solutions.mediapipe.dev/hands#static_image_mode.
+        max_num_hands: Maximum number of hands to detect. See details in
+          https://solutions.mediapipe.dev/hands#max_num_hands.
+        model_complexity: Complexity of the hand landmark model: 0 or 1.
+          Landmark accuracy as well as inference latency generally go up with the
+          model complexity. See details in
+          https://solutions.mediapipe.dev/hands#model_complexity.
+        min_detection_confidence: Minimum confidence value ([0.0, 1.0]) for hand
+          detection to be considered successful. See details in
+          https://solutions.mediapipe.dev/hands#min_detection_confidence.
+        min_tracking_confidence: Minimum confidence value ([0.0, 1.0]) for the
+          hand landmarks to be considered tracked successfully. See details in
+          https://solutions.mediapipe.dev/hands#min_tracking_confidence.
+      """
+>     super().__init__(
+          binary_graph_path=_BINARYPB_FILE_PATH,
+          side_inputs={
+              'model_complexity': model_complexity,
+              'num_hands': max_num_hands,
+              'use_prev_landmarks': not static_image_mode,
+          },
+          calculator_params={
+              'palmdetectioncpu__TensorsToDetectionsCalculator.min_score_thresh':
+                  min_detection_confidence,
+              'handlandmarkcpu__ThresholdingCalculator.threshold':
+                  min_tracking_confidence,
+          },
+          outputs=[
+              'multi_hand_landmarks', 'multi_hand_world_landmarks',
+              'multi_handedness'
+          ])
+
+.venv/lib/python3.11/site-packages/mediapipe/python/solutions/hands.py:114:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <mediapipe.python.solutions.hands.Hands object at 0x1323171d0>
+binary_graph_path = 'mediapipe/modules/hand_landmark/hand_landmark_tracking_cpu.binarypb'
+graph_config = None
+calculator_params = {'palmdetectioncpu__TensorsToDetectionsCalculator.min_score_thresh': 0.5, 'handlandmarkcpu__ThresholdingCalculator.threshold': 0.5}
+graph_options = None
+side_inputs = {'model_complexity': 1, 'num_hands': 2, 'use_prev_landmarks': True}
+outputs = ['multi_hand_landmarks', 'multi_hand_world_landmarks', 'multi_handedness']
+stream_type_hints = None
+
+    def __init__(
+        self,
+        binary_graph_path: Optional[str] = None,
+        graph_config: Optional[calculator_pb2.CalculatorGraphConfig] = None,
+        calculator_params: Optional[Mapping[str, Any]] = None,
+        graph_options: Optional[message.Message] = None,
+        side_inputs: Optional[Mapping[str, Any]] = None,
+        outputs: Optional[List[str]] = None,
+        stream_type_hints: Optional[Mapping[str, PacketDataType]] = None):
+      """Initializes the SolutionBase object.
+
+      Args:
+        binary_graph_path: The path to a binary mediapipe graph file (.binarypb).
+        graph_config: A CalculatorGraphConfig proto message or its text proto
+          format.
+        calculator_params: A mapping from the
+          {calculator_name}.{options_field_name} str to the field value.
+        graph_options: The graph options protobuf for the mediapipe graph.
+        side_inputs: A mapping from the side packet name to the packet raw data.
+        outputs: A list of the graph output stream names to observe. If the list
+          is empty, all the output streams listed in the graph config will be
+          automatically observed by default.
+        stream_type_hints: A mapping from the stream name to its packet type hint.
+
+      Raises:
+        FileNotFoundError: If the binary graph file can't be found.
+        RuntimeError: If the underlying calculator graph can't be successfully
+          initialized or started.
+        ValueError: If any of the following:
+          a) If not exactly one of 'binary_graph_path' or 'graph_config' arguments
+          is provided.
+          b) If the graph validation process contains error.
+          c) If the registered type name of the streams and side packets can't be
+          found.
+          d) If the calculator options of the calculator listed in
+          calculator_params is not allowed to be modified.
+          e) If the calculator options field is a repeated field but the field
+          value to be set is not iterable.
+          f) If not all calculator params are valid.
+      """
+      if bool(binary_graph_path) == bool(graph_config):
+        raise ValueError(
+            "Must provide exactly one of 'binary_graph_path' or 'graph_config'.")
+      # MediaPipe package root path
+      root_path = os.sep.join(os.path.abspath(__file__).split(os.sep)[:-3])
+      resource_util.set_resource_dir(root_path)
+      validated_graph = validated_graph_config.ValidatedGraphConfig()
+      if binary_graph_path:
+        validated_graph.initialize(
+            binary_graph_path=os.path.join(root_path, binary_graph_path))
+      else:
+        validated_graph.initialize(graph_config=graph_config)
+
+      canonical_graph_config_proto = self._initialize_graph_interface(
+          validated_graph, side_inputs, outputs, stream_type_hints)
+      if calculator_params:
+        self._modify_calculator_options(canonical_graph_config_proto,
+                                        calculator_params)
+      if graph_options:
+        self._set_extension(canonical_graph_config_proto.graph_options,
+                            graph_options)
+
+      self._graph = calculator_graph.CalculatorGraph(
+          graph_config=canonical_graph_config_proto)
+      self._simulated_timestamp = 0
+      self._graph_outputs = {}
+
+      def callback(stream_name: str, output_packet: packet.Packet) -> None:
+        self._graph_outputs[stream_name] = output_packet
+
+      for stream_name in self._output_stream_type_info.keys():
+        self._graph.observe_output_stream(stream_name, callback, True)
+
+      self._input_side_packets = {
+          name: self._make_packet(self._side_input_type_info[name], data)
+          for name, data in (side_inputs or {}).items()
+      }
+>     self._graph.start_run(self._input_side_packets)
+E     RuntimeError: Service "kGpuService", required by node palmdetectioncpu__ImageToTensorCalculator, was not provided and cannot be created: Could not create an NSOpenGLPixelFormat
+
+.venv/lib/python3.11/site-packages/mediapipe/python/solution_base.py:263: RuntimeError
+----------------------------- Captured stdout call -----------------------------
+clip      frames   left  right  unassigned  label agrees
+----------------------------- Captured stderr call -----------------------------
+W0000 00:00:1791749105.137087 25426189 gl_context_nsgl.cc:85] failed to create pixel format; trying without acceleration
+______ test_a_clip_does_not_inherit_tracker_state_from_the_previous_clip _______
+
+tmp_path = PosixPath('/private/var/folders/kh/q9j57tjd7kx3087v55g1r35h0000gn/T/pytest-of-bemnetbeshah/pytest-89/test_a_clip_does_not_inherit_t0')
+
+    @pytest.mark.skipif(not all(clip.exists() for clip in CLIPS), reason="sample videos not present")
+    def test_a_clip_does_not_inherit_tracker_state_from_the_previous_clip(tmp_path):
+        extractor = load_extractor()
+
+>       extractor.extract_all(CLIPS, tmp_path / "after_another")
+
+tests/test_extract_world_landmarks.py:37:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+videos = [PosixPath('/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/.claude/worktrees/face-v1.3/data/sign_videos/0199...ath('/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/.claude/worktrees/face-v1.3/data/sign_videos/01992.mp4')]
+output_dir = PosixPath('/private/var/folders/kh/q9j57tjd7kx3087v55g1r35h0000gn/T/pytest-of-bemnetbeshah/pytest-89/test_a_clip_does_not_inherit_t0/after_another')
+
+    def extract_all(videos, output_dir: Path) -> None:
+        """
+        Extract each clip with its own Holistic instance.
+
+        Video mode is stateful -- a tracked region of interest and landmark smoothing.
+        A shared instance carries that state across clips, making a clip's landmarks
+        depend on which clip preceded it (up to 114 mm on the sample clips).
+        """
+        import mediapipe as mp
+
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        print(f"{'clip':<10}{'frames':>8}{'detected':>10}{'median vis':>12}")
+        print("-" * 40)
+
+        for video in videos:
+>           with mp.solutions.holistic.Holistic(
+                static_image_mode=False, model_complexity=1
+            ) as holistic:
+
+scripts/extract_world_landmarks.py:83:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <mediapipe.python.solutions.holistic.Holistic object at 0x139bb9050>
+static_image_mode = False, model_complexity = 1, smooth_landmarks = True
+enable_segmentation = False, smooth_segmentation = True
+refine_face_landmarks = False, min_detection_confidence = 0.5
+min_tracking_confidence = 0.5
+
+    def __init__(self,
+                 static_image_mode=False,
+                 model_complexity=1,
+                 smooth_landmarks=True,
+                 enable_segmentation=False,
+                 smooth_segmentation=True,
+                 refine_face_landmarks=False,
+                 min_detection_confidence=0.5,
+                 min_tracking_confidence=0.5):
+      """Initializes a MediaPipe Holistic object.
+
+      Args:
+        static_image_mode: Whether to treat the input images as a batch of static
+          and possibly unrelated images, or a video stream. See details in
+          https://solutions.mediapipe.dev/holistic#static_image_mode.
+        model_complexity: Complexity of the pose landmark model: 0, 1 or 2. See
+          details in https://solutions.mediapipe.dev/holistic#model_complexity.
+        smooth_landmarks: Whether to filter landmarks across different input
+          images to reduce jitter. See details in
+          https://solutions.mediapipe.dev/holistic#smooth_landmarks.
+        enable_segmentation: Whether to predict segmentation mask. See details in
+          https://solutions.mediapipe.dev/holistic#enable_segmentation.
+        smooth_segmentation: Whether to filter segmentation across different input
+          images to reduce jitter. See details in
+          https://solutions.mediapipe.dev/holistic#smooth_segmentation.
+        refine_face_landmarks: Whether to further refine the landmark coordinates
+          around the eyes and lips, and output additional landmarks around the
+          irises. Default to False. See details in
+          https://solutions.mediapipe.dev/holistic#refine_face_landmarks.
+        min_detection_confidence: Minimum confidence value ([0.0, 1.0]) for person
+          detection to be considered successful. See details in
+          https://solutions.mediapipe.dev/holistic#min_detection_confidence.
+        min_tracking_confidence: Minimum confidence value ([0.0, 1.0]) for the
+          pose landmarks to be considered tracked successfully. See details in
+          https://solutions.mediapipe.dev/holistic#min_tracking_confidence.
+      """
+      _download_oss_pose_landmark_model(model_complexity)
+>     super().__init__(
+          binary_graph_path=_BINARYPB_FILE_PATH,
+          side_inputs={
+              'model_complexity': model_complexity,
+              'smooth_landmarks': smooth_landmarks and not static_image_mode,
+              'enable_segmentation': enable_segmentation,
+              'smooth_segmentation':
+                  smooth_segmentation and not static_image_mode,
+              'refine_face_landmarks': refine_face_landmarks,
+              'use_prev_landmarks': not static_image_mode,
+          },
+          calculator_params={
+              'poselandmarkcpu__posedetectioncpu__TensorsToDetectionsCalculator.min_score_thresh':
+                  min_detection_confidence,
+              'poselandmarkcpu__poselandmarkbyroicpu__tensorstoposelandmarksandsegmentation__ThresholdingCalculator.threshold':
+                  min_tracking_confidence,
+          },
+          outputs=[
+              'pose_landmarks', 'pose_world_landmarks', 'left_hand_landmarks',
+              'right_hand_landmarks', 'face_landmarks', 'segmentation_mask'
+          ])
+
+.venv/lib/python3.11/site-packages/mediapipe/python/solutions/holistic.py:114:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <mediapipe.python.solutions.holistic.Holistic object at 0x139bb9050>
+binary_graph_path = 'mediapipe/modules/holistic_landmark/holistic_landmark_cpu.binarypb'
+graph_config = None
+calculator_params = {'poselandmarkcpu__posedetectioncpu__TensorsToDetectionsCalculator.min_score_thresh': 0.5, 'poselandmarkcpu__poselandmarkbyroicpu__tensorstoposelandmarksandsegmentation__ThresholdingCalculator.threshold': 0.5}
+graph_options = None
+side_inputs = {'model_complexity': 1, 'smooth_landmarks': True, 'enable_segmentation': False, 'smooth_segmentation': True, ...}
+outputs = ['pose_landmarks', 'pose_world_landmarks', 'left_hand_landmarks', 'right_hand_landmarks', 'face_landmarks', 'segmentation_mask']
+stream_type_hints = None
+
+    def __init__(
+        self,
+        binary_graph_path: Optional[str] = None,
+        graph_config: Optional[calculator_pb2.CalculatorGraphConfig] = None,
+        calculator_params: Optional[Mapping[str, Any]] = None,
+        graph_options: Optional[message.Message] = None,
+        side_inputs: Optional[Mapping[str, Any]] = None,
+        outputs: Optional[List[str]] = None,
+        stream_type_hints: Optional[Mapping[str, PacketDataType]] = None):
+      """Initializes the SolutionBase object.
+
+      Args:
+        binary_graph_path: The path to a binary mediapipe graph file (.binarypb).
+        graph_config: A CalculatorGraphConfig proto message or its text proto
+          format.
+        calculator_params: A mapping from the
+          {calculator_name}.{options_field_name} str to the field value.
+        graph_options: The graph options protobuf for the mediapipe graph.
+        side_inputs: A mapping from the side packet name to the packet raw data.
+        outputs: A list of the graph output stream names to observe. If the list
+          is empty, all the output streams listed in the graph config will be
+          automatically observed by default.
+        stream_type_hints: A mapping from the stream name to its packet type hint.
+
+      Raises:
+        FileNotFoundError: If the binary graph file can't be found.
+        RuntimeError: If the underlying calculator graph can't be successfully
+          initialized or started.
+        ValueError: If any of the following:
+          a) If not exactly one of 'binary_graph_path' or 'graph_config' arguments
+          is provided.
+          b) If the graph validation process contains error.
+          c) If the registered type name of the streams and side packets can't be
+          found.
+          d) If the calculator options of the calculator listed in
+          calculator_params is not allowed to be modified.
+          e) If the calculator options field is a repeated field but the field
+          value to be set is not iterable.
+          f) If not all calculator params are valid.
+      """
+      if bool(binary_graph_path) == bool(graph_config):
+        raise ValueError(
+            "Must provide exactly one of 'binary_graph_path' or 'graph_config'.")
+      # MediaPipe package root path
+      root_path = os.sep.join(os.path.abspath(__file__).split(os.sep)[:-3])
+      resource_util.set_resource_dir(root_path)
+      validated_graph = validated_graph_config.ValidatedGraphConfig()
+      if binary_graph_path:
+        validated_graph.initialize(
+            binary_graph_path=os.path.join(root_path, binary_graph_path))
+      else:
+        validated_graph.initialize(graph_config=graph_config)
+
+      canonical_graph_config_proto = self._initialize_graph_interface(
+          validated_graph, side_inputs, outputs, stream_type_hints)
+      if calculator_params:
+        self._modify_calculator_options(canonical_graph_config_proto,
+                                        calculator_params)
+      if graph_options:
+        self._set_extension(canonical_graph_config_proto.graph_options,
+                            graph_options)
+
+      self._graph = calculator_graph.CalculatorGraph(
+          graph_config=canonical_graph_config_proto)
+      self._simulated_timestamp = 0
+      self._graph_outputs = {}
+
+      def callback(stream_name: str, output_packet: packet.Packet) -> None:
+        self._graph_outputs[stream_name] = output_packet
+
+      for stream_name in self._output_stream_type_info.keys():
+        self._graph.observe_output_stream(stream_name, callback, True)
+
+      self._input_side_packets = {
+          name: self._make_packet(self._side_input_type_info[name], data)
+          for name, data in (side_inputs or {}).items()
+      }
+>     self._graph.start_run(self._input_side_packets)
+E     RuntimeError: Service "kGpuService", required by node poselandmarkcpu__posedetectioncpu__ImageToTensorCalculator, was not provided and cannot be created: Could not create an NSOpenGLPixelFormat
+
+.venv/lib/python3.11/site-packages/mediapipe/python/solution_base.py:263: RuntimeError
+----------------------------- Captured stdout call -----------------------------
+clip        frames  detected  median vis
+----------------------------------------
+----------------------------- Captured stderr call -----------------------------
+W0000 00:00:1791749105.152134 25426189 gl_context_nsgl.cc:85] failed to create pixel format; trying without acceleration
+=========================== short test summary info ============================
+FAILED tests/test_extract_hand_landmarks.py::test_a_clip_does_not_depend_on_the_clip_before_it
+FAILED tests/test_extract_hand_landmarks.py::test_hands_are_metric_sided_and_missing_as_nan
+FAILED tests/test_extract_world_landmarks.py::test_a_clip_does_not_inherit_tracker_state_from_the_previous_clip
+ERROR tests/test_extract_face_landmarks.py::test_a_face_is_found_on_most_frames
+ERROR tests/test_extract_face_landmarks.py::test_frames_line_up_with_the_hand_clip
+ERROR tests/test_extract_face_landmarks.py::test_head_matrix_puts_the_face_in_front_of_the_camera
+======== 3 failed, 279 passed, 1 xfailed, 3 errors in 88.86s (0:01:28) =========
