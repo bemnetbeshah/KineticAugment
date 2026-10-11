@@ -46,6 +46,22 @@ FACE_SUBSET_IDS = (
 BODY_POSE_IDS = (11, 12, 13, 14, 15, 16)
 HEAD_ROTATION_ORDER = "first column xyz, then second column xyz (column-major 6D)"
 BLENDSHAPE_COUNT = 52
+# MediaPipe's documented FaceLandmarker blendshape order. This layout lets a clip with no
+# detector output share a batch with observed clips; its score mask remains entirely false.
+MEDIAPIPE_BLENDSHAPE_NAMES = (
+    "_neutral", "browDownLeft", "browDownRight", "browInnerUp", "browOuterUpLeft",
+    "browOuterUpRight",
+    "cheekPuff", "cheekSquintLeft", "cheekSquintRight", "eyeBlinkLeft", "eyeBlinkRight",
+    "eyeLookDownLeft", "eyeLookDownRight", "eyeLookInLeft", "eyeLookInRight",
+    "eyeLookOutLeft", "eyeLookOutRight", "eyeLookUpLeft", "eyeLookUpRight",
+    "eyeSquintLeft", "eyeSquintRight", "eyeWideLeft", "eyeWideRight", "jawForward",
+    "jawLeft", "jawOpen", "jawRight", "mouthClose", "mouthDimpleLeft", "mouthDimpleRight",
+    "mouthFrownLeft", "mouthFrownRight", "mouthFunnel", "mouthLeft", "mouthLowerDownLeft",
+    "mouthLowerDownRight", "mouthPressLeft", "mouthPressRight", "mouthPucker", "mouthRight",
+    "mouthRollLower", "mouthRollUpper", "mouthShrugLower", "mouthShrugUpper", "mouthSmileLeft",
+    "mouthSmileRight", "mouthStretchLeft", "mouthStretchRight", "mouthUpperUpLeft",
+    "mouthUpperUpRight", "noseSneerLeft", "noseSneerRight",
+)
 
 
 @dataclass
@@ -303,8 +319,9 @@ def sample_from_face_features(
     streams["head"], masks["head"] = _sanitize(head_values, head_mask)
 
     blendshape_names = list(meta.get("blendshape_names", []))
-    if not blendshape_names:
-        blendshape_names = ["coefficient_{:02d}".format(i) for i in range(BLENDSHAPE_COUNT)]
+    unnamed_blendshapes = not blendshape_names
+    if unnamed_blendshapes:
+        blendshape_names = list(MEDIAPIPE_BLENDSHAPE_NAMES)
     if len(blendshape_names) != BLENDSHAPE_COUNT:
         raise ValueError("blendshape_names must name all 52 ordered score channels")
     if include_blendshapes:
@@ -312,7 +329,8 @@ def sample_from_face_features(
         # Scores are masked as a unit if any selected mouth, eye, or brow point is occluded.
         observed = point_valid[:, face_ids] & point_visible[:, face_ids]
         face_clear = observed.all(axis=1)
-        bs_mask = np.isfinite(bs) & face_clear[:, None]
+        # Without channel names, finite numbers have unknown semantics and must stay invalid.
+        bs_mask = np.isfinite(bs) & face_clear[:, None] & (not unnamed_blendshapes)
         streams["blendshapes"], masks["blendshapes"] = _sanitize(bs, bs_mask)
 
     metadata = {
@@ -453,14 +471,19 @@ def collate_face_samples(batch):
         names,
         tuple(samples[0].streams[name].shape[1] for name in names),
         tuple(samples[0].metadata.get("face_subset_ids", ())),
-        tuple(samples[0].metadata.get("blendshape_names", ())),
+        (
+            tuple(samples[0].metadata.get("blendshape_names", ()))
+            if "blendshapes" in names
+            else ()
+        ),
     )
+    check_blendshape_order = "blendshapes" in names
     for sample in samples:
         other = (
             tuple(sample.streams),
             tuple(sample.streams[name].shape[1] for name in sample.streams),
             tuple(sample.metadata.get("face_subset_ids", ())),
-            tuple(sample.metadata.get("blendshape_names", ())),
+            tuple(sample.metadata.get("blendshape_names", ())) if check_blendshape_order else (),
         )
         if other != layout:
             raise ValueError(

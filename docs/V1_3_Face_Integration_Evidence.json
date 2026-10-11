@@ -121,6 +121,81 @@
     ],
     "processed_frames": 1646
   },
+  "final_fix": {
+    "channel_semantics": "Missing blendshape names map to the canonical MediaPipe 52-channel order, but every score stays masked invalid when channel semantics are unknown.",
+    "classifier_archive_probe": {
+      "accuracy_measured": false,
+      "clips": [
+        "01986",
+        "01987",
+        "01988",
+        "01991",
+        "01992",
+        "05631",
+        "07389",
+        "08917",
+        "08918",
+        "08938",
+        "09849",
+        "12328",
+        "13630",
+        "17083",
+        "21871",
+        "21942",
+        "28111",
+        "57641",
+        "57949",
+        "63229",
+        "63665",
+        "63669",
+        "69257",
+        "69364",
+        "69411"
+      ],
+      "modes": {
+        "body_only": {
+          "all_logits_finite": true,
+          "all_parameter_updates_finite": true,
+          "all_stream_values_finite": true,
+          "blendshape_valid_values": 0,
+          "finite_gradients": true,
+          "loss_before_step": 0.998117208480835,
+          "optimizer_step_completed": true,
+          "padded_frames": 144,
+          "streams": [
+            "body_hands"
+          ],
+          "updated_parameter_count": 8
+        },
+        "multimodal": {
+          "all_logits_finite": true,
+          "all_parameter_updates_finite": true,
+          "all_stream_values_finite": true,
+          "blendshape_valid_values": 72852,
+          "finite_gradients": true,
+          "loss_before_step": 0.7618099451065063,
+          "optimizer_step_completed": true,
+          "padded_frames": 144,
+          "streams": [
+            "blendshapes",
+            "body_hands",
+            "face",
+            "head"
+          ],
+          "updated_parameter_count": 20
+        }
+      },
+      "no_face_clips": [
+        "09849"
+      ],
+      "samples": 25,
+      "synthetic_labels_only": true
+    },
+    "collation": "Blendshape order is enforced only when the blendshape stream is present; valid incompatible named orders are rejected.",
+    "probe_command": "rtk proxy env PYTHONPATH=src .venv/bin/python scripts/validate_face_integration.py --probe-feature-dir /tmp/face-v1.3-validation-full --output-dir /tmp/face-v1.3-final-fix-probe",
+    "recognition_accuracy_measured": false,
+    "source_feature_dir": "/private/tmp/face-v1.3-validation-full"
+  },
   "implementation_sha256": {
     "scripts/validate_face_integration.py": "392b222160ed8c99cf2a19374be58e4ab76f289cd901117496d55a4e7f3432a2",
     "src/kinetic_augment/body_model/face_features.py": "cd79d73ece0f55c7e99b160cbdf32ee9ee54b2b4f09f836ac7392e2968a3c064",
@@ -514,6 +589,14 @@
   "roundtrip_metrics_recomputed_from_saved_feature_archives": true,
   "schema": 1,
   "verification": {
+    "final_fix_focused": {
+      "command": "rtk proxy env PYTHONPATH=src .venv/bin/python -m pytest tests/test_face_training_dataset.py tests/test_face_classifier.py tests/test_face_integration_validation.py -q --tb=long",
+      "failed": 0,
+      "git_diff_check": "passed",
+      "passed": 19,
+      "py_compile": "passed: scripts/validate_face_integration.py and src/kinetic_augment/evaluation/datasets/face_features.py",
+      "xfailed": 0
+    },
     "full_suite": {
       "command": "rtk proxy env PYTHONPATH=src .venv/bin/python -m pytest -q --tb=long",
       "elapsed_seconds": 88.86,

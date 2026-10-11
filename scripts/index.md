@@ -9,7 +9,7 @@
 - `extract_face_landmarks.py` — Extracts MediaPipe FaceLandmarker landmarks, blendshapes and head matrix per frame, aligned frame-for-frame with `*_hands.npz`.
 - `evaluate_face.py` — Runs the V1.3 phase-A gate over a landmark folder: runs the face pipeline per clip and reports every metric for hand-near-face frames and the rest.
 - `extract_face_features.py` — Writes versioned per-clip `_face_features.npz` archives with fitted geometry and reversible face streams; `--output-dir` selects the destination and `--depth-corrected` writes `_face_features_dc.npz`.
-- `validate_face_integration.py` — Runs selected/all paired real face and hand caches through the V1.3 pipeline, checks masks and re-posing, and writes outputs plus JSON evidence to a separate directory.
+- `validate_face_integration.py` — Runs paired caches through the V1.3 pipeline or probes existing feature archives with multimodal/body-only classifiers, checks masks and re-posing, and writes JSON evidence separately.
 - `extract_world_landmarks.py` — Extracts metric MediaPipe world landmarks and visibility, one MediaPipe instance per clip.
 - `measure_detector_agreement.py` — Measures how far MediaPipe's own landmarks move when one setting changes (context for the round trip).
 - `measure_hand_round_trip.py` — Measures the V1.2 hand round trip (MediaPipe hand → MANO / SMPL-X → landmarks) as an error ladder on the pilot clips.

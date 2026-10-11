@@ -75,13 +75,57 @@ observations on 01986 frame 0. The producer reported body-fit failure while reta
 face points; the image-space adapter produced 52 valid face values and zero body/hand values for
 that row.
 
-The collator and classifier optimization probe used four synthetic sequences, synthetic labels,
-and body/hand, face, and head streams. All collated values and logits were finite and an optimizer
-step completed. This verifies the training wiring only. A bounded filename inventory of the
-current worktree `data` and parent project `data` directories (following scoped symlinks) found
-zero matching WLASL/annotation/label/gloss JSON, CSV, TSV, or Parquet files. The exact roots,
-filter, and command are recorded in the evidence JSON and Task 5 report. Therefore **no meaningful
-real recognition accuracy was measured**.
+The original integration check used four synthetic sequences, synthetic labels, and body/hand,
+face, and head streams. The final review fix adds the real-archive probe below. A bounded filename
+inventory of the current worktree `data` and parent project `data` directories (following scoped
+symlinks) found zero matching WLASL/annotation/label/gloss JSON, CSV, TSV, or Parquet files. The
+search command was:
+
+```sh
+rtk proxy rg --files --hidden --no-ignore --follow data \
+  /Users/bemnetbeshah/Workspace/cv-research/KineticAugment/data \
+  | rtk proxy rg -i '(wlasl|annot|label|gloss).*(\.json|\.csv|\.tsv|\.parquet)$|(^|/)(annotations?|labels?)(/|\.)' || true
+```
+
+Therefore **no meaningful real recognition accuracy was measured**.
+
+## Mixed-archive classifier integration
+
+Archives without detector blendshape names receive the canonical MediaPipe 52-channel layout for
+collation, while every score remains invalid when its channel names are unknown. The collator checks
+channel order only when the blendshape stream is present. Real named channel orders remain strict,
+and incompatible orders are rejected. This lets no-face clips join batches with the default
+blendshape stream and body-only batches where that metadata is absent.
+
+The classifier probe loaded the already generated archives in `/tmp/face-v1.3-validation-full`
+without rerunning fitting: all 25 clips and 1,646 frames, including entirely no-face clip 09849,
+were collated and passed through both modes. The multimodal batch used `body_hands`, `face`, `head`,
+and `blendshapes`; all 72,852 named blendshape values were valid, logits, gradients, and parameter
+updates were finite, and the optimizer changed 20 parameters (loss before update 0.76181). The
+body-only batch used only `body_hands`; logits, gradients, and updates were finite, 8 parameters
+changed (loss before update 0.99812). Its padded sequence length was 144. Labels were synthetic in
+both probes, so these measurements establish finite training wiring only and do not measure
+recognition accuracy.
+
+Reproduce the archive-only probe without fitting:
+
+```sh
+rtk proxy env PYTHONPATH=src .venv/bin/python scripts/validate_face_integration.py \
+  --probe-feature-dir /tmp/face-v1.3-validation-full \
+  --output-dir /tmp/face-v1.3-final-fix-probe
+```
+
+The focused adapter, classifier, and validator tests reported **19 passed**. They cover default
+mixed collation with an unnamed no-face clip, blendshapes-disabled and body-only batches, and
+rejection of incompatible named channel orders. Reproduce them with:
+
+```sh
+rtk proxy env PYTHONPATH=src .venv/bin/python -m pytest \
+  tests/test_face_training_dataset.py tests/test_face_classifier.py \
+  tests/test_face_integration_validation.py -q --tb=long
+```
+
+Machine-readable probe metrics and counts are recorded in the evidence JSON.
 
 ## Feature contract and training
 
@@ -120,7 +164,7 @@ The default input directories are `data/test_output` and `data/round_trip_eval`.
 `--input-dir` to select others, or repeat `--clip` to select exact clip IDs. `--frame-stride` and
 `--max-clips` explicitly reduce work and are recorded in the JSON report.
 
-The full project suite was run with:
+The full project suite previously ran with:
 
 ```sh
 rtk proxy env PYTHONPATH=src .venv/bin/python -m pytest -q --tb=long
@@ -129,6 +173,13 @@ rtk proxy env PYTHONPATH=src .venv/bin/python -m pytest -q --tb=long
 That sandbox run reported **279 passed, 1 xfailed, 3 failed, and 3 errors**. All six failures and
 errors were the MediaPipe face/hand/world extraction tests; the traceback showed NSOpenGL pixel
 format creation failing in the sandbox. The only rerun was those six extraction tests with graphics
-access, and all six passed in 14.63 seconds. The full-suite output and targeted graphics rerun are
-saved in the Task 5 workspace. The remaining checks and reproduction details are in the Task 5
-report.
+access, and all six passed in 14.63 seconds. The graphics-enabled rerun command was:
+
+```sh
+rtk proxy env PYTHONPATH=src .venv/bin/python -m pytest \
+  tests/test_extract_face_landmarks.py tests/test_extract_hand_landmarks.py \
+  tests/test_extract_world_landmarks.py -q --tb=long
+```
+
+The full-suite counts above are retained historical evidence; this final fix was verified with the
+focused adapter, classifier, and validator command documented above.

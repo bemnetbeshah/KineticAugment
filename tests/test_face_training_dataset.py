@@ -156,6 +156,86 @@ def test_collate_pads_masks_and_enforces_channel_layout():
         collate_face_samples([(first, 0), (mismatch, 0)])
 
 
+def test_missing_name_no_face_clip_batches_with_named_clip_without_valid_unnamed_scores():
+    from kinetic_augment.evaluation.datasets.face_features import MEDIAPIPE_BLENDSHAPE_NAMES
+
+    ordinary_features = feature_fixture((0, 40))
+    ordinary_features["meta"]["blendshape_names"] = list(MEDIAPIPE_BLENDSHAPE_NAMES)
+    no_face_features = feature_fixture((0, 40, 80))
+    no_face_features["meta"]["blendshape_names"] = []
+    no_face_features["face_point_valid"][:] = False
+    no_face_features["face_point_visible"][:] = False
+    no_face_features["blendshapes"][:] = np.nan
+
+    ordinary = sample_from_face_features(ordinary_features)
+    no_face = sample_from_face_features(no_face_features)
+    inputs, lengths, labels = collate_face_samples([(ordinary, 0), (no_face, 1)])
+
+    assert no_face.metadata["blendshape_names"] == list(MEDIAPIPE_BLENDSHAPE_NAMES)
+    assert no_face.masks["blendshapes"].sum() == 0
+    assert inputs["streams"]["blendshapes"].shape == (2, 3, 52)
+    assert not inputs["masks"]["blendshapes"][1].any()
+    assert lengths.tolist() == [2, 3]
+    assert labels.tolist() == [0, 1]
+    assert inputs["masks"]["blendshapes"][0].any()
+
+
+def test_blendshapes_disabled_collation_ignores_absent_blendshape_metadata():
+    from kinetic_augment.evaluation.datasets.face_features import MEDIAPIPE_BLENDSHAPE_NAMES
+
+    first_features, second_features = feature_fixture(), feature_fixture()
+    first_features["meta"]["blendshape_names"] = list(MEDIAPIPE_BLENDSHAPE_NAMES)
+    second_features["meta"]["blendshape_names"] = []
+    second_features["face_point_valid"][:] = False
+    second_features["face_point_visible"][:] = False
+    second_features["blendshapes"][:] = np.nan
+    first = sample_from_face_features(first_features, include_blendshapes=False)
+    second = sample_from_face_features(second_features, include_blendshapes=False)
+    second.metadata["blendshape_names"] = ["different", "unused"]
+
+    inputs, _, _ = collate_face_samples([(first, 0), (second, 1)])
+    assert tuple(inputs["streams"]) == ("body_hands", "face", "head")
+
+
+def test_body_only_collation_accepts_unnamed_face_clip():
+    no_face_features = feature_fixture()
+    no_face_features["meta"]["blendshape_names"] = []
+    no_face_features["face_point_valid"][:] = False
+    no_face_features["face_point_visible"][:] = False
+    no_face_features["blendshapes"][:] = np.nan
+    samples = [
+        sample_from_face_features(feature_fixture()),
+        sample_from_face_features(no_face_features),
+    ]
+    body_only = [
+        FaceTrainingSample(
+            streams={"body_hands": sample.streams["body_hands"]},
+            masks={"body_hands": sample.masks["body_hands"]},
+            timestamp_ms=sample.timestamp_ms,
+            source_frames=sample.source_frames,
+            source_time_ms=sample.source_time_ms,
+            interpolated=sample.interpolated,
+            metadata=sample.metadata,
+        )
+        for sample in samples
+    ]
+
+    inputs, _, _ = collate_face_samples([(body_only[0], 0), (body_only[1], 1)])
+    assert tuple(inputs["streams"]) == ("body_hands",)
+
+
+def test_collate_rejects_incompatible_valid_blendshape_channel_order():
+    first_features, second_features = feature_fixture(), feature_fixture()
+    second_features["meta"]["blendshape_names"] = list(
+        reversed(second_features["meta"]["blendshape_names"])
+    )
+    first = sample_from_face_features(first_features)
+    second = sample_from_face_features(second_features)
+
+    with pytest.raises(ValueError, match="blendshape channel order"):
+        collate_face_samples([(first, 0), (second, 1)])
+
+
 def test_wlasl_uses_annotation_order_and_requested_split_without_leakage(tmp_path, monkeypatch):
     (tmp_path / "features").mkdir()
     annotation = [

@@ -179,58 +179,90 @@ def archive_metrics(features, result):
     }
 
 
-def run_training_wiring_probe(seed=913):
-    """Exercise collation and one optimizer step using synthetic labels, not accuracy data."""
+def run_training_wiring_probe(feature_paths, seed=913):
+    """Probe fresh feature archives with synthetic labels, never recognition accuracy."""
     import torch
     from kinetic_augment.evaluation.datasets.face_features import (
         FaceTrainingSample,
         collate_face_samples,
+        sample_from_face_features,
     )
+    from kinetic_augment.body_model.face_features import load_face_features
     from kinetic_augment.evaluation.models.face_classifier import FaceStreamClassifier
 
     torch.manual_seed(seed)
-    rng = np.random.default_rng(seed)
-    batch = []
-    for i, length in enumerate((5, 7, 4, 6)):
-        streams = {
-            "body_hands": rng.normal(size=(length, 12)).astype(np.float32),
-            "face": rng.normal(size=(length, 8)).astype(np.float32),
-            "head": rng.normal(size=(length, 6)).astype(np.float32),
-        }
-        masks = {name: rng.random(value.shape) > 0.15 for name, value in streams.items()}
-        sample = FaceTrainingSample(
-            streams=streams,
-            masks=masks,
-            timestamp_ms=np.arange(length, dtype=np.float64),
-            source_frames=np.column_stack([np.arange(length), np.arange(length)]),
-            source_time_ms=np.column_stack([np.arange(length), np.arange(length)]),
-            interpolated=np.zeros(length, dtype=bool),
-        )
-        batch.append((sample, i % 2))
-    inputs, lengths, labels = collate_face_samples(batch)
-    model = FaceStreamClassifier(
-        num_classes=2,
-        stream_dims={"body_hands": 12, "face": 8, "head": 6},
-        hidden_dim=8,
-    )
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-    optimizer.zero_grad()
-    logits = model(inputs, lengths)
-    loss = torch.nn.functional.cross_entropy(logits, labels)
-    loss.backward()
-    optimizer.step()
-    return {
+    feature_paths = [Path(path) for path in feature_paths]
+    features = [load_face_features(path) for path in feature_paths]
+    result = {
         "synthetic_labels_only": True,
-        "samples": int(labels.numel()),
-        "padded_frames": int(inputs["streams"]["face"].shape[1]),
-        "all_stream_values_finite": bool(
-            all(torch.isfinite(value).all().item() for value in inputs["streams"].values())
-        ),
-        "streams": sorted(inputs["streams"]),
-        "all_logits_finite": bool(torch.isfinite(logits).all().item()),
-        "loss_before_step": float(loss.detach().item()),
-        "optimizer_step_completed": True,
+        "accuracy_measured": False,
+        "samples": len(feature_paths),
+        "clips": [path.name.removesuffix("_face_features.npz") for path in feature_paths],
+        "no_face_clips": [
+            path.name.removesuffix("_face_features.npz")
+            for path, archive in zip(feature_paths, features)
+            if not np.asarray(archive["face_point_valid"], dtype=bool).any()
+        ],
+        "modes": {},
     }
+    for mode, include_blendshapes in (("multimodal", True), ("body_only", False)):
+        samples = [
+            sample_from_face_features(archive, include_blendshapes=include_blendshapes)
+            for archive in features
+        ]
+        if mode == "body_only":
+            samples = [
+                FaceTrainingSample(
+                    streams={"body_hands": sample.streams["body_hands"]},
+                    masks={"body_hands": sample.masks["body_hands"]},
+                    timestamp_ms=sample.timestamp_ms,
+                    source_frames=sample.source_frames,
+                    source_time_ms=sample.source_time_ms,
+                    interpolated=sample.interpolated,
+                    metadata=sample.metadata,
+                )
+                for sample in samples
+            ]
+        batch = [(sample, index % 2) for index, sample in enumerate(samples)]
+        inputs, lengths, labels = collate_face_samples(batch)
+        stream_dims = {name: value.shape[-1] for name, value in inputs["streams"].items()}
+        model = FaceStreamClassifier(num_classes=2, stream_dims=stream_dims, hidden_dim=8)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        before = [parameter.detach().clone() for parameter in model.parameters()]
+        optimizer.zero_grad()
+        logits = model(inputs, lengths)
+        loss = torch.nn.functional.cross_entropy(logits, labels)
+        loss.backward()
+        gradients_finite = all(
+            parameter.grad is None or torch.isfinite(parameter.grad).all().item()
+            for parameter in model.parameters()
+        )
+        optimizer.step()
+        updates = [
+            parameter.detach() - initial
+            for parameter, initial in zip(model.parameters(), before)
+        ]
+        result["modes"][mode] = {
+            "streams": sorted(inputs["streams"]),
+            "all_stream_values_finite": all(
+                torch.isfinite(value).all().item() for value in inputs["streams"].values()
+            ),
+            "all_logits_finite": bool(torch.isfinite(logits).all().item()),
+            "finite_gradients": bool(gradients_finite),
+            "optimizer_step_completed": True,
+            "updated_parameter_count": sum(bool(torch.any(delta != 0).item()) for delta in updates),
+            "all_parameter_updates_finite": all(
+                torch.isfinite(delta).all().item() for delta in updates
+            ),
+            "loss_before_step": float(loss.detach().item()),
+            "padded_frames": int(lengths.max().item()),
+            "blendshape_valid_values": int(
+                inputs["masks"].get(
+                    "blendshapes", torch.zeros((), dtype=torch.bool)
+                ).sum().item()
+            ),
+        }
+    return result
 
 
 def face_only_adapter_probe(hands, face, models, features, output_dir):
@@ -291,6 +323,11 @@ def main():
     )
     parser.add_argument("--clip", action="append", help="clip id; repeatable (default: all)")
     parser.add_argument(
+        "--probe-feature-dir",
+        type=Path,
+        help="probe existing *_face_features.npz archives without rerunning fitting",
+    )
+    parser.add_argument(
         "--output-dir", type=Path, required=True, help="separate destination for features/report"
     )
     parser.add_argument(
@@ -300,6 +337,38 @@ def main():
         "--frame-stride", type=int, default=1, help="process every Nth frame; default is all"
     )
     args = parser.parse_args()
+    if args.probe_feature_dir is not None:
+        assert_output_is_separate(args.output_dir, [args.probe_feature_dir])
+        feature_paths = sorted(args.probe_feature_dir.glob("*_face_features.npz"))
+        if args.clip:
+            by_clip = {path.name[: -len("_face_features.npz")]: path for path in feature_paths}
+            missing = sorted(set(args.clip) - by_clip.keys())
+            if missing:
+                parser.error("requested feature archives not found: {}".format(missing))
+            feature_paths = [by_clip[clip] for clip in args.clip]
+        if not feature_paths:
+            parser.error("no saved *_face_features.npz archives found")
+        import torch
+
+        torch.set_num_threads(1)
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+        probe = run_training_wiring_probe(feature_paths)
+        report = {
+            "schema": 1,
+            "probe_feature_dir": str(args.probe_feature_dir.resolve(strict=True)),
+            "classifier_real_archive_probe": probe,
+            "recognition_accuracy": {
+                "measured": False,
+                "reason": "Classifier labels in this wiring probe are synthetic.",
+            },
+        }
+        report_path = args.output_dir / "face_classifier_archive_probe.json"
+        report_path.write_text(
+            json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        print("probed {} feature archives; wrote {}".format(len(feature_paths), report_path))
+        return
+
     input_dirs = args.input_dir or list(DEFAULT_INPUT_DIRS)
     if args.frame_stride < 1 or (args.max_clips is not None and args.max_clips < 1):
         parser.error("--frame-stride and --max-clips must be positive")
@@ -328,7 +397,7 @@ def main():
         for path in (face_path, hands_path)
     }
     models = load_face_models()
-    records, total_frames = [], 0
+    records, total_frames, feature_paths = [], 0, []
     pilot_sample = None
     regression_samples = {}
     for clip, (source_dir, face_path, hands_path) in clips.items():
@@ -339,6 +408,7 @@ def main():
         result = run_clip(hands, face, models, frames=frames)
         output_path = args.output_dir / (clip + "_face_features.npz")
         save_face_features(output_path, result, face)
+        feature_paths.append(output_path)
         features = load_face_features(output_path)
         metrics = archive_metrics(features, result)
         records.append(
@@ -479,7 +549,7 @@ def main():
             "pass": invalid_geometry_leaks == 0,
         }
 
-    training_probe = run_training_wiring_probe()
+    training_probe = run_training_wiring_probe(feature_paths)
     report = {
         "schema": 1,
         "generated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -497,7 +567,7 @@ def main():
         "face_only_adapter_probe": face_only_adapter_probe(
             pilot_sample[1], pilot_sample[2], models, pilot_sample[4], args.output_dir
         ),
-        "classifier_synthetic_wiring_probe": training_probe,
+        "classifier_real_archive_probe": training_probe,
         "source_hashes_before": file_hashes,
         "source_hashes_unchanged": True,
         "recognition_accuracy": {
