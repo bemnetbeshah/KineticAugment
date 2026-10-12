@@ -1565,6 +1565,8 @@ Update it whenever a step proves or retracts something.
 | P18 | With the nose, the fitted body is upright on all 409 real frames | Step 8, Step 10 note |
 | P19 | A shared MediaPipe instance made stored landmarks depend on clip order, by up to 114 mm | Step 9 box |
 | P20 | MediaPipe disagrees with itself by more than the conversion loses: smoothing off 2.41%, static mode 9.22%, heavy model 25.47% | Step 10, context |
+| P21 | The body round trip holds on 20 randomly drawn unseen clips (seed 20261007, from the same 334-clip WLASL pool): 3.13% direct, 3.37% held out, against the pilot's 3.52% and 3.99%; clip-level 95% CI on the median difference [-1.21, +1.16] pp; upright on 1234/1234 frames, with the nose and masked | `scripts/evaluate_round_trip.py`, `data/round_trip_eval/round_trip_report.json` (2026-10-07) |
+| P22 | The MANO hand round trip holds on the same 20 clips (26 tracks): in-sample 5.10 mm mean, 2.53 tips, 14.59 p95; held out (time halves) 5.62 and 16.50. The pilot's hands (7.38 / 3.28 / 20.89) were harder than typical, not easier | Same run |
 
 ### Disproven, retracted or superseded
 
@@ -1606,3 +1608,5 @@ Update it whenever a step proves or retracts something.
 | O5 | The nose-less fallback root, and orphan correspondences (review assessment §4.6) | **Both fixed 2026-10-05** (Step 10, contract fixes) |
 | O6 | Are the elbow and shoulder joint-limit axes wrong (review assessment §4.2)? | Not re-verified; latent until augmentation is wired |
 | O7 | Is `z` noise 1.2× or about 1.9× that of x/y per axis (review assessment §4.7)? | Not re-verified; reference figures only |
+| O8 | The per-clip body tail is wider than the pilot showed: direct 1.44–5.52% (pilot 2.67–4.40%), gap to floor up to 3.85 pp (`08917`, `08918`, `57949`), where `betas` cannot reach the clip's proportions (P17). Accept, or flag such clips before augmenting? | Open (2026-10-07) |
+| O9 | Does the round trip hold on another dataset, camera set-up or signer pool? The P21–P22 sample shares WLASL's sources and some signers | Untested |

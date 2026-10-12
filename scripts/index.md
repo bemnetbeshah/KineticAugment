@@ -1,9 +1,11 @@
 # Scripts index
 
+- `augment_trials.py` — Applies seven per-clip augmentations (yaw, mirror, scale, uncentre, arm pose, body shape, time warp) through the SMPL-X body + MANO hand round trip; renders the meshes side by side and measures identity, bone lengths, wrist displacement and jitter.
 - `convert_mano.py` — Converts licensed MANO .pkl files to chumpy-free .npz and fixes the left-hand shapedirs bug.
 - `demo_smplx_augmentation.py` — Demo of SMPL-X-space augmentation (elbow bend, arm raise, body shape) via fit_body → edit → reconstruct_body; renders videos and measures each edit.
 - `diagnose_residual.py` — Diagnoses round-trip error below the rigid-skeleton floor (MediaPipe non-rigidity).
 - `download_models.py` — Checks required model assets and prints setup or download guidance.
+- `evaluate_round_trip.py` — One-stop body + hand round-trip evaluation on any footage: extracts MediaPipe landmarks, scores SMPL-X body and MANO/SMPL-X hand round trips, writes a JSON report, optionally renders videos.
 - `extract_hand_landmarks.py` — Extracts MediaPipe hand world and image landmarks with the paired pose and a geometric left/right assignment.
 - `extract_world_landmarks.py` — Extracts metric MediaPipe world landmarks and visibility, one MediaPipe instance per clip.
 - `measure_detector_agreement.py` — Measures how far MediaPipe's own landmarks move when one setting changes (context for the round trip).

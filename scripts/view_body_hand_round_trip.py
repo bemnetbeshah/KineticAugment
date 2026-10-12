@@ -25,6 +25,8 @@ the detector missed in a frame is drawn flat and the panel says so.
 Usage (from the repo root):
     .venv/bin/python scripts/view_body_hand_round_trip.py --clip 01988
     .venv/bin/python scripts/view_body_hand_round_trip.py --clip 01988 --landmark-dir <dir>
+    .venv/bin/python scripts/view_body_hand_round_trip.py --clip 08917 \
+        --landmark-dir data/round_trip_eval --video <path>/08917.mp4 --output-dir <dir>
 
 Reads <landmark-dir>/<clip>_world.npz and <clip>_hands.npz (from
 extract_world_landmarks.py and extract_hand_landmarks.py).
@@ -247,9 +249,9 @@ def set_view(ax, lim, title):
     ax.set_yticks([])
 
 
-def render(clip, landmark_dir: Path, out_dir: Path, model_dir="models"):
+def render(clip, landmark_dir: Path, out_dir: Path, model_dir="models", video_path=None):
     pose, ok, hands = load_observations(landmark_dir, clip)
-    frames, fps = read_frames(clip, len(pose))
+    frames, fps = read_frames(clip, len(pose), video_path)
     skeleton = SMPLXSkeleton(model_path=model_dir)
 
     print(f"Clip {clip}: {len(pose)} frames")
@@ -384,8 +386,10 @@ def main():
     parser.add_argument("--clip", required=True, help="clip id, e.g. 01988")
     parser.add_argument("--landmark-dir", type=Path, default=LANDMARK_DIR)
     parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR)
+    parser.add_argument("--video", type=Path,
+                        help="source video (default: data/sign_videos/<clip>.mp4)")
     args = parser.parse_args()
-    render(args.clip, args.landmark_dir, args.output_dir)
+    render(args.clip, args.landmark_dir, args.output_dir, video_path=args.video)
 
 
 if __name__ == "__main__":

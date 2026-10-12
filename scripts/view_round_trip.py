@@ -66,8 +66,9 @@ def load_clip(clip: str):
     return pose, ok
 
 
-def read_frames(clip: str, count: int):
-    capture = cv2.VideoCapture(str(VIDEO_DIR / f"{clip}.mp4"))
+def read_frames(clip: str, count: int, video_path=None):
+    """RGB frames of the clip's video (VIDEO_DIR/<clip>.mp4 unless `video_path` is given)."""
+    capture = cv2.VideoCapture(str(video_path or VIDEO_DIR / f"{clip}.mp4"))
     fps = capture.get(cv2.CAP_PROP_FPS) or 25.0
     frames = []
     while len(frames) < count:

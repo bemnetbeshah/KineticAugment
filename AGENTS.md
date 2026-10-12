@@ -32,6 +32,7 @@ Run the test suite with `pytest`. The documented phase checks can also be run wi
 - [`data/test_output/index.md`](data/test_output/index.md)
 - [`data/test_output/videos/index.md`](data/test_output/videos/index.md)
 - [`docs/index.md`](docs/index.md)
+- [`docs/augmentation-evidence/index.md`](docs/augmentation-evidence/index.md)
 - [`docs/media/index.md`](docs/media/index.md)
 - [`docs/research-guide/index.md`](docs/research-guide/index.md)
 - [`examples/index.md`](examples/index.md)
