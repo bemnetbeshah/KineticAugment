@@ -13,4 +13,5 @@
 - `test_phase3.py` — Exercises collision geometry, detection, resolution, and constraint integration.
 - `test_phase4.py` — Checks pipeline configuration, presets, datasets, and legacy compatibility.
 - `test_phase5.py` — Runs evaluation metrics, datasets, classifiers, benchmarks, and integration checks.
+- `visualize_hand_round_trip.py` — Fits the V1.2 hands on the pilot clips and draws how they are detected and how the MANO / SMPL-X round trip looks.
 - `index.md` — Index of setup, rendering, and phase-check scripts.
