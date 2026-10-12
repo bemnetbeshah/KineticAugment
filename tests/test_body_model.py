@@ -193,7 +193,7 @@ class TestSMPLXWrapper:
     def smplx_wrapper(self):
         """Create SMPL-X wrapper for testing."""
         from kinetic_augment.body_model.smplx_wrapper import SMPLXWrapper
-        return SMPLXWrapper(model_path=MODEL_PATH, gender='neutral')
+        return SMPLXWrapper(model_path=MODEL_PATH.parent, gender='neutral')
 
     def test_wrapper_initialization(self, smplx_wrapper):
         """Test that wrapper initializes correctly."""
@@ -230,10 +230,33 @@ class TestSMPLXWrapper:
         """Test getting rest pose joint positions."""
         joints = smplx_wrapper.get_rest_pose_joints()
 
-        assert joints.shape == (1, smplx_wrapper.num_joints, 3)
+        assert joints.shape == (1, smplx_wrapper.num_output_joints, 3)
         # In rest pose, joints should be centered around origin
         center = joints.mean(axis=1)
         assert np.abs(center).max() < 1.0  # Should be near origin
+
+    def test_joint_counts_are_distinct(self, smplx_wrapper):
+        """num_model_joints is the kinematic chain; num_output_joints is wider."""
+        assert smplx_wrapper.num_model_joints == 55
+        assert smplx_wrapper.num_output_joints == 127
+        assert smplx_wrapper.num_output_joints > smplx_wrapper.num_model_joints
+
+    def test_num_joints_is_deprecated(self, smplx_wrapper):
+        """The ambiguous alias still works but warns and never sizes output."""
+        with pytest.deprecated_call():
+            assert smplx_wrapper.num_joints == smplx_wrapper.num_model_joints
+
+    def test_model_joints_is_leading_slice_of_joints(self, smplx_wrapper):
+        """model_joints must be exactly the kinematic prefix of joints."""
+        params = smplx_wrapper.get_default_params(batch_size=1)
+        output = smplx_wrapper.forward(**params, return_vertices=False)
+
+        assert output['joints'].shape == (1, smplx_wrapper.num_output_joints, 3)
+        assert output['model_joints'].shape == (1, smplx_wrapper.num_model_joints, 3)
+        np.testing.assert_array_equal(
+            output['model_joints'],
+            output['joints'][:, :smplx_wrapper.num_model_joints],
+        )
 
 
 @pytest.mark.skipif(not SMPLX_AVAILABLE, reason="PyTorch/SMPL-X not installed")
@@ -247,7 +270,7 @@ class TestMediaPipeToSMPLX:
         from kinetic_augment.body_model.smplx_wrapper import SMPLXWrapper
         from kinetic_augment.body_model.mp_to_smplx import MediaPipeToSMPLX
 
-        wrapper = SMPLXWrapper(model_path=MODEL_PATH, gender='neutral')
+        wrapper = SMPLXWrapper(model_path=MODEL_PATH.parent, gender='neutral')
         return MediaPipeToSMPLX(wrapper, num_iterations=10, verbose=False)
 
     def test_fitter_initialization(self, fitter):
@@ -284,7 +307,7 @@ class TestSMPLXToMediaPipe:
         from kinetic_augment.body_model.smplx_wrapper import SMPLXWrapper
         from kinetic_augment.body_model.smplx_to_mp import SMPLXToMediaPipe
 
-        wrapper = SMPLXWrapper(model_path=MODEL_PATH, gender='neutral')
+        wrapper = SMPLXWrapper(model_path=MODEL_PATH.parent, gender='neutral')
         return SMPLXToMediaPipe(wrapper)
 
     def test_projector_initialization(self, projector):

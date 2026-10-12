@@ -12,7 +12,7 @@ Components:
 
 Example:
     >>> from kinetic_augment.body_model import SMPLXWrapper, MediaPipeToSMPLX
-    >>> model = SMPLXWrapper(model_path="models/smplx")
+    >>> model = SMPLXWrapper(model_path="models")
     >>> fitter = MediaPipeToSMPLX(model)
     >>> smplx_params = fitter.fit(mediapipe_landmarks)
 """
