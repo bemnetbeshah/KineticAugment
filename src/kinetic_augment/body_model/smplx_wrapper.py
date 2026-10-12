@@ -15,10 +15,18 @@ SMPL-X Parameters:
     - reye_pose (3): Right eye rotation
     - expression (10): Facial expression parameters
 
+Note:
+    ``model_path`` is the directory *containing* the ``smplx/`` folder, not the
+    folder itself: ``smplx.create()`` appends the model type to the path it is
+    given. With the model installed at ``models/smplx/SMPLX_NEUTRAL.npz``, pass
+    ``model_path="models"`` -- passing ``"models/smplx"`` resolves to
+    ``models/smplx/smplx/`` and raises an AssertionError.
+
 Example:
-    >>> wrapper = SMPLXWrapper(model_path="models/smplx", gender="neutral")
+    >>> wrapper = SMPLXWrapper(model_path="models", gender="neutral")
     >>> output = wrapper.forward(body_pose=my_pose)
-    >>> joints = output['joints']  # (1, 55, 3) joint positions
+    >>> joints = output['joints']  # (1, 127, 3): 55 model joints + 72 landmarks
+    >>> body_joints = joints[:, :55]  # (1, 55, 3) the SMPL-X skeleton itself
 """
 
 import os
@@ -80,7 +88,9 @@ class SMPLXWrapper:
         Initialize the SMPL-X wrapper.
 
         Args:
-            model_path: Path to SMPL-X model files directory
+            model_path: Directory *containing* the ``smplx/`` model folder, not
+                the folder itself -- ``smplx.create()`` appends the model type.
+                For ``models/smplx/SMPLX_NEUTRAL.npz``, pass ``"models"``.
             gender: 'male', 'female', or 'neutral'
             num_betas: Number of body shape parameters
             num_expression_coeffs: Number of expression parameters
@@ -174,7 +184,9 @@ class SMPLXWrapper:
 
         Returns:
             Dictionary with:
-                - joints: Joint positions (batch, num_joints, 3)
+                - joints: Joint positions (batch, 127, 3) -- the 55 SMPL-X
+                  model joints (``self.num_joints``) followed by 72 appended
+                  face/hand/foot landmarks. Index ``[:, :55]`` for the skeleton.
                 - vertices: Mesh vertices (batch, num_verts, 3) if return_vertices
                 - full_pose: Full pose vector
         """
@@ -257,7 +269,8 @@ class SMPLXWrapper:
             params: Dictionary of SMPL-X parameters
 
         Returns:
-            Joint positions (batch, num_joints, 3)
+            Joint positions (batch, 127, 3) -- 55 model joints followed by
+            72 appended landmarks. Index [:, :55] for the SMPL-X skeleton.
         """
         output = self.forward(**params, return_vertices=False)
         return output['joints']
@@ -267,7 +280,8 @@ class SMPLXWrapper:
         Get joint positions in rest pose (T-pose).
 
         Returns:
-            Joint positions (1, num_joints, 3)
+            Joint positions (1, 127, 3) -- 55 model joints followed by
+            72 appended landmarks. Index [:, :55] for the SMPL-X skeleton.
         """
         params = self.get_default_params(batch_size=1)
         return self.get_joint_positions(params)
