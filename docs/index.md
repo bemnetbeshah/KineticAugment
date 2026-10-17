@@ -22,7 +22,6 @@
 - `V1_3_Face_Design.md` — Approved V1.3 design: SMPL-X neck, head and jaw from FaceLandmarker, signed hand-to-face distances with ASL-LEX regions, and the face stream.
 - `V1_3_Implementation_Plan.md` — Task-by-task plan for V1.3: face correspondence, head/neck/jaw fit, hand-to-face geometry, gate, face stream.
 - `Week_2_Findings.md` — Round trip on 20 unseen clips, what its error is made of (systematic vs varying), and the agreed plan for metrics and smoothing (2026-10-07).
-- `Week_2_Progress_Deck.pptx` — 21-slide deck on the week's findings: round trip on unseen clips, error make-up and smoothing, the augmentation evidence base and first trial, and V1.3 face results from `feat/face-v1.3` (2026-10-13).
 - `media/` — Images and placeholder assets referenced by documentation.
 - `index.md` — Index of the documentation pages and media folder.
 - `research-guide/` — Source-grounded research onboarding, verification status, and practical learning roadmap.

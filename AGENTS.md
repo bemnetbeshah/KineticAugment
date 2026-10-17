@@ -40,6 +40,7 @@ Run the test suite with `pytest`. The documented phase checks can also be run wi
 - [`models/mano/index.md`](models/mano/index.md)
 - [`models/smplx/index.md`](models/smplx/index.md)
 - [`models/vposer/index.md`](models/vposer/index.md)
+- [`presentation 2/index.md`](<presentation 2/index.md>)
 - [`scripts/index.md`](scripts/index.md)
 - [`scripts/review_checks/index.md`](scripts/review_checks/index.md) — frozen V1 review evidence; per-cluster subfolders each have their own `index.md`
 - [`src/index.md`](src/index.md)

@@ -16,6 +16,7 @@
 | `docs/` | Framework concepts, architecture, validation, and roadmap. |
 | `examples/` | Runnable scripts demonstrating package usage. |
 | `models/` | Model setup guidance, version metadata, and local model asset locations. |
+| `presentation 2/` | Week 2 progress deck for the professor and the sample augmentation clips it shows. |
 | `pyproject.toml` | Package metadata, dependencies, and development-tool settings. |
 | `scripts/` | Model setup, rendering utilities, and phase validation scripts. |
 | `src/` | Installable Python source tree. |
