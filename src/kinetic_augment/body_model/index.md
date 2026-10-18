@@ -20,6 +20,7 @@
 - `hand_model.py` — Evaluates MediaPipe's 21 hand landmarks on MANO or SMPL-X (joints plus fingertip vertices).
 - `hand_face_geometry.py` — Signed distances from each hand's wrist, fingertips and palm centre to the head and neck surface, with region labels and contact (V1.3).
 - `head_converter.py` — Fits the SMPL-X neck, head and jaw to MediaPipe face landmarks.
+- `head_placement.py` — Spike (08925 head placement): swings the neck so the head joint lands on the weighted mean of per-point votes from several observed face points; keeps the head's world rotation exact.
 - `image_proximity.py` — Projects the fitted head into the image and measures hand points against it in 2-D: overlap, distance at head depth, region, near; Neck is excluded on purpose, so these describe the face and head (V1.3).
 - `hand_depth.py` — Estimates each wrist's 3-D position relative to the nose from the image (pinhole depth from the head and hand scales) so the body can be re-fitted (V1.3).
 - `face_pipeline.py` — Runs one clip end to end (body, hands, head, hand-to-face geometry) and writes the per-frame `_face_features.npz` (V1.3).
