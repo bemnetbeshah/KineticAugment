@@ -14,7 +14,10 @@ hand set {15, 17, 19, 21} (left) / {16, 18, 20, 22} (right). For that pair it re
               visible pose points 0-24); NEAR below 2 cm
     img-min   the smallest image distance over all hand/face pairs (not tied to the 3-D pair)
 
-A hand counts as present in a frame when its wrist (15 / 16) has visibility >= 0.5.
+A point is usable when its visibility is >= 0.5 and its normalised image x, y lie inside the frame
+(0..1). Only usable points enter the closest-pair search, and a hand counts as present in a frame
+when its wrist (15 / 16) is usable and at least one face point is. Image "metres" use the body-plane
+pixels-per-metre scale, so they are approximate for a hand nearer the camera than the body.
 
 Panels: 1. video frame with the pose skeleton, face points (orange), left hand points (blue), right
 hand points (green) and the closest pair joined by a line (red at CONTACT), per-hand readouts below;
@@ -100,20 +103,22 @@ def measure(data) -> dict:
     for t in range(n):
         if not data["valid"][t]:
             continue
+        usable = (vis[t] >= VISIBILITY) & ((image[t, :, :2] >= 0) & (image[t, :, :2] <= 1)).all(1)
         seen = np.where(vis[t, :SCALE_POINTS] >= VISIBILITY)[0]
         if len(seen) < 3:
             seen = np.arange(SCALE_POINTS)
         ppm = similarity_scale(world[t, seen, :2], px[t, seen])
         out["ppm"][t] = ppm
         for i, side in enumerate("LR"):
-            if not vis[t, WRIST[side]] >= VISIBILITY:
+            idx = [j for j in HANDS[side] if usable[j]]
+            face = [j for j in FACE if usable[j]]
+            if not usable[WRIST[side]] or not face:
                 continue
-            idx = HANDS[side]
-            hp, fp, d3 = closest_pair(world[t, idx], world[t, FACE])
-            a, b = idx[hp], FACE[fp]
+            hp, fp, d3 = closest_pair(world[t, idx], world[t, face])
+            a, b = idx[hp], face[fp]
             delta = world[t, a] - world[t, b]
             img_px = float(np.linalg.norm(px[t, a] - px[t, b]))
-            img_all = np.linalg.norm(px[t, idx][:, None] - px[t, FACE][None], axis=-1)
+            img_all = np.linalg.norm(px[t, idx][:, None] - px[t, face][None], axis=-1)
             out["present"][t, i] = True
             out["hand_pt"][t, i], out["face_pt"][t, i] = a, b
             out["d3"][t, i], out["dz"][t, i] = d3, abs(delta[2])
@@ -173,7 +178,7 @@ def readout(m, t) -> str:
     lines = []
     for i, side in enumerate("LR"):
         if not m["present"][t, i]:
-            lines.append(f"{side}: wrist not visible")
+            lines.append(f"{side}: no in-frame visible pair")
             continue
         flags = ("  CONTACT" if m["contact"][t, i] else "") + ("  NEAR" if m["near"][t, i] else "")
         lines.append(
@@ -258,7 +263,7 @@ def render(clip, landmark_dir: Path, video_dir: Path, out_dir: Path):
 
         xs = np.arange(1, n + 1)
         ax_strip.plot(xs, d3, color="#222222", lw=1.6, label="3-D min")
-        ax_strip.plot(xs, img, color="#1f77b4", lw=1.3, label="image (same pair, m)")
+        ax_strip.plot(xs, img, color="#1f77b4", lw=1.3, label="image (same pair)")
         ax_strip.plot(xs, dz, color="#d62728", lw=1.3, ls="--", label="|dz|")
         ax_strip.axhspan(0, CONTACT_M * 100, color="#2ca02c", alpha=0.2, label="2 cm")
         ax_strip.axvline(t + 1, color="k", lw=1)
