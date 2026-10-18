@@ -1567,6 +1567,7 @@ Update it whenever a step proves or retracts something.
 | P20 | MediaPipe disagrees with itself by more than the conversion loses: smoothing off 2.41%, static mode 9.22%, heavy model 25.47% | Step 10, context |
 | P21 | The body round trip holds on 20 randomly drawn unseen clips (seed 20261007, from the same 334-clip WLASL pool): 3.13% direct, 3.37% held out, against the pilot's 3.52% and 3.99%; clip-level 95% CI on the median difference [-1.21, +1.16] pp; upright on 1234/1234 frames, with the nose and masked | `scripts/evaluate_round_trip.py`, `data/round_trip_eval/round_trip_report.json` (2026-10-07) |
 | P22 | The MANO hand round trip holds on the same 20 clips (26 tracks): in-sample 5.10 mm mean, 2.53 tips, 14.59 p95; held out (time halves) 5.62 and 16.50. The pilot's hands (7.38 / 3.28 / 20.89) were harder than typical, not easier | Same run |
+| P23 | Signers differ too little in MediaPipe's arm proportions for a body-shape augmentation to add anything: upper arm / shoulder width CV is 5.7% (2.9% robust) across 25 clips, no larger than MediaPipe's frame-to-frame jitter in the same ratio (3.7%), and the 20.6% left/right forearm spread is detector error. Sampling SMPL-X's shape prior is 15% off in mean and about 2.5× too wide. Body-shape augmentation is dropped | [Augmentation grounding §6.1](Augmentation_Grounding.md#61-why-body-shape-was-dropped) (2026-10-18) |
 
 ### Disproven, retracted or superseded
 
