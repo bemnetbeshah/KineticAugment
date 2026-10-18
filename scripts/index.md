@@ -10,6 +10,7 @@
 - `evaluate_face.py` — Runs the V1.3 phase-A gate over a landmark folder: runs the face pipeline per clip and reports every metric for hand-near-face frames and the rest.
 - `extract_face_features.py` — Writes versioned per-clip `_face_features.npz` archives with fitted geometry and reversible face streams; `--output-dir` selects the destination and `--depth-corrected` writes `_face_features_dc.npz`.
 - `validate_face_integration.py` — Runs paired caches through the V1.3 pipeline or probes existing feature archives with multimodal/body-only classifiers, checks masks and re-posing, and writes JSON evidence separately.
+- `extract_pose_only.py` — Spike (08925 head placement): runs the legacy MediaPipe `Pose` alone over one video and saves image/world landmarks, visibility and a validity mask to `<clip>_pose_only.npz`.
 - `extract_world_landmarks.py` — Extracts metric MediaPipe world landmarks and visibility, one MediaPipe instance per clip.
 - `measure_detector_agreement.py` — Measures how far MediaPipe's own landmarks move when one setting changes (context for the round trip).
 - `measure_hand_round_trip.py` — Measures the V1.2 hand round trip (MediaPipe hand → MANO / SMPL-X → landmarks) as an error ladder on the pilot clips.
@@ -27,6 +28,7 @@
 - `test_phase5.py` — Runs evaluation metrics, datasets, classifiers, benchmarks, and integration checks.
 - `view_body_hand_round_trip.py` — Renders one clip's stitched body (SMPL-X) + hand (MANO) round trip beside MediaPipe's 2-D output, with the SMPL-X body figure posed from the round-trip parameters.
 - `view_face_round_trip.py` — Renders one clip's body + hands + face round trip (V1.3): MediaPipe 2-D with face landmarks, front and side views with the observed and SMPL-X face, nose and ears and hand-to-head lines, the posed SMPL-X mesh with the head tinted by region, error and hand-to-face distance strips; saves stills of the closest approach.
+- `view_pose_face_proximity.py` — Spike (08925 head placement): renders hand-to-face proximity from pose-only landmarks (closest hand/face pair: 3-D, depth, image distance, CONTACT/NEAR) as video, front/side world views and a distance strip, plus stills.
 - `view_proximity_round_trip.py` — Renders the hand-to-face proximity comparison video of a clip (V1.3): video with the projected SMPL-X head and per-hand readouts of image, original 3-D and depth-corrected 3-D distance, front and side views with original and corrected wrists, the corrected SMPL-X figure, and a strip of the three closest distances; saves stills where image near / corrected contact first occur.
 - `view_round_trip.py` — Renders per-clip videos of the V1 round trip: input vs SMPL-X reconstruction, joints coloured by error, error-over-time strip.
 - `index.md` — Index of setup, rendering, and phase-check scripts.
