@@ -12,6 +12,7 @@
 - `validate_face_integration.py` — Runs paired caches through the V1.3 pipeline or probes existing feature archives with multimodal/body-only classifiers, checks masks and re-posing, and writes JSON evidence separately.
 - `extract_pose_only.py` — Spike (08925 head placement): runs the legacy MediaPipe `Pose` alone over one video and saves image/world landmarks, visibility and a validity mask to `<clip>_pose_only.npz`.
 - `exp_head_placement.py` — Spike (08925 head placement): places the head three ways (neck at rest, ear-midpoint swing, 11-pose-face-point swing) on the pipeline's first-pass fit, measures residuals, head shift, hand-to-head distance and an independent Kabsch rotation; writes `<clip>_head_placement.npz`, mp4 and stills.
+- `exp_frame_alignment.py` — O11 check across clips: per-frame world→image roll (2-D similarity, orthographic and 3-D fits), pose-face Kabsch vs R_head angle split into roll and swing, shoulder and eye-line tilts; prints the per-clip table behind `docs/O11_Frame_Alignment.md`.
 - `extract_world_landmarks.py` — Extracts metric MediaPipe world landmarks and visibility, one MediaPipe instance per clip.
 - `measure_detector_agreement.py` — Measures how far MediaPipe's own landmarks move when one setting changes (context for the round trip).
 - `measure_hand_round_trip.py` — Measures the V1.2 hand round trip (MediaPipe hand → MANO / SMPL-X → landmarks) as an error ladder on the pilot clips.

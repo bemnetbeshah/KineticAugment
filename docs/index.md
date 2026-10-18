@@ -25,6 +25,7 @@
 - `V1_3_Face_Integration_Plan.md` — Implementation contract for reversible face attachment, quality masks, synchronized training samples and a masked facial classifier.
 - `V1_3_Face_Integration_Results.md` — Real-cache coverage, geometric and masking regressions, reproduction commands, and recognition-data limitations for the V1.3 integration.
 - `V1_3_Face_Integration_Evidence.json` — Compact machine-readable aggregate and per-clip evidence from the real-cache validation.
+- `O11_Frame_Alignment.md` — Cross-clip test of O11 (2026-10-18): pose-world vs image roll is ~1-2°, so no roll correction is needed; the pose-face Kabsch vs R_head gap comes from pose-world face distortion; pitch/yaw still open.
 - `Week_2_Findings.md` — Round trip on 20 unseen clips, what its error is made of (systematic vs varying), and the agreed plan for metrics and smoothing (2026-10-07).
 - `media/` — Images and placeholder assets referenced by documentation.
 - `index.md` — Index of the documentation pages and media folder.
