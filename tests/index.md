@@ -16,6 +16,7 @@
 - `test_face_integration_validation.py` — Tests that attachment on/off comparisons reject validity or finite-value mask loss.
 - `test_kinematics.py` — Tests skeleton sources and forward kinematics against the real SMPL-X model.
 - `test_shape.py` — Tests the per-clip shape fit against the converter's own round-trip error and SMPL-X's shape prior.
+- `test_smoothing.py` — Tests the gap-aware landmark smoothing filters: gaps stay NaN and do not leak, constants pass through, noise drops, One Euro is causal.
 - `test_swing_ik.py` — Tests analytic swing inverse kinematics against known synthetic ground truth.
 - `hand_assets.py` — Shared model-asset paths, skip marks and a cached hand-model loader for the hand tests.
 - `test_hand_model.py` — Tests the 21-point hand operator against the full MANO/SMPL-X forward pass and hand anatomy.
