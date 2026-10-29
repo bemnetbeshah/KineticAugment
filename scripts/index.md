@@ -1,8 +1,9 @@
 # Scripts index
 
 - `audit_face_training.py` — Read-only synthetic, cache and optional fresh-fit probes supporting the V1.3 training-data audit; writes a separate JSON evidence file.
+- `augment_face_trials.py` — Applies per-clip augmentations (yaw, mirror, scale, uncentre, arm pose, body shape, head turn, time warp) to the V1.3 body + hands + head pose, carries the observed face in the head frame, measures identity, face rigidity and hand-to-face distance, and renders one comparison video per clip.
 - `convert_mano.py` — Converts licensed MANO .pkl files to chumpy-free .npz and fixes the left-hand shapedirs bug.
-- `demo_smplx_augmentation.py` — Demo of SMPL-X-space augmentation (elbow bend, arm raise, body shape) via fit_body → edit → reconstruct_body; renders videos and measures each edit.
+- `demo_smplx_augmentation.py` — Demo of SMPL-X-space augmentation (elbow bend, arm raise, body shape) via fit_body → edit → reconstruct_body; renders videos and measures each edit. Its clamps never pull an already out-of-range pose, so zero strength is the identity.
 - `diagnose_residual.py` — Diagnoses round-trip error below the rigid-skeleton floor (MediaPipe non-rigidity).
 - `download_models.py` — Checks required model assets and prints setup or download guidance.
 - `extract_hand_landmarks.py` — Extracts MediaPipe hand world and image landmarks with the paired pose and a geometric left/right assignment.

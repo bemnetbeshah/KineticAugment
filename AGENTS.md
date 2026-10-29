@@ -28,6 +28,7 @@ Run the test suite with `pytest`. The documented phase checks can also be run wi
 - [`.github/ISSUE_TEMPLATE/index.md`](.github/ISSUE_TEMPLATE/index.md)
 - [`configs/index.md`](configs/index.md)
 - [`data/index.md`](data/index.md)
+- [`data/augment_trials/index.md`](data/augment_trials/index.md)
 - [`data/sign_videos/index.md`](data/sign_videos/index.md)
 - [`data/test_output/index.md`](data/test_output/index.md)
 - [`data/test_output/videos/index.md`](data/test_output/videos/index.md)
