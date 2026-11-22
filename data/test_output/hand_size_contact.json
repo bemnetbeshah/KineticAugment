@@ -1,0 +1,526 @@
+{
+  "clips": {
+    "05631": {
+      "mediapipe size": {
+        "frames": 24,
+        "near_face": 13,
+        "corrected": 13,
+        "reached": 2,
+        "contact": 0,
+        "posed": 2,
+        "closest_median_m": 0.030160550541065454,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 2.8529500611822844
+      },
+      "constant size": {
+        "frames": 24,
+        "near_face": 13,
+        "corrected": 13,
+        "reached": 2,
+        "contact": 2,
+        "posed": 2,
+        "closest_median_m": 0.01842326336458168,
+        "all_frames_contact": 2,
+        "depth_ratio_roughness_pct": 3.412519345362285
+      }
+    },
+    "07389": {
+      "mediapipe size": {
+        "frames": 82,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 10.019305400988602
+      },
+      "constant size": {
+        "frames": 82,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 10.406053787966576
+      }
+    },
+    "08917": {
+      "mediapipe size": {
+        "frames": 32,
+        "near_face": 18,
+        "corrected": 18,
+        "reached": 18,
+        "contact": 1,
+        "posed": 18,
+        "closest_median_m": 0.04488572699578369,
+        "all_frames_contact": 1,
+        "depth_ratio_roughness_pct": 3.1712884963526915
+      },
+      "constant size": {
+        "frames": 32,
+        "near_face": 18,
+        "corrected": 18,
+        "reached": 18,
+        "contact": 0,
+        "posed": 18,
+        "closest_median_m": 0.04859572735448954,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 2.353299770256346
+      }
+    },
+    "08918": {
+      "mediapipe size": {
+        "frames": 30,
+        "near_face": 12,
+        "corrected": 12,
+        "reached": 12,
+        "contact": 0,
+        "posed": 12,
+        "closest_median_m": 0.05718533339105358,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 2.5453864994910145
+      },
+      "constant size": {
+        "frames": 30,
+        "near_face": 12,
+        "corrected": 12,
+        "reached": 12,
+        "contact": 0,
+        "posed": 12,
+        "closest_median_m": 0.08892495051225027,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 6.966204823053836
+      }
+    },
+    "08938": {
+      "mediapipe size": {
+        "frames": 56,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 4.532511829639307
+      },
+      "constant size": {
+        "frames": 56,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 4.698971011067738
+      }
+    },
+    "09849": {
+      "mediapipe size": {
+        "frames": 81,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": NaN
+      },
+      "constant size": {
+        "frames": 81,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": NaN
+      }
+    },
+    "12328": {
+      "mediapipe size": {
+        "frames": 88,
+        "near_face": 6,
+        "corrected": 6,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 0.7117778042299574
+      },
+      "constant size": {
+        "frames": 88,
+        "near_face": 6,
+        "corrected": 6,
+        "reached": 1,
+        "contact": 0,
+        "posed": 1,
+        "closest_median_m": 0.07384054196366531,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 0.8973538762925488
+      }
+    },
+    "13630": {
+      "mediapipe size": {
+        "frames": 106,
+        "near_face": 4,
+        "corrected": 4,
+        "reached": 3,
+        "contact": 1,
+        "posed": 3,
+        "closest_median_m": 0.033122824320742546,
+        "all_frames_contact": 2,
+        "depth_ratio_roughness_pct": 6.811579193266271
+      },
+      "constant size": {
+        "frames": 106,
+        "near_face": 4,
+        "corrected": 4,
+        "reached": 3,
+        "contact": 1,
+        "posed": 3,
+        "closest_median_m": 0.02444910981492264,
+        "all_frames_contact": 3,
+        "depth_ratio_roughness_pct": 4.285041769440886
+      }
+    },
+    "17083": {
+      "mediapipe size": {
+        "frames": 62,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 4.389796233273308
+      },
+      "constant size": {
+        "frames": 62,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 3.4429180908076695
+      }
+    },
+    "21871": {
+      "mediapipe size": {
+        "frames": 79,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 21,
+        "depth_ratio_roughness_pct": 5.956559377373835
+      },
+      "constant size": {
+        "frames": 79,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 1,
+        "depth_ratio_roughness_pct": 3.0451489156838862
+      }
+    },
+    "21942": {
+      "mediapipe size": {
+        "frames": 68,
+        "near_face": 3,
+        "corrected": 3,
+        "reached": 3,
+        "contact": 0,
+        "posed": 3,
+        "closest_median_m": 0.059751763925471,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 5.698138946171557
+      },
+      "constant size": {
+        "frames": 68,
+        "near_face": 3,
+        "corrected": 3,
+        "reached": 3,
+        "contact": 0,
+        "posed": 3,
+        "closest_median_m": 0.06987887403733568,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 3.8307485985875105
+      }
+    },
+    "28111": {
+      "mediapipe size": {
+        "frames": 35,
+        "near_face": 7,
+        "corrected": 7,
+        "reached": 6,
+        "contact": 0,
+        "posed": 6,
+        "closest_median_m": 0.09740550988054117,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 9.60589214575021
+      },
+      "constant size": {
+        "frames": 35,
+        "near_face": 7,
+        "corrected": 7,
+        "reached": 6,
+        "contact": 0,
+        "posed": 6,
+        "closest_median_m": 0.045350328406024695,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 8.634685540603847
+      }
+    },
+    "57641": {
+      "mediapipe size": {
+        "frames": 29,
+        "near_face": 8,
+        "corrected": 8,
+        "reached": 4,
+        "contact": 1,
+        "posed": 4,
+        "closest_median_m": 0.04799554225113982,
+        "all_frames_contact": 1,
+        "depth_ratio_roughness_pct": 1.7436933281234615
+      },
+      "constant size": {
+        "frames": 29,
+        "near_face": 8,
+        "corrected": 8,
+        "reached": 4,
+        "contact": 1,
+        "posed": 4,
+        "closest_median_m": 0.0546332534965038,
+        "all_frames_contact": 1,
+        "depth_ratio_roughness_pct": 1.6723731380892632
+      }
+    },
+    "57949": {
+      "mediapipe size": {
+        "frames": 53,
+        "near_face": 29,
+        "corrected": 29,
+        "reached": 28,
+        "contact": 13,
+        "posed": 28,
+        "closest_median_m": 0.02042497505382298,
+        "all_frames_contact": 13,
+        "depth_ratio_roughness_pct": 3.847569602554014
+      },
+      "constant size": {
+        "frames": 53,
+        "near_face": 29,
+        "corrected": 29,
+        "reached": 28,
+        "contact": 6,
+        "posed": 28,
+        "closest_median_m": 0.03494274301181914,
+        "all_frames_contact": 6,
+        "depth_ratio_roughness_pct": 1.8396761670182713
+      }
+    },
+    "63229": {
+      "mediapipe size": {
+        "frames": 47,
+        "near_face": 17,
+        "corrected": 15,
+        "reached": 8,
+        "contact": 1,
+        "posed": 10,
+        "closest_median_m": 0.062093590199993984,
+        "all_frames_contact": 1,
+        "depth_ratio_roughness_pct": 8.11842801076557
+      },
+      "constant size": {
+        "frames": 47,
+        "near_face": 17,
+        "corrected": 15,
+        "reached": 6,
+        "contact": 0,
+        "posed": 8,
+        "closest_median_m": 0.08050453424725287,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 4.437602641627335
+      }
+    },
+    "63665": {
+      "mediapipe size": {
+        "frames": 72,
+        "near_face": 11,
+        "corrected": 11,
+        "reached": 4,
+        "contact": 0,
+        "posed": 4,
+        "closest_median_m": 0.053694125476640875,
+        "all_frames_contact": 2,
+        "depth_ratio_roughness_pct": 8.052948407478876
+      },
+      "constant size": {
+        "frames": 72,
+        "near_face": 11,
+        "corrected": 11,
+        "reached": 6,
+        "contact": 0,
+        "posed": 6,
+        "closest_median_m": 0.06522319734502482,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 6.0482587761678746
+      }
+    },
+    "63669": {
+      "mediapipe size": {
+        "frames": 94,
+        "near_face": 15,
+        "corrected": 15,
+        "reached": 15,
+        "contact": 12,
+        "posed": 15,
+        "closest_median_m": -0.002075569141323145,
+        "all_frames_contact": 14,
+        "depth_ratio_roughness_pct": 1.3537921356936573
+      },
+      "constant size": {
+        "frames": 94,
+        "near_face": 15,
+        "corrected": 15,
+        "reached": 15,
+        "contact": 1,
+        "posed": 15,
+        "closest_median_m": 0.03836502840675701,
+        "all_frames_contact": 1,
+        "depth_ratio_roughness_pct": 3.94447676320534
+      }
+    },
+    "69257": {
+      "mediapipe size": {
+        "frames": 56,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 7.308268871386023
+      },
+      "constant size": {
+        "frames": 56,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 7.380492589453737
+      }
+    },
+    "69364": {
+      "mediapipe size": {
+        "frames": 75,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 2.8295735474040384
+      },
+      "constant size": {
+        "frames": 75,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 2.2417481437978224
+      }
+    },
+    "69411": {
+      "mediapipe size": {
+        "frames": 67,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 2.4201454482369513
+      },
+      "constant size": {
+        "frames": 67,
+        "near_face": 0,
+        "corrected": 0,
+        "reached": 0,
+        "contact": 0,
+        "posed": 0,
+        "closest_median_m": null,
+        "all_frames_contact": 0,
+        "depth_ratio_roughness_pct": 2.5403633520962483
+      }
+    },
+    "08925": {
+      "mediapipe size": {
+        "frames": 41,
+        "near_face": 41,
+        "corrected": 41,
+        "reached": 23,
+        "contact": 23,
+        "posed": 23,
+        "closest_median_m": -0.013091827835210595,
+        "all_frames_contact": 23,
+        "depth_ratio_roughness_pct": 1.557762023179484
+      },
+      "constant size": {
+        "frames": 41,
+        "near_face": 41,
+        "corrected": 41,
+        "reached": 20,
+        "contact": 20,
+        "posed": 20,
+        "closest_median_m": -0.0036876896359948996,
+        "all_frames_contact": 20,
+        "depth_ratio_roughness_pct": 0.5804780342238932
+      }
+    }
+  },
+  "pooled": {
+    "mediapipe size": {
+      "near_face": 184,
+      "corrected": 182,
+      "reached": 126,
+      "contact": 52,
+      "posed": 128,
+      "all_frames_contact": 78
+    },
+    "constant size": {
+      "near_face": 184,
+      "corrected": 182,
+      "reached": 124,
+      "contact": 31,
+      "posed": 126,
+      "all_frames_contact": 34
+    }
+  }
+}

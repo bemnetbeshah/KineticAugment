@@ -1,0 +1,3167 @@
+{
+  "settings": {
+    "backend": "mano",
+    "sigmas": [
+      0.0,
+      1.5,
+      3.0,
+      6.0,
+      12.0
+    ],
+    "depth_sigma": 3.0,
+    "min_frames": 10,
+    "clip_dirs": [
+      "/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/data/test_output",
+      "/Users/bemnetbeshah/Workspace/cv-research/KineticAugment/data/round_trip_eval",
+      "/private/tmp/claude-501/-Users-bemnetbeshah-Workspace-cv-research-KineticAugment--claude-worktrees-body-variation-round-trip-59c31f/a5853e64-9132-451e-b8d5-48eea51b9bb4/scratchpad/c08925"
+    ]
+  },
+  "tracks": [
+    {
+      "clip": "01986",
+      "side": "left",
+      "frames": 48,
+      "hand_mm": 2155.2335829092044,
+      "scale_sd_pct": 5.982866452703326,
+      "rows": {
+        "in-sample shape": {
+          "frames": 48,
+          "mean_mm": 4.914127113117825,
+          "tips_mm": 2.7264913885140705,
+          "p95_mm": 13.06860528586592,
+          "mean_pct_hand": 0.2280090265893396
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 48,
+          "mean_mm": 3.819020271457417,
+          "tips_mm": 2.0656158723751923,
+          "p95_mm": 9.297373919169543,
+          "mean_pct_hand": 0.1771975112925987
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 48,
+          "mean_mm": 4.151381926980952,
+          "tips_mm": 2.394015392686541,
+          "p95_mm": 10.221396782363382,
+          "mean_pct_hand": 0.19261865441876058
+        },
+        "held-out, constant": {
+          "frames": 48,
+          "mean_mm": 4.9158106426958925,
+          "tips_mm": 2.7239435010104085,
+          "p95_mm": 13.107857474423511,
+          "mean_pct_hand": 0.22808714014470635
+        },
+        "held-out, scale sigma=0": {
+          "frames": 48,
+          "mean_mm": 4.300033452312092,
+          "tips_mm": 2.382673601431439,
+          "p95_mm": 10.92727794977061,
+          "mean_pct_hand": 0.19951588943356047
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 48,
+          "mean_mm": 4.256377993404782,
+          "tips_mm": 2.3300067783695635,
+          "p95_mm": 10.752406413528835,
+          "mean_pct_hand": 0.19749033363053783
+        },
+        "held-out, scale sigma=3": {
+          "frames": 48,
+          "mean_mm": 4.2446051324134215,
+          "tips_mm": 2.3038964316788406,
+          "p95_mm": 11.133629083053197,
+          "mean_pct_hand": 0.19694408838432795
+        },
+        "held-out, scale sigma=6": {
+          "frames": 48,
+          "mean_mm": 4.318462954395886,
+          "tips_mm": 2.338111734738089,
+          "p95_mm": 11.36981017917554,
+          "mean_pct_hand": 0.2003709940602672
+        },
+        "held-out, scale sigma=12": {
+          "frames": 48,
+          "mean_mm": 4.400012715541168,
+          "tips_mm": 2.291543930782309,
+          "p95_mm": 11.694903349788724,
+          "mean_pct_hand": 0.20415479558377553
+        }
+      },
+      "depth": {
+        "frames": 48,
+        "size_sd_pct": 5.982866452703326,
+        "size_max_over_min": 1.3523538248575908,
+        "size_vs_image_size_corr": -0.5932204451397685,
+        "depth_sd_pct": {
+          "mediapipe size": 9.291890973653928,
+          "constant size": 4.39697711249859,
+          "smoothed size (sigma=3)": 7.4975048397929696
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 3.8233130857596582,
+          "constant size": 1.3164286992148577,
+          "smoothed size (sigma=3)": 1.3245433517533032
+        }
+      }
+    },
+    {
+      "clip": "01986",
+      "side": "right",
+      "frames": 52,
+      "hand_mm": 1458.8852020460763,
+      "scale_sd_pct": 18.408064849753757,
+      "rows": {
+        "in-sample shape": {
+          "frames": 52,
+          "mean_mm": 8.402608075515868,
+          "tips_mm": 3.9626833697060273,
+          "p95_mm": 23.998673525101037,
+          "mean_pct_hand": 0.57596088189333
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 52,
+          "mean_mm": 4.122463367628334,
+          "tips_mm": 2.5623231141431133,
+          "p95_mm": 10.606901957896563,
+          "mean_pct_hand": 0.28257626863625784
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 52,
+          "mean_mm": 4.709864441720132,
+          "tips_mm": 1.9297038456743338,
+          "p95_mm": 14.880147117367828,
+          "mean_pct_hand": 0.32283996267249676
+        },
+        "held-out, constant": {
+          "frames": 52,
+          "mean_mm": 8.406567174383056,
+          "tips_mm": 3.9639691428371746,
+          "p95_mm": 24.20483866068687,
+          "mean_pct_hand": 0.5762322602623501
+        },
+        "held-out, scale sigma=0": {
+          "frames": 52,
+          "mean_mm": 5.523692952815023,
+          "tips_mm": 3.342357976401996,
+          "p95_mm": 18.33037176497279,
+          "mean_pct_hand": 0.37862423616800567
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 52,
+          "mean_mm": 5.576735514770676,
+          "tips_mm": 3.372471213750991,
+          "p95_mm": 19.101146143967263,
+          "mean_pct_hand": 0.382260064530735
+        },
+        "held-out, scale sigma=3": {
+          "frames": 52,
+          "mean_mm": 5.8399377437471545,
+          "tips_mm": 3.531488163676452,
+          "p95_mm": 20.485600535665696,
+          "mean_pct_hand": 0.4003013900995557
+        },
+        "held-out, scale sigma=6": {
+          "frames": 52,
+          "mean_mm": 6.237366110114641,
+          "tips_mm": 3.7650860060921953,
+          "p95_mm": 20.370351033671984,
+          "mean_pct_hand": 0.4275433119320683
+        },
+        "held-out, scale sigma=12": {
+          "frames": 52,
+          "mean_mm": 7.870929534223244,
+          "tips_mm": 5.257920293335463,
+          "p95_mm": 21.246726242010908,
+          "mean_pct_hand": 0.5395167161325868
+        }
+      },
+      "depth": {
+        "frames": 52,
+        "size_sd_pct": 18.408064849753757,
+        "size_max_over_min": 1.9599093800600993,
+        "size_vs_image_size_corr": -0.19540011269354202,
+        "depth_sd_pct": {
+          "mediapipe size": 26.214758653354846,
+          "constant size": 15.410815270117586,
+          "smoothed size (sigma=3)": 24.594387100783223
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 5.427977544575885,
+          "constant size": 5.810431536678975,
+          "smoothed size (sigma=3)": 5.814529445548187
+        }
+      }
+    },
+    {
+      "clip": "01987",
+      "side": "left",
+      "frames": 49,
+      "hand_mm": 1581.9025502969453,
+      "scale_sd_pct": 31.89403441579125,
+      "rows": {
+        "in-sample shape": {
+          "frames": 49,
+          "mean_mm": 10.663310648592006,
+          "tips_mm": 3.959656051154369,
+          "p95_mm": 33.12031662901663,
+          "mean_pct_hand": 0.6740813867826658
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 49,
+          "mean_mm": 4.901964121380234,
+          "tips_mm": 3.0422636586195164,
+          "p95_mm": 12.546483226382353,
+          "mean_pct_hand": 0.309877755773266
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 49,
+          "mean_mm": 6.091733942712729,
+          "tips_mm": 2.3874133620389375,
+          "p95_mm": 21.966705210577715,
+          "mean_pct_hand": 0.38508907780502816
+        },
+        "held-out, constant": {
+          "frames": 49,
+          "mean_mm": 10.695131546323264,
+          "tips_mm": 3.9852503690472187,
+          "p95_mm": 33.93690630488459,
+          "mean_pct_hand": 0.6760929454419072
+        },
+        "held-out, scale sigma=0": {
+          "frames": 49,
+          "mean_mm": 5.787457526306726,
+          "tips_mm": 3.822178424921082,
+          "p95_mm": 15.659920307200961,
+          "mean_pct_hand": 0.3658542383170404
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 49,
+          "mean_mm": 6.202318369550302,
+          "tips_mm": 4.05980563801701,
+          "p95_mm": 18.441993366840876,
+          "mean_pct_hand": 0.39207967446452624
+        },
+        "held-out, scale sigma=3": {
+          "frames": 49,
+          "mean_mm": 7.239948052007439,
+          "tips_mm": 4.684431219174404,
+          "p95_mm": 23.929251301011803,
+          "mean_pct_hand": 0.45767345470480464
+        },
+        "held-out, scale sigma=6": {
+          "frames": 49,
+          "mean_mm": 8.538268939065224,
+          "tips_mm": 5.069125320649604,
+          "p95_mm": 26.84680492094193,
+          "mean_pct_hand": 0.5397468344344266
+        },
+        "held-out, scale sigma=12": {
+          "frames": 49,
+          "mean_mm": 10.432844412576951,
+          "tips_mm": 5.3984065657143185,
+          "p95_mm": 27.642270946958707,
+          "mean_pct_hand": 0.6595124592610689
+        }
+      },
+      "depth": {
+        "frames": 49,
+        "size_sd_pct": 31.89403441579125,
+        "size_max_over_min": 2.9624977492367504,
+        "size_vs_image_size_corr": 0.8920194464284623,
+        "depth_sd_pct": {
+          "mediapipe size": 18.131269711093996,
+          "constant size": 17.453661373401882,
+          "smoothed size (sigma=3)": 15.05079649621664
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 5.342785543030899,
+          "constant size": 5.140475700931394,
+          "smoothed size (sigma=3)": 5.134082632817503
+        }
+      }
+    },
+    {
+      "clip": "01987",
+      "side": "right",
+      "frames": 27,
+      "hand_mm": 907.013701274991,
+      "scale_sd_pct": 16.439765258147986,
+      "rows": {
+        "in-sample shape": {
+          "frames": 27,
+          "mean_mm": 7.545502384919064,
+          "tips_mm": 3.1444262210946228,
+          "p95_mm": 20.74443973795887,
+          "mean_pct_hand": 0.8319061083986201
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 27,
+          "mean_mm": 4.99276457724288,
+          "tips_mm": 2.421360283775673,
+          "p95_mm": 14.503406598099527,
+          "mean_pct_hand": 0.5504618695643231
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 27,
+          "mean_mm": 5.107617230580644,
+          "tips_mm": 2.1677268704078294,
+          "p95_mm": 16.08514997302998,
+          "mean_pct_hand": 0.5631245948546153
+        },
+        "held-out, constant": {
+          "frames": 27,
+          "mean_mm": 7.554769895264272,
+          "tips_mm": 3.1161516239826277,
+          "p95_mm": 20.382178542896888,
+          "mean_pct_hand": 0.8329278691870385
+        },
+        "held-out, scale sigma=0": {
+          "frames": 27,
+          "mean_mm": 5.635102850773274,
+          "tips_mm": 2.6639185065293045,
+          "p95_mm": 15.999131829853578,
+          "mean_pct_hand": 0.6212808960715808
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 27,
+          "mean_mm": 6.493965616998216,
+          "tips_mm": 3.2883761436574703,
+          "p95_mm": 17.27612058231744,
+          "mean_pct_hand": 0.7159721631403841
+        },
+        "held-out, scale sigma=3": {
+          "frames": 27,
+          "mean_mm": 7.261124164445684,
+          "tips_mm": 3.703178298067022,
+          "p95_mm": 18.662068632063022,
+          "mean_pct_hand": 0.8005528642223053
+        },
+        "held-out, scale sigma=6": {
+          "frames": 27,
+          "mean_mm": 7.9408905390836715,
+          "tips_mm": 4.149770219706537,
+          "p95_mm": 20.138090469825396,
+          "mean_pct_hand": 0.8754984106547835
+        },
+        "held-out, scale sigma=12": {
+          "frames": 27,
+          "mean_mm": 8.380607917198118,
+          "tips_mm": 4.480541538810365,
+          "p95_mm": 21.154174216920048,
+          "mean_pct_hand": 0.9239780948642207
+        }
+      },
+      "depth": {
+        "frames": 27,
+        "size_sd_pct": 16.439765258147986,
+        "size_max_over_min": 1.8227917217396483,
+        "size_vs_image_size_corr": -0.12487181579708136,
+        "depth_sd_pct": {
+          "mediapipe size": 22.869895401635347,
+          "constant size": 13.977747436188482,
+          "smoothed size (sigma=3)": 16.995287606189414
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 3.438878023956261,
+          "constant size": 1.9272237351082664,
+          "smoothed size (sigma=3)": 1.8723696499414786
+        }
+      }
+    },
+    {
+      "clip": "01988",
+      "side": "left",
+      "frames": 92,
+      "hand_mm": 2493.151570960663,
+      "scale_sd_pct": 14.551069457658963,
+      "rows": {
+        "in-sample shape": {
+          "frames": 92,
+          "mean_mm": 6.143348457787452,
+          "tips_mm": 2.7790952729788763,
+          "p95_mm": 21.082889372482235,
+          "mean_pct_hand": 0.24640894397849603
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 92,
+          "mean_mm": 3.8336765687170784,
+          "tips_mm": 2.38580583580174,
+          "p95_mm": 9.599883427438822,
+          "mean_pct_hand": 0.15376829124110908
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 92,
+          "mean_mm": 4.100857466068483,
+          "tips_mm": 2.284638894359284,
+          "p95_mm": 10.740647325231933,
+          "mean_pct_hand": 0.16448488386481605
+        },
+        "held-out, constant": {
+          "frames": 92,
+          "mean_mm": 6.14589734426356,
+          "tips_mm": 2.788168174631443,
+          "p95_mm": 21.07849571898649,
+          "mean_pct_hand": 0.24651117949862228
+        },
+        "held-out, scale sigma=0": {
+          "frames": 92,
+          "mean_mm": 3.940792612071787,
+          "tips_mm": 2.422913798135535,
+          "p95_mm": 9.784064563622518,
+          "mean_pct_hand": 0.1580647024421912
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 92,
+          "mean_mm": 3.975813639590046,
+          "tips_mm": 2.426802246596352,
+          "p95_mm": 9.873725780598095,
+          "mean_pct_hand": 0.1594693915082781
+        },
+        "held-out, scale sigma=3": {
+          "frames": 92,
+          "mean_mm": 4.137056068695722,
+          "tips_mm": 2.4973502354885837,
+          "p95_mm": 10.180445193923038,
+          "mean_pct_hand": 0.16593680532233462
+        },
+        "held-out, scale sigma=6": {
+          "frames": 92,
+          "mean_mm": 4.289212553884975,
+          "tips_mm": 2.533960213495425,
+          "p95_mm": 10.64976157080382,
+          "mean_pct_hand": 0.17203978305387396
+        },
+        "held-out, scale sigma=12": {
+          "frames": 92,
+          "mean_mm": 4.51995069749681,
+          "tips_mm": 2.4585601709745126,
+          "p95_mm": 11.67755307395018,
+          "mean_pct_hand": 0.18129466134925684
+        }
+      },
+      "depth": {
+        "frames": 92,
+        "size_sd_pct": 14.551069457658963,
+        "size_max_over_min": 1.6359583626586842,
+        "size_vs_image_size_corr": 0.739176143656867,
+        "depth_sd_pct": {
+          "mediapipe size": 11.489998202846465,
+          "constant size": 4.75799186632927,
+          "smoothed size (sigma=3)": 11.104843389802335
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 1.5731442629099233,
+          "constant size": 0.9629210741775628,
+          "smoothed size (sigma=3)": 0.9515609601471393
+        }
+      }
+    },
+    {
+      "clip": "01988",
+      "side": "right",
+      "frames": 101,
+      "hand_mm": 2603.164684958756,
+      "scale_sd_pct": 23.721251420103318,
+      "rows": {
+        "in-sample shape": {
+          "frames": 101,
+          "mean_mm": 9.736468849321442,
+          "tips_mm": 4.111806256858405,
+          "p95_mm": 30.263984890278348,
+          "mean_pct_hand": 0.3740243137738981
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 101,
+          "mean_mm": 4.555784069547126,
+          "tips_mm": 2.766887347924204,
+          "p95_mm": 11.810113947169128,
+          "mean_pct_hand": 0.17500944507547772
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 101,
+          "mean_mm": 4.995144706220473,
+          "tips_mm": 2.190810881843908,
+          "p95_mm": 15.244134788512179,
+          "mean_pct_hand": 0.19188738749733059
+        },
+        "held-out, constant": {
+          "frames": 101,
+          "mean_mm": 9.73986935130606,
+          "tips_mm": 4.119297422100886,
+          "p95_mm": 30.23028227850211,
+          "mean_pct_hand": 0.3741549433112557
+        },
+        "held-out, scale sigma=0": {
+          "frames": 101,
+          "mean_mm": 5.2852289758878,
+          "tips_mm": 3.3105996630785897,
+          "p95_mm": 14.46523210582,
+          "mean_pct_hand": 0.20303091104555063
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 101,
+          "mean_mm": 5.288312053346087,
+          "tips_mm": 3.2487357229987097,
+          "p95_mm": 14.025072003615636,
+          "mean_pct_hand": 0.20314934678940122
+        },
+        "held-out, scale sigma=3": {
+          "frames": 101,
+          "mean_mm": 5.68531030048739,
+          "tips_mm": 3.333189919013129,
+          "p95_mm": 16.26788429468647,
+          "mean_pct_hand": 0.2183999473155678
+        },
+        "held-out, scale sigma=6": {
+          "frames": 101,
+          "mean_mm": 6.955464789903552,
+          "tips_mm": 4.190692390957515,
+          "p95_mm": 22.105159598906187,
+          "mean_pct_hand": 0.2671926532382931
+        },
+        "held-out, scale sigma=12": {
+          "frames": 101,
+          "mean_mm": 8.39260271496564,
+          "tips_mm": 5.150390497919877,
+          "p95_mm": 27.280372956667726,
+          "mean_pct_hand": 0.32239999118990087
+        }
+      },
+      "depth": {
+        "frames": 101,
+        "size_sd_pct": 23.721251420103318,
+        "size_max_over_min": 2.524292244738558,
+        "size_vs_image_size_corr": 0.4273690316760852,
+        "depth_sd_pct": {
+          "mediapipe size": 21.725234328553004,
+          "constant size": 13.610705611502038,
+          "smoothed size (sigma=3)": 21.39422312784943
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 4.881609205231053,
+          "constant size": 5.730670674075908,
+          "smoothed size (sigma=3)": 5.717917763496446
+        }
+      }
+    },
+    {
+      "clip": "01991",
+      "side": "right",
+      "frames": 49,
+      "hand_mm": 1527.6111970051716,
+      "scale_sd_pct": 2.527491002009623,
+      "rows": {
+        "in-sample shape": {
+          "frames": 49,
+          "mean_mm": 3.609661785012888,
+          "tips_mm": 1.5410916571186317,
+          "p95_mm": 9.863432273874107,
+          "mean_pct_hand": 0.23629453568352363
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 49,
+          "mean_mm": 3.1105706841037764,
+          "tips_mm": 1.0175165679622653,
+          "p95_mm": 8.54243198854943,
+          "mean_pct_hand": 0.20362319222338393
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 49,
+          "mean_mm": 3.2308392228559075,
+          "tips_mm": 1.20779770707895,
+          "p95_mm": 9.098587422126183,
+          "mean_pct_hand": 0.21149617318790637
+        },
+        "held-out, constant": {
+          "frames": 49,
+          "mean_mm": 3.6160735913905175,
+          "tips_mm": 1.5458765425091407,
+          "p95_mm": 9.908193381535337,
+          "mean_pct_hand": 0.23671426332038567
+        },
+        "held-out, scale sigma=0": {
+          "frames": 49,
+          "mean_mm": 3.2056969669278264,
+          "tips_mm": 1.0772873872764213,
+          "p95_mm": 8.83139281072046,
+          "mean_pct_hand": 0.209850318799213
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 49,
+          "mean_mm": 3.200067496479303,
+          "tips_mm": 1.0824551308749735,
+          "p95_mm": 8.787179674046042,
+          "mean_pct_hand": 0.20948180418897977
+        },
+        "held-out, scale sigma=3": {
+          "frames": 49,
+          "mean_mm": 3.1948136561689457,
+          "tips_mm": 1.0908681513889704,
+          "p95_mm": 8.792290727225037,
+          "mean_pct_hand": 0.20913787895979466
+        },
+        "held-out, scale sigma=6": {
+          "frames": 49,
+          "mean_mm": 3.190651952588575,
+          "tips_mm": 1.0942975409751365,
+          "p95_mm": 8.77804054013001,
+          "mean_pct_hand": 0.20886544683907374
+        },
+        "held-out, scale sigma=12": {
+          "frames": 49,
+          "mean_mm": 3.195639246628806,
+          "tips_mm": 1.11725309776131,
+          "p95_mm": 8.76125989848729,
+          "mean_pct_hand": 0.20919192350080607
+        }
+      },
+      "depth": {
+        "frames": 49,
+        "size_sd_pct": 2.527491002009623,
+        "size_max_over_min": 1.104465312189299,
+        "size_vs_image_size_corr": 0.6520707658386709,
+        "depth_sd_pct": {
+          "mediapipe size": 5.031872066825853,
+          "constant size": 6.3008193191224455,
+          "smoothed size (sigma=3)": 5.43352122708421
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 1.3696139245522019,
+          "constant size": 1.8945502052743313,
+          "smoothed size (sigma=3)": 1.8921340135367792
+        }
+      }
+    },
+    {
+      "clip": "01992",
+      "side": "left",
+      "frames": 59,
+      "hand_mm": 1200.0800452267413,
+      "scale_sd_pct": 9.704078228290241,
+      "rows": {
+        "in-sample shape": {
+          "frames": 59,
+          "mean_mm": 5.744680720440967,
+          "tips_mm": 2.503549575860672,
+          "p95_mm": 15.087285313445886,
+          "mean_pct_hand": 0.4786914625645305
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 59,
+          "mean_mm": 3.480097835395114,
+          "tips_mm": 2.2433541928219203,
+          "p95_mm": 8.933546877537514,
+          "mean_pct_hand": 0.2899888094329232
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 59,
+          "mean_mm": 3.6245150026926023,
+          "tips_mm": 2.1892310338710677,
+          "p95_mm": 9.298986149267163,
+          "mean_pct_hand": 0.3020227706567516
+        },
+        "held-out, constant": {
+          "frames": 59,
+          "mean_mm": 5.752580645673579,
+          "tips_mm": 2.512770942988639,
+          "p95_mm": 14.935818984673197,
+          "mean_pct_hand": 0.479349745756892
+        },
+        "held-out, scale sigma=0": {
+          "frames": 59,
+          "mean_mm": 4.410527015173799,
+          "tips_mm": 2.552642347044492,
+          "p95_mm": 10.882290454156989,
+          "mean_pct_hand": 0.3675194027862101
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 59,
+          "mean_mm": 4.420563206879083,
+          "tips_mm": 2.515198162193181,
+          "p95_mm": 11.047396693115418,
+          "mean_pct_hand": 0.36835569631056303
+        },
+        "held-out, scale sigma=3": {
+          "frames": 59,
+          "mean_mm": 4.478337728293773,
+          "tips_mm": 2.452124247739734,
+          "p95_mm": 11.207662934632879,
+          "mean_pct_hand": 0.37316991863218946
+        },
+        "held-out, scale sigma=6": {
+          "frames": 59,
+          "mean_mm": 4.586731212948323,
+          "tips_mm": 2.433032643383301,
+          "p95_mm": 11.470368825006467,
+          "mean_pct_hand": 0.38220210653379494
+        },
+        "held-out, scale sigma=12": {
+          "frames": 59,
+          "mean_mm": 4.98452611793439,
+          "tips_mm": 2.593670777501265,
+          "p95_mm": 12.442883856873667,
+          "mean_pct_hand": 0.4153494708757216
+        }
+      },
+      "depth": {
+        "frames": 59,
+        "size_sd_pct": 9.704078228290241,
+        "size_max_over_min": 1.4418603677311246,
+        "size_vs_image_size_corr": 0.8082608406842441,
+        "depth_sd_pct": {
+          "mediapipe size": 7.137095562255823,
+          "constant size": 3.5669399113210867,
+          "smoothed size (sigma=3)": 5.7105581865153425
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 3.6398439219871688,
+          "constant size": 2.1154511892446273,
+          "smoothed size (sigma=3)": 2.1121621925018808
+        }
+      }
+    },
+    {
+      "clip": "01992",
+      "side": "right",
+      "frames": 58,
+      "hand_mm": 1715.6185785715934,
+      "scale_sd_pct": 12.829706248827982,
+      "rows": {
+        "in-sample shape": {
+          "frames": 58,
+          "mean_mm": 8.361974278278078,
+          "tips_mm": 4.175374714959439,
+          "p95_mm": 19.7322303611475,
+          "mean_pct_hand": 0.48740287513324615
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 58,
+          "mean_mm": 3.9940458263343723,
+          "tips_mm": 2.10225298715459,
+          "p95_mm": 10.783632397488274,
+          "mean_pct_hand": 0.23280499967887822
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 58,
+          "mean_mm": 3.9105401340916788,
+          "tips_mm": 2.0547205424476562,
+          "p95_mm": 11.062057607922378,
+          "mean_pct_hand": 0.2279376187070412
+        },
+        "held-out, constant": {
+          "frames": 58,
+          "mean_mm": 8.376873672741075,
+          "tips_mm": 4.183028681477443,
+          "p95_mm": 19.714348648738742,
+          "mean_pct_hand": 0.4882713312486727
+        },
+        "held-out, scale sigma=0": {
+          "frames": 58,
+          "mean_mm": 5.051276578861243,
+          "tips_mm": 2.747047420253554,
+          "p95_mm": 14.370273432764293,
+          "mean_pct_hand": 0.29442888075197254
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 58,
+          "mean_mm": 5.10266379970699,
+          "tips_mm": 2.743462324566349,
+          "p95_mm": 14.699014083463242,
+          "mean_pct_hand": 0.29742413980824434
+        },
+        "held-out, scale sigma=3": {
+          "frames": 58,
+          "mean_mm": 5.244968072507977,
+          "tips_mm": 2.8052956651011547,
+          "p95_mm": 14.878295479014962,
+          "mean_pct_hand": 0.3057187732762187
+        },
+        "held-out, scale sigma=6": {
+          "frames": 58,
+          "mean_mm": 5.460075418541514,
+          "tips_mm": 2.9300011609134753,
+          "p95_mm": 14.582237422514387,
+          "mean_pct_hand": 0.3182569533076237
+        },
+        "held-out, scale sigma=12": {
+          "frames": 58,
+          "mean_mm": 6.384649697567206,
+          "tips_mm": 3.6868514268973036,
+          "p95_mm": 16.508325154597696,
+          "mean_pct_hand": 0.37214855197493846
+        }
+      },
+      "depth": {
+        "frames": 58,
+        "size_sd_pct": 12.829706248827982,
+        "size_max_over_min": 1.5519571240386152,
+        "size_vs_image_size_corr": 0.23057738080654977,
+        "depth_sd_pct": {
+          "mediapipe size": 13.36665881864573,
+          "constant size": 7.734995218852113,
+          "smoothed size (sigma=3)": 11.137956282968034
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 6.24022539089456,
+          "constant size": 3.487299558485288,
+          "smoothed size (sigma=3)": 3.4686626932420146
+        }
+      }
+    },
+    {
+      "clip": "05631",
+      "side": "right",
+      "frames": 17,
+      "hand_mm": 433.3270639181137,
+      "scale_sd_pct": 12.135475184492925,
+      "rows": {
+        "in-sample shape": {
+          "frames": 17,
+          "mean_mm": 5.198905815260633,
+          "tips_mm": 3.122890575133936,
+          "p95_mm": 18.4114415635383,
+          "mean_pct_hand": 1.199764853884842
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 17,
+          "mean_mm": 2.810049797759002,
+          "tips_mm": 1.4916532682148935,
+          "p95_mm": 8.441492468766452,
+          "mean_pct_hand": 0.64848241241863
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 17,
+          "mean_mm": 2.690566432775548,
+          "tips_mm": 1.3138048873745227,
+          "p95_mm": 8.753446380685624,
+          "mean_pct_hand": 0.6209089292617983
+        },
+        "held-out, constant": {
+          "frames": 17,
+          "mean_mm": 5.209244122950564,
+          "tips_mm": 3.0620494768536535,
+          "p95_mm": 18.339954959895003,
+          "mean_pct_hand": 1.202150651715343
+        },
+        "held-out, scale sigma=0": {
+          "frames": 17,
+          "mean_mm": 3.8770903066670557,
+          "tips_mm": 2.508299285311508,
+          "p95_mm": 12.014916236444842,
+          "mean_pct_hand": 0.894726092483278
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 17,
+          "mean_mm": 4.2582018799912404,
+          "tips_mm": 2.948027755355484,
+          "p95_mm": 12.242121592525226,
+          "mean_pct_hand": 0.982676189548114
+        },
+        "held-out, scale sigma=3": {
+          "frames": 17,
+          "mean_mm": 4.672141356255648,
+          "tips_mm": 3.2068930453823516,
+          "p95_mm": 13.11022734131176,
+          "mean_pct_hand": 1.0782020661277107
+        },
+        "held-out, scale sigma=6": {
+          "frames": 17,
+          "mean_mm": 5.287047849349808,
+          "tips_mm": 3.7949327019747328,
+          "p95_mm": 15.690428207085946,
+          "mean_pct_hand": 1.2201056175777902
+        },
+        "held-out, scale sigma=12": {
+          "frames": 17,
+          "mean_mm": 6.123709981169042,
+          "tips_mm": 4.715618565183694,
+          "p95_mm": 18.211547658974624,
+          "mean_pct_hand": 1.4131842875907346
+        }
+      },
+      "depth": {
+        "frames": 17,
+        "size_sd_pct": 12.135475184492925,
+        "size_max_over_min": 1.5565385484807468,
+        "size_vs_image_size_corr": -0.4461524051692959,
+        "depth_sd_pct": {
+          "mediapipe size": 22.897121242297153,
+          "constant size": 14.74317726797723,
+          "smoothed size (sigma=3)": 19.217446535928577
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 2.473136218817766,
+          "constant size": 3.4159942284401765,
+          "smoothed size (sigma=3)": 3.449891109096967
+        }
+      }
+    },
+    {
+      "clip": "07389",
+      "side": "right",
+      "frames": 52,
+      "hand_mm": 746.5171593685227,
+      "scale_sd_pct": 14.283055496813255,
+      "rows": {
+        "in-sample shape": {
+          "frames": 52,
+          "mean_mm": 7.796916588663451,
+          "tips_mm": 3.7380756490828837,
+          "p95_mm": 20.263104747940652,
+          "mean_pct_hand": 1.0444390314160825
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 52,
+          "mean_mm": 5.213693872934811,
+          "tips_mm": 2.2318112538666917,
+          "p95_mm": 13.530378186866159,
+          "mean_pct_hand": 0.6984024154709403
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 52,
+          "mean_mm": 5.306767540552948,
+          "tips_mm": 2.1403265135632767,
+          "p95_mm": 14.670789415695026,
+          "mean_pct_hand": 0.7108701352614494
+        },
+        "held-out, constant": {
+          "frames": 52,
+          "mean_mm": 7.804803097712079,
+          "tips_mm": 3.735619067711736,
+          "p95_mm": 20.216139166425986,
+          "mean_pct_hand": 1.0454954718407472
+        },
+        "held-out, scale sigma=0": {
+          "frames": 52,
+          "mean_mm": 7.402741663891804,
+          "tips_mm": 3.621182332522284,
+          "p95_mm": 20.68544043567835,
+          "mean_pct_hand": 0.9916371741747729
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 52,
+          "mean_mm": 7.20315981087813,
+          "tips_mm": 3.4398952214656515,
+          "p95_mm": 19.860558892016467,
+          "mean_pct_hand": 0.9649021084754794
+        },
+        "held-out, scale sigma=3": {
+          "frames": 52,
+          "mean_mm": 7.126517014001809,
+          "tips_mm": 3.3885800724478528,
+          "p95_mm": 19.614382343881125,
+          "mean_pct_hand": 0.9546353924443097
+        },
+        "held-out, scale sigma=6": {
+          "frames": 52,
+          "mean_mm": 7.513427198785307,
+          "tips_mm": 3.6029956738873246,
+          "p95_mm": 20.796218058032625,
+          "mean_pct_hand": 1.0064640985802524
+        },
+        "held-out, scale sigma=12": {
+          "frames": 52,
+          "mean_mm": 8.008945933414987,
+          "tips_mm": 4.035013386071356,
+          "p95_mm": 21.17637643989971,
+          "mean_pct_hand": 1.0728415057719154
+        }
+      },
+      "depth": {
+        "frames": 52,
+        "size_sd_pct": 14.283055496813255,
+        "size_max_over_min": 1.8712622759133801,
+        "size_vs_image_size_corr": 0.18720602167950062,
+        "depth_sd_pct": {
+          "mediapipe size": 20.062107375705036,
+          "constant size": 17.013751269160498,
+          "smoothed size (sigma=3)": 19.79071526602853
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 10.019163149684145,
+          "constant size": 10.404245808201324,
+          "smoothed size (sigma=3)": 10.405981087278684
+        }
+      }
+    },
+    {
+      "clip": "08917",
+      "side": "right",
+      "frames": 23,
+      "hand_mm": 330.19718958530575,
+      "scale_sd_pct": 4.629834894139697,
+      "rows": {
+        "in-sample shape": {
+          "frames": 23,
+          "mean_mm": 4.2472164410766995,
+          "tips_mm": 2.3516610395377993,
+          "p95_mm": 10.176200829098507,
+          "mean_pct_hand": 1.2862666839807972
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 23,
+          "mean_mm": 3.116644330709156,
+          "tips_mm": 1.8069031612112114,
+          "p95_mm": 7.13296687974484,
+          "mean_pct_hand": 0.9438736697375727
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 23,
+          "mean_mm": 3.686701817413662,
+          "tips_mm": 2.2441313860497494,
+          "p95_mm": 9.250476175836686,
+          "mean_pct_hand": 1.1165152017325728
+        },
+        "held-out, constant": {
+          "frames": 23,
+          "mean_mm": 4.269208508795524,
+          "tips_mm": 2.357190088482704,
+          "p95_mm": 10.370189873016633,
+          "mean_pct_hand": 1.2929269671123542
+        },
+        "held-out, scale sigma=0": {
+          "frames": 23,
+          "mean_mm": 4.098055605873164,
+          "tips_mm": 2.178924762110496,
+          "p95_mm": 12.01785045261477,
+          "mean_pct_hand": 1.2410934239082732
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 23,
+          "mean_mm": 4.060792506334707,
+          "tips_mm": 2.139136540099424,
+          "p95_mm": 11.899091562911895,
+          "mean_pct_hand": 1.2298083189122992
+        },
+        "held-out, scale sigma=3": {
+          "frames": 23,
+          "mean_mm": 3.93351444610952,
+          "tips_mm": 2.0231240512332063,
+          "p95_mm": 10.943550391289698,
+          "mean_pct_hand": 1.1912622427373218
+        },
+        "held-out, scale sigma=6": {
+          "frames": 23,
+          "mean_mm": 3.810883345681328,
+          "tips_mm": 1.960175940486296,
+          "p95_mm": 10.394800266606667,
+          "mean_pct_hand": 1.1541234952567019
+        },
+        "held-out, scale sigma=12": {
+          "frames": 23,
+          "mean_mm": 3.732760988415766,
+          "tips_mm": 1.9096788182186406,
+          "p95_mm": 9.545721465870336,
+          "mean_pct_hand": 1.1304641911409772
+        }
+      },
+      "depth": {
+        "frames": 23,
+        "size_sd_pct": 4.629834894139697,
+        "size_max_over_min": 1.2213139386422303,
+        "size_vs_image_size_corr": 0.25998772020816,
+        "depth_sd_pct": {
+          "mediapipe size": 5.276528156229605,
+          "constant size": 4.006426116095946,
+          "smoothed size (sigma=3)": 4.480807407658434
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 3.1673057665178153,
+          "constant size": 2.3225149947668755,
+          "smoothed size (sigma=3)": 2.325393355647445
+        }
+      }
+    },
+    {
+      "clip": "08918",
+      "side": "right",
+      "frames": 24,
+      "hand_mm": 267.3964463174343,
+      "scale_sd_pct": 12.375282300329712,
+      "rows": {
+        "in-sample shape": {
+          "frames": 24,
+          "mean_mm": 5.814590819401668,
+          "tips_mm": 3.313201070323868,
+          "p95_mm": 16.391961989552186,
+          "mean_pct_hand": 2.17452060394961
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 24,
+          "mean_mm": 3.613130331666087,
+          "tips_mm": 1.9987735821567232,
+          "p95_mm": 9.315503023584835,
+          "mean_pct_hand": 1.3512260097042699
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 24,
+          "mean_mm": 4.084221202796231,
+          "tips_mm": 2.380751917214594,
+          "p95_mm": 10.734435653460654,
+          "mean_pct_hand": 1.5274029475873179
+        },
+        "held-out, constant": {
+          "frames": 24,
+          "mean_mm": 5.836056554350906,
+          "tips_mm": 3.3231704901702064,
+          "p95_mm": 16.708256888174585,
+          "mean_pct_hand": 2.1825482854109244
+        },
+        "held-out, scale sigma=0": {
+          "frames": 24,
+          "mean_mm": 4.940307391698301,
+          "tips_mm": 2.7267102460453523,
+          "p95_mm": 14.820458048562333,
+          "mean_pct_hand": 1.8475591054914446
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 24,
+          "mean_mm": 4.799048299344206,
+          "tips_mm": 2.6131894833642946,
+          "p95_mm": 13.790649410239165,
+          "mean_pct_hand": 1.7947315177282173
+        },
+        "held-out, scale sigma=3": {
+          "frames": 24,
+          "mean_mm": 4.842760065453772,
+          "tips_mm": 2.571941651714707,
+          "p95_mm": 14.927083424810286,
+          "mean_pct_hand": 1.8110786931344582
+        },
+        "held-out, scale sigma=6": {
+          "frames": 24,
+          "mean_mm": 5.193792042768205,
+          "tips_mm": 2.7916605845532834,
+          "p95_mm": 15.46260095502924,
+          "mean_pct_hand": 1.942356420325235
+        },
+        "held-out, scale sigma=12": {
+          "frames": 24,
+          "mean_mm": 5.6278365810411195,
+          "tips_mm": 2.9729876537441697,
+          "p95_mm": 16.041690769286063,
+          "mean_pct_hand": 2.1046788985221387
+        }
+      },
+      "depth": {
+        "frames": 24,
+        "size_sd_pct": 12.375282300329712,
+        "size_max_over_min": 1.6025835970209328,
+        "size_vs_image_size_corr": 0.3071369040516164,
+        "depth_sd_pct": {
+          "mediapipe size": 12.661275747446634,
+          "constant size": 8.449257981516665,
+          "smoothed size (sigma=3)": 10.542592162228049
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 2.5257396844973963,
+          "constant size": 6.899661553132057,
+          "smoothed size (sigma=3)": 6.887702686905864
+        }
+      }
+    },
+    {
+      "clip": "08938",
+      "side": "left",
+      "frames": 35,
+      "hand_mm": 461.04419423500076,
+      "scale_sd_pct": 6.1062883916559985,
+      "rows": {
+        "in-sample shape": {
+          "frames": 35,
+          "mean_mm": 4.498525425995939,
+          "tips_mm": 1.709840516402927,
+          "p95_mm": 12.13353750472351,
+          "mean_pct_hand": 0.9757254255115894
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 35,
+          "mean_mm": 3.6468083054028737,
+          "tips_mm": 1.5489122260589778,
+          "p95_mm": 10.165307049251954,
+          "mean_pct_hand": 0.7909888793749876
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 35,
+          "mean_mm": 3.55734870822784,
+          "tips_mm": 1.5403479303607543,
+          "p95_mm": 10.345987460077614,
+          "mean_pct_hand": 0.7715851869971948
+        },
+        "held-out, constant": {
+          "frames": 35,
+          "mean_mm": 4.512122277185018,
+          "tips_mm": 1.7231433102217475,
+          "p95_mm": 12.058723386826227,
+          "mean_pct_hand": 0.9786745682096423
+        },
+        "held-out, scale sigma=0": {
+          "frames": 35,
+          "mean_mm": 3.941740450192006,
+          "tips_mm": 1.6787741291622744,
+          "p95_mm": 10.876604025522528,
+          "mean_pct_hand": 0.8549593508562534
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 35,
+          "mean_mm": 3.9435460120154895,
+          "tips_mm": 1.6587357161465774,
+          "p95_mm": 10.870392211988381,
+          "mean_pct_hand": 0.855350975313531
+        },
+        "held-out, scale sigma=3": {
+          "frames": 35,
+          "mean_mm": 3.9624583596671257,
+          "tips_mm": 1.6280374720531523,
+          "p95_mm": 10.880442107374403,
+          "mean_pct_hand": 0.8594530435942122
+        },
+        "held-out, scale sigma=6": {
+          "frames": 35,
+          "mean_mm": 3.9901099900050734,
+          "tips_mm": 1.565868555084184,
+          "p95_mm": 11.011228574718157,
+          "mean_pct_hand": 0.8654506530823503
+        },
+        "held-out, scale sigma=12": {
+          "frames": 35,
+          "mean_mm": 4.1682632542050815,
+          "tips_mm": 1.5436573859211755,
+          "p95_mm": 11.342957782028698,
+          "mean_pct_hand": 0.9040919083953279
+        }
+      },
+      "depth": {
+        "frames": 35,
+        "size_sd_pct": 6.1062883916559985,
+        "size_max_over_min": 1.2425896570696295,
+        "size_vs_image_size_corr": -0.15258578943856596,
+        "depth_sd_pct": {
+          "mediapipe size": 13.274703925466946,
+          "constant size": 10.891935481869181,
+          "smoothed size (sigma=3)": 13.457041895791402
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 4.164743315156326,
+          "constant size": 4.499436094725053,
+          "smoothed size (sigma=3)": 4.496729423835586
+        }
+      }
+    },
+    {
+      "clip": "08938",
+      "side": "right",
+      "frames": 34,
+      "hand_mm": 261.189474236744,
+      "scale_sd_pct": 5.346140657442042,
+      "rows": {
+        "in-sample shape": {
+          "frames": 34,
+          "mean_mm": 4.759100428737271,
+          "tips_mm": 1.585744699370669,
+          "p95_mm": 13.372568231838956,
+          "mean_pct_hand": 1.8220873726418196
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 34,
+          "mean_mm": 4.096897262972314,
+          "tips_mm": 1.4556373258076503,
+          "p95_mm": 11.777976842941213,
+          "mean_pct_hand": 1.5685537386008357
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 34,
+          "mean_mm": 3.892318374961877,
+          "tips_mm": 1.382953139608528,
+          "p95_mm": 11.861364291318315,
+          "mean_pct_hand": 1.4902278839283745
+        },
+        "held-out, constant": {
+          "frames": 34,
+          "mean_mm": 4.7556083947243515,
+          "tips_mm": 1.5707347771442173,
+          "p95_mm": 13.369391269871498,
+          "mean_pct_hand": 1.820750399158059
+        },
+        "held-out, scale sigma=0": {
+          "frames": 34,
+          "mean_mm": 4.483935231250069,
+          "tips_mm": 1.4996873697891795,
+          "p95_mm": 12.853196396942181,
+          "mean_pct_hand": 1.7167365738428637
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 34,
+          "mean_mm": 4.429584452696003,
+          "tips_mm": 1.469035644647548,
+          "p95_mm": 12.687672608045753,
+          "mean_pct_hand": 1.6959276271144819
+        },
+        "held-out, scale sigma=3": {
+          "frames": 34,
+          "mean_mm": 4.42540967505847,
+          "tips_mm": 1.4562425596060298,
+          "p95_mm": 12.474797705480428,
+          "mean_pct_hand": 1.6943292557981284
+        },
+        "held-out, scale sigma=6": {
+          "frames": 34,
+          "mean_mm": 4.469861499194531,
+          "tips_mm": 1.4688614327162646,
+          "p95_mm": 13.069312759172865,
+          "mean_pct_hand": 1.7113482510183458
+        },
+        "held-out, scale sigma=12": {
+          "frames": 34,
+          "mean_mm": 4.585422742581715,
+          "tips_mm": 1.448482686640695,
+          "p95_mm": 13.090191622303903,
+          "mean_pct_hand": 1.7555924701718475
+        }
+      },
+      "depth": {
+        "frames": 34,
+        "size_sd_pct": 5.346140657442042,
+        "size_max_over_min": 1.2044364366448705,
+        "size_vs_image_size_corr": 0.03859608530691613,
+        "depth_sd_pct": {
+          "mediapipe size": 16.229905755827126,
+          "constant size": 15.531848156113472,
+          "smoothed size (sigma=3)": 16.626162906425858
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 4.870234319456602,
+          "constant size": 4.894807482139734,
+          "smoothed size (sigma=3)": 4.881714676472921
+        }
+      }
+    },
+    {
+      "clip": "09849",
+      "side": "left",
+      "frames": 55,
+      "hand_mm": 1800.4346538514255,
+      "scale_sd_pct": 6.434285747239326,
+      "rows": {
+        "in-sample shape": {
+          "frames": 55,
+          "mean_mm": 4.916719316349046,
+          "tips_mm": 2.756674674366697,
+          "p95_mm": 11.455933033767918,
+          "mean_pct_hand": 0.27308513007297297
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 55,
+          "mean_mm": 3.6794108946131936,
+          "tips_mm": 2.1804855150697056,
+          "p95_mm": 8.724064268349656,
+          "mean_pct_hand": 0.2043623680949669
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 55,
+          "mean_mm": 3.598889000394042,
+          "tips_mm": 2.0860879151498217,
+          "p95_mm": 8.443745650294579,
+          "mean_pct_hand": 0.19989000948717728
+        },
+        "held-out, constant": {
+          "frames": 55,
+          "mean_mm": 4.931592732106978,
+          "tips_mm": 2.765229895377621,
+          "p95_mm": 11.580475028628392,
+          "mean_pct_hand": 0.27391123146610685
+        },
+        "held-out, scale sigma=0": {
+          "frames": 55,
+          "mean_mm": 4.3546308358090045,
+          "tips_mm": 2.4485153452880057,
+          "p95_mm": 10.644097052632304,
+          "mean_pct_hand": 0.2418655309979584
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 55,
+          "mean_mm": 4.329227696650228,
+          "tips_mm": 2.4191806358121184,
+          "p95_mm": 10.485026641415978,
+          "mean_pct_hand": 0.24045458619613314
+        },
+        "held-out, scale sigma=3": {
+          "frames": 55,
+          "mean_mm": 4.360754766178205,
+          "tips_mm": 2.4093016480866685,
+          "p95_mm": 10.362899522767522,
+          "mean_pct_hand": 0.2422056672176263
+        },
+        "held-out, scale sigma=6": {
+          "frames": 55,
+          "mean_mm": 4.483736750041955,
+          "tips_mm": 2.4623518797754067,
+          "p95_mm": 10.50985864067222,
+          "mean_pct_hand": 0.24903635021968196
+        },
+        "held-out, scale sigma=12": {
+          "frames": 55,
+          "mean_mm": 4.662279549882108,
+          "tips_mm": 2.5272443650459246,
+          "p95_mm": 11.109768369478093,
+          "mean_pct_hand": 0.2589530000385588
+        }
+      },
+      "depth": {
+        "frames": 55,
+        "size_sd_pct": 6.434285747239326,
+        "size_max_over_min": 1.2845817498751966,
+        "size_vs_image_size_corr": -0.1276430318103123,
+        "depth_sd_pct": {
+          "mediapipe size": 12.040835132521382,
+          "constant size": 9.389300687855341,
+          "smoothed size (sigma=3)": 10.42968413358562
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 5.341094938847485,
+          "constant size": 3.9520619576786076,
+          "smoothed size (sigma=3)": 3.9511888550228385
+        }
+      }
+    },
+    {
+      "clip": "09849",
+      "side": "right",
+      "frames": 49,
+      "hand_mm": 1757.8206465732364,
+      "scale_sd_pct": 16.739161420559626,
+      "rows": {
+        "in-sample shape": {
+          "frames": 49,
+          "mean_mm": 8.33398351734173,
+          "tips_mm": 3.3572601591524096,
+          "p95_mm": 22.1418541099894,
+          "mean_pct_hand": 0.474108865064722
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 49,
+          "mean_mm": 5.1166422119230415,
+          "tips_mm": 2.338337741309151,
+          "p95_mm": 12.785209087518092,
+          "mean_pct_hand": 0.2910787412753185
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 49,
+          "mean_mm": 5.402282608265744,
+          "tips_mm": 2.142705665833477,
+          "p95_mm": 14.746636514621258,
+          "mean_pct_hand": 0.30732843073593213
+        },
+        "held-out, constant": {
+          "frames": 49,
+          "mean_mm": 8.348379397049804,
+          "tips_mm": 3.3515288671611723,
+          "p95_mm": 22.62841166794148,
+          "mean_pct_hand": 0.474927826870418
+        },
+        "held-out, scale sigma=0": {
+          "frames": 49,
+          "mean_mm": 6.372931655602727,
+          "tips_mm": 2.9232315651761653,
+          "p95_mm": 17.016343456193823,
+          "mean_pct_hand": 0.36254732062832273
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 49,
+          "mean_mm": 6.24301086954277,
+          "tips_mm": 2.700504796428631,
+          "p95_mm": 16.35541829754428,
+          "mean_pct_hand": 0.35515630571942236
+        },
+        "held-out, scale sigma=3": {
+          "frames": 49,
+          "mean_mm": 6.364186081518291,
+          "tips_mm": 2.6339002002942307,
+          "p95_mm": 16.827837537097277,
+          "mean_pct_hand": 0.3620497969417346
+        },
+        "held-out, scale sigma=6": {
+          "frames": 49,
+          "mean_mm": 7.195083622906195,
+          "tips_mm": 2.9031027857963063,
+          "p95_mm": 18.612980865759358,
+          "mean_pct_hand": 0.40931841578562467
+        },
+        "held-out, scale sigma=12": {
+          "frames": 49,
+          "mean_mm": 7.8841009558809105,
+          "tips_mm": 3.062107093567278,
+          "p95_mm": 20.72044634142639,
+          "mean_pct_hand": 0.4485156646242881
+        }
+      },
+      "depth": {
+        "frames": 49,
+        "size_sd_pct": 16.739161420559626,
+        "size_max_over_min": 1.7199996292760467,
+        "size_vs_image_size_corr": 0.0854248376195057,
+        "depth_sd_pct": {
+          "mediapipe size": 18.570027691278135,
+          "constant size": 9.59640402071317,
+          "smoothed size (sigma=3)": 15.895154839056877
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 5.033041540834055,
+          "constant size": 5.517768251750653,
+          "smoothed size (sigma=3)": 5.5349681287632295
+        }
+      }
+    },
+    {
+      "clip": "12328",
+      "side": "left",
+      "frames": 88,
+      "hand_mm": 653.8717176445061,
+      "scale_sd_pct": 2.1033690221489767,
+      "rows": {
+        "in-sample shape": {
+          "frames": 88,
+          "mean_mm": 3.1477928962642108,
+          "tips_mm": 2.296047624586804,
+          "p95_mm": 7.4255035050099325,
+          "mean_pct_hand": 0.48140832694274577
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 88,
+          "mean_mm": 2.764277123202348,
+          "tips_mm": 2.0441111625404482,
+          "p95_mm": 6.458750414112267,
+          "mean_pct_hand": 0.42275526660800106
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 88,
+          "mean_mm": 2.6725653842306656,
+          "tips_mm": 2.2903651669755187,
+          "p95_mm": 5.836496535304582,
+          "mean_pct_hand": 0.4087293137342382
+        },
+        "held-out, constant": {
+          "frames": 88,
+          "mean_mm": 3.14723066969549,
+          "tips_mm": 2.2990894699174937,
+          "p95_mm": 7.394388630336735,
+          "mean_pct_hand": 0.4813223427116573
+        },
+        "held-out, scale sigma=0": {
+          "frames": 88,
+          "mean_mm": 2.8324339175217905,
+          "tips_mm": 2.0682816931038657,
+          "p95_mm": 6.761211113901467,
+          "mean_pct_hand": 0.4331788393792732
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 88,
+          "mean_mm": 2.838950604446386,
+          "tips_mm": 2.065401484481126,
+          "p95_mm": 6.748734646142329,
+          "mean_pct_hand": 0.43417547017836505
+        },
+        "held-out, scale sigma=3": {
+          "frames": 88,
+          "mean_mm": 2.8809356155223087,
+          "tips_mm": 2.0455809537840373,
+          "p95_mm": 6.856935204658247,
+          "mean_pct_hand": 0.44059645612147463
+        },
+        "held-out, scale sigma=6": {
+          "frames": 88,
+          "mean_mm": 2.9324531912453256,
+          "tips_mm": 2.018651942520528,
+          "p95_mm": 7.101353466562586,
+          "mean_pct_hand": 0.44847530671752156
+        },
+        "held-out, scale sigma=12": {
+          "frames": 88,
+          "mean_mm": 2.9659805969961854,
+          "tips_mm": 2.0001989363592103,
+          "p95_mm": 7.176376076584931,
+          "mean_pct_hand": 0.45360282712345656
+        }
+      },
+      "depth": {
+        "frames": 88,
+        "size_sd_pct": 2.1033690221489767,
+        "size_max_over_min": 1.0987033061110403,
+        "size_vs_image_size_corr": 0.8127028004239453,
+        "depth_sd_pct": {
+          "mediapipe size": 2.1628477779400415,
+          "constant size": 3.4915039962597,
+          "smoothed size (sigma=3)": 2.385717841434361
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 0.7975873284106089,
+          "constant size": 0.7125291165706874,
+          "smoothed size (sigma=3)": 0.7056729948432549
+        }
+      }
+    },
+    {
+      "clip": "12328",
+      "side": "right",
+      "frames": 88,
+      "hand_mm": 299.11517381788144,
+      "scale_sd_pct": 1.8215022026376118,
+      "rows": {
+        "in-sample shape": {
+          "frames": 88,
+          "mean_mm": 2.695826453374872,
+          "tips_mm": 1.8531609253809005,
+          "p95_mm": 6.216617398631806,
+          "mean_pct_hand": 0.9012670333522587
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 88,
+          "mean_mm": 2.270522513549341,
+          "tips_mm": 1.4958114186852072,
+          "p95_mm": 4.969743852868488,
+          "mean_pct_hand": 0.7590796831095457
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 88,
+          "mean_mm": 2.282237990425593,
+          "tips_mm": 1.7132143383233258,
+          "p95_mm": 4.712753179557842,
+          "mean_pct_hand": 0.7629963940963927
+        },
+        "held-out, constant": {
+          "frames": 88,
+          "mean_mm": 2.6951081199231153,
+          "tips_mm": 1.8456290295061442,
+          "p95_mm": 6.165909071267151,
+          "mean_pct_hand": 0.9010268805567359
+        },
+        "held-out, scale sigma=0": {
+          "frames": 88,
+          "mean_mm": 2.4052575639456717,
+          "tips_mm": 1.5533407224847569,
+          "p95_mm": 5.528413901348463,
+          "mean_pct_hand": 0.8041242218658327
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 88,
+          "mean_mm": 2.406142210359779,
+          "tips_mm": 1.5423622382108724,
+          "p95_mm": 5.522446825964109,
+          "mean_pct_hand": 0.804419976308115
+        },
+        "held-out, scale sigma=3": {
+          "frames": 88,
+          "mean_mm": 2.4366147852197293,
+          "tips_mm": 1.5281142930380678,
+          "p95_mm": 5.758871754098863,
+          "mean_pct_hand": 0.8146075486973726
+        },
+        "held-out, scale sigma=6": {
+          "frames": 88,
+          "mean_mm": 2.4947130676443727,
+          "tips_mm": 1.5279300151931137,
+          "p95_mm": 5.973568461431409,
+          "mean_pct_hand": 0.8340309305616498
+        },
+        "held-out, scale sigma=12": {
+          "frames": 88,
+          "mean_mm": 2.5299034712475623,
+          "tips_mm": 1.5383059618203396,
+          "p95_mm": 6.021358934504261,
+          "mean_pct_hand": 0.8457957645398202
+        }
+      },
+      "depth": {
+        "frames": 88,
+        "size_sd_pct": 1.8215022026376118,
+        "size_max_over_min": 1.089138718936918,
+        "size_vs_image_size_corr": 0.7233982994474906,
+        "depth_sd_pct": {
+          "mediapipe size": 1.652015696910645,
+          "constant size": 2.3889064081249827,
+          "smoothed size (sigma=3)": 1.9510586917497648
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 0.578803869901066,
+          "constant size": 1.020183362549312,
+          "smoothed size (sigma=3)": 1.0170161085894458
+        }
+      }
+    },
+    {
+      "clip": "13630",
+      "side": "right",
+      "frames": 47,
+      "hand_mm": 836.6879782406613,
+      "scale_sd_pct": 9.547596085343505,
+      "rows": {
+        "in-sample shape": {
+          "frames": 47,
+          "mean_mm": 4.177617965196477,
+          "tips_mm": 1.9068475512163698,
+          "p95_mm": 11.780445796464393,
+          "mean_pct_hand": 0.4993041699942825
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 47,
+          "mean_mm": 3.1785835836369625,
+          "tips_mm": 1.4969966358207445,
+          "p95_mm": 8.647855649562546,
+          "mean_pct_hand": 0.379900711651278
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 47,
+          "mean_mm": 2.9824715058446705,
+          "tips_mm": 1.4885639935203148,
+          "p95_mm": 8.441227830157649,
+          "mean_pct_hand": 0.3564616181191031
+        },
+        "held-out, constant": {
+          "frames": 47,
+          "mean_mm": 4.22824163080213,
+          "tips_mm": 1.9379427723371987,
+          "p95_mm": 11.742174962157009,
+          "mean_pct_hand": 0.5053546531997544
+        },
+        "held-out, scale sigma=0": {
+          "frames": 47,
+          "mean_mm": 4.232945789213998,
+          "tips_mm": 2.108381124327138,
+          "p95_mm": 13.461927063215192,
+          "mean_pct_hand": 0.505916888887873
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 47,
+          "mean_mm": 4.156690519681272,
+          "tips_mm": 2.0399189452577304,
+          "p95_mm": 13.22791582833849,
+          "mean_pct_hand": 0.4968029453968871
+        },
+        "held-out, scale sigma=3": {
+          "frames": 47,
+          "mean_mm": 4.171335384785011,
+          "tips_mm": 1.877116498104429,
+          "p95_mm": 12.434826061369478,
+          "mean_pct_hand": 0.4985532830955994
+        },
+        "held-out, scale sigma=6": {
+          "frames": 47,
+          "mean_mm": 4.166806479422192,
+          "tips_mm": 1.749643394312549,
+          "p95_mm": 12.132778707010074,
+          "mean_pct_hand": 0.49801199345351055
+        },
+        "held-out, scale sigma=12": {
+          "frames": 47,
+          "mean_mm": 4.290049836799698,
+          "tips_mm": 1.668444139200897,
+          "p95_mm": 11.888271001045272,
+          "mean_pct_hand": 0.5127419000115867
+        }
+      },
+      "depth": {
+        "frames": 47,
+        "size_sd_pct": 9.547596085343505,
+        "size_max_over_min": 1.588928713948503,
+        "size_vs_image_size_corr": -0.5511996614845679,
+        "depth_sd_pct": {
+          "mediapipe size": 16.07298465454116,
+          "constant size": 8.697294395084034,
+          "smoothed size (sigma=3)": 12.888355354931655
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 6.8452663759636625,
+          "constant size": 4.281778019873256,
+          "smoothed size (sigma=3)": 4.294814994927122
+        }
+      }
+    },
+    {
+      "clip": "17083",
+      "side": "right",
+      "frames": 35,
+      "hand_mm": 1050.5331461317837,
+      "scale_sd_pct": 2.6845202698748154,
+      "rows": {
+        "in-sample shape": {
+          "frames": 35,
+          "mean_mm": 5.0240103212686185,
+          "tips_mm": 2.7653775086945074,
+          "p95_mm": 13.577950056462345,
+          "mean_pct_hand": 0.4782343460335124
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 35,
+          "mean_mm": 4.286978882846136,
+          "tips_mm": 2.359233637162208,
+          "p95_mm": 11.267213912818294,
+          "mean_pct_hand": 0.40807649893117776
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 35,
+          "mean_mm": 4.772591590211325,
+          "tips_mm": 2.5548102190623037,
+          "p95_mm": 12.931602333601445,
+          "mean_pct_hand": 0.454301856898538
+        },
+        "held-out, constant": {
+          "frames": 35,
+          "mean_mm": 5.023811047048327,
+          "tips_mm": 2.761988278577704,
+          "p95_mm": 13.608912588904229,
+          "mean_pct_hand": 0.47821537716793916
+        },
+        "held-out, scale sigma=0": {
+          "frames": 35,
+          "mean_mm": 4.526489294935968,
+          "tips_mm": 2.565054426248851,
+          "p95_mm": 11.603938388318667,
+          "mean_pct_hand": 0.43087543801955813
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 35,
+          "mean_mm": 4.494635030230084,
+          "tips_mm": 2.5356315228397612,
+          "p95_mm": 11.54294811621221,
+          "mean_pct_hand": 0.42784323814817127
+        },
+        "held-out, scale sigma=3": {
+          "frames": 35,
+          "mean_mm": 4.448077097125807,
+          "tips_mm": 2.4988219614942326,
+          "p95_mm": 11.582723738257313,
+          "mean_pct_hand": 0.42341139958356133
+        },
+        "held-out, scale sigma=6": {
+          "frames": 35,
+          "mean_mm": 4.4481832070967,
+          "tips_mm": 2.489470109107027,
+          "p95_mm": 11.634402377451288,
+          "mean_pct_hand": 0.42342150016642127
+        },
+        "held-out, scale sigma=12": {
+          "frames": 35,
+          "mean_mm": 4.475761682940469,
+          "tips_mm": 2.4982257696222785,
+          "p95_mm": 11.604026838004842,
+          "mean_pct_hand": 0.4260466887142854
+        }
+      },
+      "depth": {
+        "frames": 35,
+        "size_sd_pct": 2.6845202698748154,
+        "size_max_over_min": 1.1397867463939444,
+        "size_vs_image_size_corr": -0.5499733903233894,
+        "depth_sd_pct": {
+          "mediapipe size": 7.928723001334588,
+          "constant size": 6.128701968708081,
+          "smoothed size (sigma=3)": 7.077896026812547
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 4.409525870419943,
+          "constant size": 3.439612588537345,
+          "smoothed size (sigma=3)": 3.4403141271788757
+        }
+      }
+    },
+    {
+      "clip": "21871",
+      "side": "right",
+      "frames": 41,
+      "hand_mm": 1050.1165287569165,
+      "scale_sd_pct": 9.276854903359315,
+      "rows": {
+        "in-sample shape": {
+          "frames": 41,
+          "mean_mm": 4.93740318437252,
+          "tips_mm": 2.558198686636315,
+          "p95_mm": 13.489397243970092,
+          "mean_pct_hand": 0.4701766946014276
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 41,
+          "mean_mm": 3.306711793983995,
+          "tips_mm": 1.8829368640701787,
+          "p95_mm": 8.872397948802146,
+          "mean_pct_hand": 0.3148899863425958
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 41,
+          "mean_mm": 3.027171244569469,
+          "tips_mm": 1.6401809166005246,
+          "p95_mm": 8.532793694282228,
+          "mean_pct_hand": 0.28827003115101013
+        },
+        "held-out, constant": {
+          "frames": 41,
+          "mean_mm": 4.965358145107004,
+          "tips_mm": 2.5580029049627226,
+          "p95_mm": 13.503588999596046,
+          "mean_pct_hand": 0.4728387763770164
+        },
+        "held-out, scale sigma=0": {
+          "frames": 41,
+          "mean_mm": 4.57974192599126,
+          "tips_mm": 2.611336971267717,
+          "p95_mm": 13.73737406843114,
+          "mean_pct_hand": 0.43611749749454615
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 41,
+          "mean_mm": 4.633467489953783,
+          "tips_mm": 2.604056791533947,
+          "p95_mm": 13.148246889278242,
+          "mean_pct_hand": 0.44123365008249943
+        },
+        "held-out, scale sigma=3": {
+          "frames": 41,
+          "mean_mm": 4.809980806485361,
+          "tips_mm": 2.7488130325438616,
+          "p95_mm": 13.318898673315378,
+          "mean_pct_hand": 0.45804257668234327
+        },
+        "held-out, scale sigma=6": {
+          "frames": 41,
+          "mean_mm": 5.159120878289786,
+          "tips_mm": 3.1095381203573567,
+          "p95_mm": 14.095968963871517,
+          "mean_pct_hand": 0.49129032226518093
+        },
+        "held-out, scale sigma=12": {
+          "frames": 41,
+          "mean_mm": 5.5067564445556965,
+          "tips_mm": 3.454127551046857,
+          "p95_mm": 14.356469086621793,
+          "mean_pct_hand": 0.5243947975063645
+        }
+      },
+      "depth": {
+        "frames": 41,
+        "size_sd_pct": 9.276854903359315,
+        "size_max_over_min": 1.4662212612870438,
+        "size_vs_image_size_corr": -0.6671740473311178,
+        "depth_sd_pct": {
+          "mediapipe size": 22.428175422272833,
+          "constant size": 15.147783967602866,
+          "smoothed size (sigma=3)": 20.812094053484042
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 5.9639648422103635,
+          "constant size": 3.0348958649928655,
+          "smoothed size (sigma=3)": 3.0562304578887147
+        }
+      }
+    },
+    {
+      "clip": "21942",
+      "side": "left",
+      "frames": 27,
+      "hand_mm": 585.5192889575846,
+      "scale_sd_pct": 10.728925032106051,
+      "rows": {
+        "in-sample shape": {
+          "frames": 27,
+          "mean_mm": 6.136724754302621,
+          "tips_mm": 3.094190307088625,
+          "p95_mm": 14.924859679415839,
+          "mean_pct_hand": 1.0480824235915427
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 27,
+          "mean_mm": 4.141686841157688,
+          "tips_mm": 1.9092200169552673,
+          "p95_mm": 11.232071056349834,
+          "mean_pct_hand": 0.7073527583576694
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 27,
+          "mean_mm": 4.081618759415483,
+          "tips_mm": 2.173742231614883,
+          "p95_mm": 10.53920003230217,
+          "mean_pct_hand": 0.6970938167864795
+        },
+        "held-out, constant": {
+          "frames": 27,
+          "mean_mm": 6.1499550517257715,
+          "tips_mm": 3.081788655512442,
+          "p95_mm": 15.135946243501783,
+          "mean_pct_hand": 1.0503420071223781
+        },
+        "held-out, scale sigma=0": {
+          "frames": 27,
+          "mean_mm": 4.735227628166816,
+          "tips_mm": 2.1141978554559504,
+          "p95_mm": 12.282371382510357,
+          "mean_pct_hand": 0.8087227385108127
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 27,
+          "mean_mm": 4.823592286672653,
+          "tips_mm": 2.0876671708928316,
+          "p95_mm": 12.668170251679586,
+          "mean_pct_hand": 0.8238144118633943
+        },
+        "held-out, scale sigma=3": {
+          "frames": 27,
+          "mean_mm": 4.992149887801088,
+          "tips_mm": 2.200066921595013,
+          "p95_mm": 13.646917527462493,
+          "mean_pct_hand": 0.8526021229272811
+        },
+        "held-out, scale sigma=6": {
+          "frames": 27,
+          "mean_mm": 5.462167276838438,
+          "tips_mm": 2.708862192158136,
+          "p95_mm": 13.479232881764164,
+          "mean_pct_hand": 0.9328757190156584
+        },
+        "held-out, scale sigma=12": {
+          "frames": 27,
+          "mean_mm": 6.41187098417632,
+          "tips_mm": 3.507429489381403,
+          "p95_mm": 14.084739153010354,
+          "mean_pct_hand": 1.0950742537605453
+        }
+      },
+      "depth": {
+        "frames": 27,
+        "size_sd_pct": 10.728925032106051,
+        "size_max_over_min": 1.479889771187597,
+        "size_vs_image_size_corr": 0.827814426547259,
+        "depth_sd_pct": {
+          "mediapipe size": 6.817713306445711,
+          "constant size": 12.083663119486515,
+          "smoothed size (sigma=3)": 9.066775985208118
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 3.3069537564777285,
+          "constant size": 3.8138849952884026,
+          "smoothed size (sigma=3)": 3.8333476088589715
+        }
+      }
+    },
+    {
+      "clip": "21942",
+      "side": "right",
+      "frames": 32,
+      "hand_mm": 408.1059404052212,
+      "scale_sd_pct": 14.336019173369927,
+      "rows": {
+        "in-sample shape": {
+          "frames": 32,
+          "mean_mm": 6.121575629258193,
+          "tips_mm": 2.8955997655675216,
+          "p95_mm": 16.517620061492448,
+          "mean_pct_hand": 1.4999966977152766
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 32,
+          "mean_mm": 3.5688553491232526,
+          "tips_mm": 1.6807869945584883,
+          "p95_mm": 10.24063241105781,
+          "mean_pct_hand": 0.8744923794982313
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 32,
+          "mean_mm": 3.634786997820929,
+          "tips_mm": 1.7980894666429663,
+          "p95_mm": 10.44542741014029,
+          "mean_pct_hand": 0.890647902407849
+        },
+        "held-out, constant": {
+          "frames": 32,
+          "mean_mm": 6.136573816577419,
+          "tips_mm": 2.8708285197316705,
+          "p95_mm": 16.48552989974469,
+          "mean_pct_hand": 1.5036717697576818
+        },
+        "held-out, scale sigma=0": {
+          "frames": 32,
+          "mean_mm": 4.653256617001992,
+          "tips_mm": 2.2242291771774108,
+          "p95_mm": 14.116994700677314,
+          "mean_pct_hand": 1.1402080088277144
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 32,
+          "mean_mm": 4.792479362536521,
+          "tips_mm": 2.260016129812006,
+          "p95_mm": 14.237076170176529,
+          "mean_pct_hand": 1.1743223727098697
+        },
+        "held-out, scale sigma=3": {
+          "frames": 32,
+          "mean_mm": 4.66627353354537,
+          "tips_mm": 2.0990860574003114,
+          "p95_mm": 13.409192819762879,
+          "mean_pct_hand": 1.143397601346376
+        },
+        "held-out, scale sigma=6": {
+          "frames": 32,
+          "mean_mm": 5.104048093175271,
+          "tips_mm": 2.4100998451385034,
+          "p95_mm": 13.713628270511801,
+          "mean_pct_hand": 1.2506674340754025
+        },
+        "held-out, scale sigma=12": {
+          "frames": 32,
+          "mean_mm": 6.667589937343853,
+          "tips_mm": 3.5395927008171277,
+          "p95_mm": 14.71245124292025,
+          "mean_pct_hand": 1.633788993790042
+        }
+      },
+      "depth": {
+        "frames": 32,
+        "size_sd_pct": 14.336019173369927,
+        "size_max_over_min": 1.6735102805860684,
+        "size_vs_image_size_corr": 0.2777185147386391,
+        "depth_sd_pct": {
+          "mediapipe size": 15.527273292508264,
+          "constant size": 11.152580121772896,
+          "smoothed size (sigma=3)": 13.078059449296193
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 7.040087385552309,
+          "constant size": 3.8467535000614403,
+          "smoothed size (sigma=3)": 3.874341105989158
+        }
+      }
+    },
+    {
+      "clip": "28111",
+      "side": "right",
+      "frames": 19,
+      "hand_mm": 643.9023688435555,
+      "scale_sd_pct": 10.98628944805645,
+      "rows": {
+        "in-sample shape": {
+          "frames": 19,
+          "mean_mm": 7.235317330202744,
+          "tips_mm": 3.0238232317307463,
+          "p95_mm": 17.9981765644975,
+          "mean_pct_hand": 1.1236668290562943
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 19,
+          "mean_mm": 4.145057954998502,
+          "tips_mm": 2.370567109697879,
+          "p95_mm": 9.900929385743174,
+          "mean_pct_hand": 0.6437401313560935
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 19,
+          "mean_mm": 3.958491419481544,
+          "tips_mm": 2.0809740059388373,
+          "p95_mm": 10.481934875772561,
+          "mean_pct_hand": 0.6147657798791718
+        },
+        "held-out, constant": {
+          "frames": 19,
+          "mean_mm": 7.221521072582001,
+          "tips_mm": 2.979008540397319,
+          "p95_mm": 17.805049067864253,
+          "mean_pct_hand": 1.121524228207423
+        },
+        "held-out, scale sigma=0": {
+          "frames": 19,
+          "mean_mm": 5.117194897208491,
+          "tips_mm": 2.462037204480027,
+          "p95_mm": 12.620064870688187,
+          "mean_pct_hand": 0.7947159608061297
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 19,
+          "mean_mm": 4.969002241743438,
+          "tips_mm": 2.3374287590600478,
+          "p95_mm": 12.536467961650924,
+          "mean_pct_hand": 0.7717011898353061
+        },
+        "held-out, scale sigma=3": {
+          "frames": 19,
+          "mean_mm": 5.060123154722863,
+          "tips_mm": 2.237342362379499,
+          "p95_mm": 13.001300933646124,
+          "mean_pct_hand": 0.7858525452873875
+        },
+        "held-out, scale sigma=6": {
+          "frames": 19,
+          "mean_mm": 5.941762595425725,
+          "tips_mm": 2.6237955858988227,
+          "p95_mm": 15.177360590422701,
+          "mean_pct_hand": 0.9227738369866682
+        },
+        "held-out, scale sigma=12": {
+          "frames": 19,
+          "mean_mm": 7.334584398671868,
+          "tips_mm": 3.5829604559172745,
+          "p95_mm": 18.573247200679937,
+          "mean_pct_hand": 1.1390833072791353
+        }
+      },
+      "depth": {
+        "frames": 19,
+        "size_sd_pct": 10.98628944805645,
+        "size_max_over_min": 1.4258967318774032,
+        "size_vs_image_size_corr": -0.45740863639013846,
+        "depth_sd_pct": {
+          "mediapipe size": 19.634800595805473,
+          "constant size": 12.006502942527455,
+          "smoothed size (sigma=3)": 17.05415310354685
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 9.760702831457744,
+          "constant size": 8.685299362994822,
+          "smoothed size (sigma=3)": 8.63318824000259
+        }
+      }
+    },
+    {
+      "clip": "57641",
+      "side": "right",
+      "frames": 29,
+      "hand_mm": 502.37895362079144,
+      "scale_sd_pct": 1.809856376663879,
+      "rows": {
+        "in-sample shape": {
+          "frames": 29,
+          "mean_mm": 3.4608437698315844,
+          "tips_mm": 2.1505455930309365,
+          "p95_mm": 10.30709001826725,
+          "mean_pct_hand": 0.6888910741360232
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 29,
+          "mean_mm": 3.2303216717994765,
+          "tips_mm": 2.0191566066772784,
+          "p95_mm": 9.544624570699622,
+          "mean_pct_hand": 0.6430049763266569
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 29,
+          "mean_mm": 3.169824109992917,
+          "tips_mm": 2.265157661911719,
+          "p95_mm": 9.308093288714499,
+          "mean_pct_hand": 0.6309627597149664
+        },
+        "held-out, constant": {
+          "frames": 29,
+          "mean_mm": 3.459876261195048,
+          "tips_mm": 2.1445503010648985,
+          "p95_mm": 10.296204951690987,
+          "mean_pct_hand": 0.6886984887122982
+        },
+        "held-out, scale sigma=0": {
+          "frames": 29,
+          "mean_mm": 3.2834124136294904,
+          "tips_mm": 2.0107765468590135,
+          "p95_mm": 9.67003717260062,
+          "mean_pct_hand": 0.6535728437596722
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 29,
+          "mean_mm": 3.286097657202573,
+          "tips_mm": 1.9928354650266653,
+          "p95_mm": 9.720872606210849,
+          "mean_pct_hand": 0.6541073493462874
+        },
+        "held-out, scale sigma=3": {
+          "frames": 29,
+          "mean_mm": 3.297623429251438,
+          "tips_mm": 1.954284647050891,
+          "p95_mm": 9.787655986785554,
+          "mean_pct_hand": 0.6564015879814443
+        },
+        "held-out, scale sigma=6": {
+          "frames": 29,
+          "mean_mm": 3.3053653493274737,
+          "tips_mm": 1.9392374690468865,
+          "p95_mm": 9.829628934185312,
+          "mean_pct_hand": 0.6579426398149728
+        },
+        "held-out, scale sigma=12": {
+          "frames": 29,
+          "mean_mm": 3.3061045672745424,
+          "tips_mm": 1.9324441038652391,
+          "p95_mm": 9.85672631519573,
+          "mean_pct_hand": 0.6580897833092896
+        }
+      },
+      "depth": {
+        "frames": 29,
+        "size_sd_pct": 1.809856376663879,
+        "size_max_over_min": 1.1085849866930537,
+        "size_vs_image_size_corr": 0.3410619707922543,
+        "depth_sd_pct": {
+          "mediapipe size": 3.302076632153735,
+          "constant size": 3.4473184407090143,
+          "smoothed size (sigma=3)": 3.475343937711838
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 1.7101226971721568,
+          "constant size": 1.5480352980668275,
+          "smoothed size (sigma=3)": 1.5433833057322073
+        }
+      }
+    },
+    {
+      "clip": "57949",
+      "side": "right",
+      "frames": 53,
+      "hand_mm": 1160.0266080349684,
+      "scale_sd_pct": 4.55375443576684,
+      "rows": {
+        "in-sample shape": {
+          "frames": 53,
+          "mean_mm": 3.826953682716977,
+          "tips_mm": 1.952504473409711,
+          "p95_mm": 9.919350892465653,
+          "mean_pct_hand": 0.3299022329496097
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 53,
+          "mean_mm": 3.4506691099399482,
+          "tips_mm": 1.807156287951295,
+          "p95_mm": 8.137961170847177,
+          "mean_pct_hand": 0.2974646517621887
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 53,
+          "mean_mm": 3.319384395724385,
+          "tips_mm": 1.9422139945439256,
+          "p95_mm": 7.517297727825306,
+          "mean_pct_hand": 0.2861472635827957
+        },
+        "held-out, constant": {
+          "frames": 53,
+          "mean_mm": 3.82961454800561,
+          "tips_mm": 1.9570229584201184,
+          "p95_mm": 9.840705203047042,
+          "mean_pct_hand": 0.3301316126267828
+        },
+        "held-out, scale sigma=0": {
+          "frames": 53,
+          "mean_mm": 3.636799506518999,
+          "tips_mm": 1.874578963047875,
+          "p95_mm": 9.756583857452918,
+          "mean_pct_hand": 0.31351000755746194
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 53,
+          "mean_mm": 3.6224713567905344,
+          "tips_mm": 1.8719018148379236,
+          "p95_mm": 9.882586124057841,
+          "mean_pct_hand": 0.3122748505680257
+        },
+        "held-out, scale sigma=3": {
+          "frames": 53,
+          "mean_mm": 3.6024073439025597,
+          "tips_mm": 1.8720712493623797,
+          "p95_mm": 9.66914625436833,
+          "mean_pct_hand": 0.31054523395845823
+        },
+        "held-out, scale sigma=6": {
+          "frames": 53,
+          "mean_mm": 3.611912670454476,
+          "tips_mm": 1.8641837529097285,
+          "p95_mm": 9.662832760785593,
+          "mean_pct_hand": 0.3113646398657088
+        },
+        "held-out, scale sigma=12": {
+          "frames": 53,
+          "mean_mm": 3.6602419875878773,
+          "tips_mm": 1.8483896285475647,
+          "p95_mm": 9.746638710124703,
+          "mean_pct_hand": 0.3155308647435388
+        }
+      },
+      "depth": {
+        "frames": 53,
+        "size_sd_pct": 4.55375443576684,
+        "size_max_over_min": 1.2051992915195544,
+        "size_vs_image_size_corr": -0.5243525978705963,
+        "depth_sd_pct": {
+          "mediapipe size": 14.886503795860092,
+          "constant size": 11.984866856979885,
+          "smoothed size (sigma=3)": 14.67877920962018
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 3.6601502819790257,
+          "constant size": 1.7267317566911151,
+          "smoothed size (sigma=3)": 1.7206893514799488
+        }
+      }
+    },
+    {
+      "clip": "63229",
+      "side": "right",
+      "frames": 19,
+      "hand_mm": 364.30796794593334,
+      "scale_sd_pct": 13.327549622715862,
+      "rows": {
+        "in-sample shape": {
+          "frames": 19,
+          "mean_mm": 7.150759039256076,
+          "tips_mm": 4.055103961164839,
+          "p95_mm": 17.31372148912751,
+          "mean_pct_hand": 1.9628335552400855
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 19,
+          "mean_mm": 5.291090702947197,
+          "tips_mm": 3.213770610189661,
+          "p95_mm": 11.65945481097509,
+          "mean_pct_hand": 1.452367548472737
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 19,
+          "mean_mm": 5.4678130928609,
+          "tips_mm": 3.359593499995808,
+          "p95_mm": 12.029838450534013,
+          "mean_pct_hand": 1.5008766137314828
+        },
+        "held-out, constant": {
+          "frames": 19,
+          "mean_mm": 7.145681518563559,
+          "tips_mm": 4.011771174998529,
+          "p95_mm": 17.409792686854498,
+          "mean_pct_hand": 1.9614398111720805
+        },
+        "held-out, scale sigma=0": {
+          "frames": 19,
+          "mean_mm": 6.167307536051315,
+          "tips_mm": 3.2352942241218905,
+          "p95_mm": 14.946879832899262,
+          "mean_pct_hand": 1.6928829667998366
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 19,
+          "mean_mm": 6.470265871856138,
+          "tips_mm": 3.3985197290406175,
+          "p95_mm": 16.101077202556382,
+          "mean_pct_hand": 1.7760429200429635
+        },
+        "held-out, scale sigma=3": {
+          "frames": 19,
+          "mean_mm": 7.183485762008501,
+          "tips_mm": 3.654863420415946,
+          "p95_mm": 18.754453759229968,
+          "mean_pct_hand": 1.971816812712314
+        },
+        "held-out, scale sigma=6": {
+          "frames": 19,
+          "mean_mm": 7.4000596317940515,
+          "tips_mm": 3.5928848213687066,
+          "p95_mm": 18.711015686048203,
+          "mean_pct_hand": 2.031264831652622
+        },
+        "held-out, scale sigma=12": {
+          "frames": 19,
+          "mean_mm": 7.458673565306507,
+          "tips_mm": 3.5191595495766563,
+          "p95_mm": 18.501604383084658,
+          "mean_pct_hand": 2.0473539481885403
+        }
+      },
+      "depth": {
+        "frames": 19,
+        "size_sd_pct": 13.327549622715862,
+        "size_max_over_min": 1.5997373933025467,
+        "size_vs_image_size_corr": -0.6746353612683463,
+        "depth_sd_pct": {
+          "mediapipe size": 17.46794358100109,
+          "constant size": 5.443021723894784,
+          "smoothed size (sigma=3)": 7.792423375091276
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 8.058927272125873,
+          "constant size": 4.336878069365871,
+          "smoothed size (sigma=3)": 4.364163027022143
+        }
+      }
+    },
+    {
+      "clip": "63665",
+      "side": "right",
+      "frames": 43,
+      "hand_mm": 1608.208798475971,
+      "scale_sd_pct": 10.684714479142654,
+      "rows": {
+        "in-sample shape": {
+          "frames": 43,
+          "mean_mm": 5.868043653354151,
+          "tips_mm": 2.4650849940922526,
+          "p95_mm": 16.06198969073899,
+          "mean_pct_hand": 0.3648807082087251
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 43,
+          "mean_mm": 3.9992099328842783,
+          "tips_mm": 1.5913308108162176,
+          "p95_mm": 10.877302146918604,
+          "mean_pct_hand": 0.2486747950063545
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 43,
+          "mean_mm": 4.131253136744435,
+          "tips_mm": 1.6962962166383746,
+          "p95_mm": 12.152212359437094,
+          "mean_pct_hand": 0.256885370895834
+        },
+        "held-out, constant": {
+          "frames": 43,
+          "mean_mm": 5.86864355259434,
+          "tips_mm": 2.471230372631675,
+          "p95_mm": 16.057755526429457,
+          "mean_pct_hand": 0.3649180105317044
+        },
+        "held-out, scale sigma=0": {
+          "frames": 43,
+          "mean_mm": 5.227641663764078,
+          "tips_mm": 2.556322748833716,
+          "p95_mm": 16.557218731004404,
+          "mean_pct_hand": 0.32505988455715973
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 43,
+          "mean_mm": 5.050245870339906,
+          "tips_mm": 2.44317702990481,
+          "p95_mm": 15.7266862807469,
+          "mean_pct_hand": 0.31402924017862627
+        },
+        "held-out, scale sigma=3": {
+          "frames": 43,
+          "mean_mm": 4.908193769009794,
+          "tips_mm": 2.204222650655245,
+          "p95_mm": 14.614777209694187,
+          "mean_pct_hand": 0.3051963012303548
+        },
+        "held-out, scale sigma=6": {
+          "frames": 43,
+          "mean_mm": 5.127833842556927,
+          "tips_mm": 2.2493757605067155,
+          "p95_mm": 14.135087151120663,
+          "mean_pct_hand": 0.3188537363690804
+        },
+        "held-out, scale sigma=12": {
+          "frames": 43,
+          "mean_mm": 5.514771282062083,
+          "tips_mm": 2.450456898637484,
+          "p95_mm": 14.540460067193841,
+          "mean_pct_hand": 0.3429138857645967
+        }
+      },
+      "depth": {
+        "frames": 43,
+        "size_sd_pct": 10.684714479142654,
+        "size_max_over_min": 1.6551053376855631,
+        "size_vs_image_size_corr": -0.23079210173436826,
+        "depth_sd_pct": {
+          "mediapipe size": 17.634271755789896,
+          "constant size": 11.777833913551675,
+          "smoothed size (sigma=3)": 16.037709735970193
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 8.022167179194733,
+          "constant size": 6.033371337123321,
+          "smoothed size (sigma=3)": 6.027513725590902
+        }
+      }
+    },
+    {
+      "clip": "63669",
+      "side": "right",
+      "frames": 55,
+      "hand_mm": 1635.7372105121613,
+      "scale_sd_pct": 12.25599252372935,
+      "rows": {
+        "in-sample shape": {
+          "frames": 55,
+          "mean_mm": 4.967524187029931,
+          "tips_mm": 2.536828359019195,
+          "p95_mm": 13.07082523339586,
+          "mean_pct_hand": 0.30368717879044665
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 55,
+          "mean_mm": 3.6062796937894084,
+          "tips_mm": 3.105565694902005,
+          "p95_mm": 8.113289103806755,
+          "mean_pct_hand": 0.22046815775868153
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 55,
+          "mean_mm": 3.4235853631368536,
+          "tips_mm": 2.7519441914437484,
+          "p95_mm": 7.706295651716609,
+          "mean_pct_hand": 0.209299228576264
+        },
+        "held-out, constant": {
+          "frames": 55,
+          "mean_mm": 5.002142305240419,
+          "tips_mm": 2.5306140692573154,
+          "p95_mm": 13.034935882109425,
+          "mean_pct_hand": 0.30580354063561416
+        },
+        "held-out, scale sigma=0": {
+          "frames": 55,
+          "mean_mm": 4.155390236036542,
+          "tips_mm": 3.2902679383098166,
+          "p95_mm": 8.980453431773075,
+          "mean_pct_hand": 0.2540377640938706
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 55,
+          "mean_mm": 4.126545592576222,
+          "tips_mm": 3.2737756143595558,
+          "p95_mm": 8.879709240802057,
+          "mean_pct_hand": 0.2522743608237762
+        },
+        "held-out, scale sigma=3": {
+          "frames": 55,
+          "mean_mm": 4.196744103433035,
+          "tips_mm": 3.241998229676875,
+          "p95_mm": 9.10607247123286,
+          "mean_pct_hand": 0.256565912694436
+        },
+        "held-out, scale sigma=6": {
+          "frames": 55,
+          "mean_mm": 4.354322282772433,
+          "tips_mm": 3.1136643518305984,
+          "p95_mm": 9.5533665196609,
+          "mean_pct_hand": 0.26619937816350475
+        },
+        "held-out, scale sigma=12": {
+          "frames": 55,
+          "mean_mm": 4.589660917206007,
+          "tips_mm": 2.7263551786113625,
+          "p95_mm": 10.580777681926637,
+          "mean_pct_hand": 0.28058669129187025
+        }
+      },
+      "depth": {
+        "frames": 55,
+        "size_sd_pct": 12.25599252372935,
+        "size_max_over_min": 2.466550349402075,
+        "size_vs_image_size_corr": 0.4974499829250452,
+        "depth_sd_pct": {
+          "mediapipe size": 11.56201512971741,
+          "constant size": 10.63999316998249,
+          "smoothed size (sigma=3)": 11.69310343333039
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 1.3321692162069732,
+          "constant size": 3.943936635781023,
+          "smoothed size (sigma=3)": 3.9874570944610372
+        }
+      }
+    },
+    {
+      "clip": "69257",
+      "side": "left",
+      "frames": 39,
+      "hand_mm": 656.2473577541823,
+      "scale_sd_pct": 10.749909036240878,
+      "rows": {
+        "in-sample shape": {
+          "frames": 39,
+          "mean_mm": 7.227510693378507,
+          "tips_mm": 3.0321709855652412,
+          "p95_mm": 20.04710195671608,
+          "mean_pct_hand": 1.1013393971005967
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 39,
+          "mean_mm": 5.275767929353717,
+          "tips_mm": 2.563105632742832,
+          "p95_mm": 16.01602731637385,
+          "mean_pct_hand": 0.8039297784616634
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 39,
+          "mean_mm": 5.118666034368255,
+          "tips_mm": 2.264133589806177,
+          "p95_mm": 16.4076349694743,
+          "mean_pct_hand": 0.7799903456960827
+        },
+        "held-out, constant": {
+          "frames": 39,
+          "mean_mm": 7.247840767755156,
+          "tips_mm": 3.040095346295253,
+          "p95_mm": 19.874130999748264,
+          "mean_pct_hand": 1.104437325669212
+        },
+        "held-out, scale sigma=0": {
+          "frames": 39,
+          "mean_mm": 5.642366681438783,
+          "tips_mm": 2.651219499800473,
+          "p95_mm": 17.387310921063733,
+          "mean_pct_hand": 0.859792670365662
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 39,
+          "mean_mm": 5.639106583405912,
+          "tips_mm": 2.6094199147268005,
+          "p95_mm": 17.40492239533079,
+          "mean_pct_hand": 0.8592958915223873
+        },
+        "held-out, scale sigma=3": {
+          "frames": 39,
+          "mean_mm": 5.791183988283645,
+          "tips_mm": 2.531996135997034,
+          "p95_mm": 17.57092162396981,
+          "mean_pct_hand": 0.8824696846174446
+        },
+        "held-out, scale sigma=6": {
+          "frames": 39,
+          "mean_mm": 6.261080614264514,
+          "tips_mm": 2.610601325547835,
+          "p95_mm": 17.92314897500628,
+          "mean_pct_hand": 0.9540732683010352
+        },
+        "held-out, scale sigma=12": {
+          "frames": 39,
+          "mean_mm": 6.873287657227044,
+          "tips_mm": 2.715506254112735,
+          "p95_mm": 19.044020374026676,
+          "mean_pct_hand": 1.0473623361698388
+        }
+      },
+      "depth": {
+        "frames": 39,
+        "size_sd_pct": 10.749909036240878,
+        "size_max_over_min": 1.4068910189449049,
+        "size_vs_image_size_corr": -0.5869549899312443,
+        "depth_sd_pct": {
+          "mediapipe size": 33.342642437824736,
+          "constant size": 25.876988470069705,
+          "smoothed size (sigma=3)": 31.667323365381755
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 7.926525183108988,
+          "constant size": 7.545985116080326,
+          "smoothed size (sigma=3)": 7.564290853342298
+        }
+      }
+    },
+    {
+      "clip": "69257",
+      "side": "right",
+      "frames": 35,
+      "hand_mm": 366.68278883735184,
+      "scale_sd_pct": 22.756261132758144,
+      "rows": {
+        "in-sample shape": {
+          "frames": 35,
+          "mean_mm": 9.305907776784311,
+          "tips_mm": 3.2052260794264624,
+          "p95_mm": 24.029419090687924,
+          "mean_pct_hand": 2.5378632594921435
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 35,
+          "mean_mm": 4.731259561835256,
+          "tips_mm": 1.7291699802109337,
+          "p95_mm": 12.72029538490661,
+          "mean_pct_hand": 1.2902867835266423
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 35,
+          "mean_mm": 5.313650603265056,
+          "tips_mm": 1.5363255704993493,
+          "p95_mm": 14.94780994543809,
+          "mean_pct_hand": 1.449113720366628
+        },
+        "held-out, constant": {
+          "frames": 35,
+          "mean_mm": 9.309533112807165,
+          "tips_mm": 3.172175239214832,
+          "p95_mm": 24.143639629373276,
+          "mean_pct_hand": 2.538851944026356
+        },
+        "held-out, scale sigma=0": {
+          "frames": 35,
+          "mean_mm": 5.172373564832699,
+          "tips_mm": 2.0041904017356713,
+          "p95_mm": 13.536870253193355,
+          "mean_pct_hand": 1.4105853130529642
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 35,
+          "mean_mm": 5.501540348107854,
+          "tips_mm": 2.000002999352653,
+          "p95_mm": 15.004934406196895,
+          "mean_pct_hand": 1.5003541250331636
+        },
+        "held-out, scale sigma=3": {
+          "frames": 35,
+          "mean_mm": 5.889943240454504,
+          "tips_mm": 1.9670403430819072,
+          "p95_mm": 16.125825525729038,
+          "mean_pct_hand": 1.606277529177156
+        },
+        "held-out, scale sigma=6": {
+          "frames": 35,
+          "mean_mm": 6.71175266106488,
+          "tips_mm": 1.943471754017804,
+          "p95_mm": 18.29629441424265,
+          "mean_pct_hand": 1.8303975167053685
+        },
+        "held-out, scale sigma=12": {
+          "frames": 35,
+          "mean_mm": 7.936103140788033,
+          "tips_mm": 2.279405994904476,
+          "p95_mm": 22.313214950051155,
+          "mean_pct_hand": 2.164296602507902
+        }
+      },
+      "depth": {
+        "frames": 35,
+        "size_sd_pct": 22.756261132758144,
+        "size_max_over_min": 2.4451382658795593,
+        "size_vs_image_size_corr": -0.19396648858863752,
+        "depth_sd_pct": {
+          "mediapipe size": 35.658383021303656,
+          "constant size": 23.391727782263743,
+          "smoothed size (sigma=3)": 33.41344239132142
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 6.462719758920697,
+          "constant size": 7.157258993736164,
+          "smoothed size (sigma=3)": 7.204624610383963
+        }
+      }
+    },
+    {
+      "clip": "69364",
+      "side": "right",
+      "frames": 57,
+      "hand_mm": 856.5692629199475,
+      "scale_sd_pct": 4.7191207502273915,
+      "rows": {
+        "in-sample shape": {
+          "frames": 57,
+          "mean_mm": 4.389675231513055,
+          "tips_mm": 2.2453838728200193,
+          "p95_mm": 11.061073653888325,
+          "mean_pct_hand": 0.5124717196306053
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 57,
+          "mean_mm": 3.569574674616549,
+          "tips_mm": 2.0032679849840846,
+          "p95_mm": 8.932189425006152,
+          "mean_pct_hand": 0.41672925111137815
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 57,
+          "mean_mm": 3.892660554002535,
+          "tips_mm": 1.9507611964838365,
+          "p95_mm": 10.144322098596383,
+          "mean_pct_hand": 0.4544478447350419
+        },
+        "held-out, constant": {
+          "frames": 57,
+          "mean_mm": 4.389904356353619,
+          "tips_mm": 2.2370250589830616,
+          "p95_mm": 11.072496357222088,
+          "mean_pct_hand": 0.512498468762343
+        },
+        "held-out, scale sigma=0": {
+          "frames": 57,
+          "mean_mm": 3.870171333584379,
+          "tips_mm": 2.1545096953553515,
+          "p95_mm": 9.655352692080003,
+          "mean_pct_hand": 0.4518223453864552
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 57,
+          "mean_mm": 3.8832631986598556,
+          "tips_mm": 2.156623017151076,
+          "p95_mm": 9.627260155759338,
+          "mean_pct_hand": 0.453350752444963
+        },
+        "held-out, scale sigma=3": {
+          "frames": 57,
+          "mean_mm": 3.922353906135961,
+          "tips_mm": 2.1725627738278552,
+          "p95_mm": 9.745960691105482,
+          "mean_pct_hand": 0.4579143889386249
+        },
+        "held-out, scale sigma=6": {
+          "frames": 57,
+          "mean_mm": 3.940241263026413,
+          "tips_mm": 2.157720297814987,
+          "p95_mm": 9.92626236693691,
+          "mean_pct_hand": 0.46000264468918445
+        },
+        "held-out, scale sigma=12": {
+          "frames": 57,
+          "mean_mm": 3.931887236748654,
+          "tips_mm": 2.109666694717053,
+          "p95_mm": 9.884237438176397,
+          "mean_pct_hand": 0.4590273556332497
+        }
+      },
+      "depth": {
+        "frames": 57,
+        "size_sd_pct": 4.7191207502273915,
+        "size_max_over_min": 1.320742694541779,
+        "size_vs_image_size_corr": 0.6127576518830138,
+        "depth_sd_pct": {
+          "mediapipe size": 5.036869138890248,
+          "constant size": 6.2771976884185285,
+          "smoothed size (sigma=3)": 4.866722808369964
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 2.82233811119253,
+          "constant size": 2.2394279113786224,
+          "smoothed size (sigma=3)": 2.237026940464624
+        }
+      }
+    },
+    {
+      "clip": "69411",
+      "side": "right",
+      "frames": 45,
+      "hand_mm": 772.1573243798048,
+      "scale_sd_pct": 8.182048425583258,
+      "rows": {
+        "in-sample shape": {
+          "frames": 45,
+          "mean_mm": 3.5828938334714424,
+          "tips_mm": 1.9280597490569404,
+          "p95_mm": 8.704137398796142,
+          "mean_pct_hand": 0.46401085897219396
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 45,
+          "mean_mm": 2.931347504387376,
+          "tips_mm": 1.4308127717615742,
+          "p95_mm": 6.657473998393923,
+          "mean_pct_hand": 0.37963086172132454
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 45,
+          "mean_mm": 2.835957829197534,
+          "tips_mm": 1.5663917157641565,
+          "p95_mm": 6.661340497320351,
+          "mean_pct_hand": 0.36727720370655925
+        },
+        "held-out, constant": {
+          "frames": 45,
+          "mean_mm": 3.589002771095594,
+          "tips_mm": 1.9294750546984643,
+          "p95_mm": 8.81636673726206,
+          "mean_pct_hand": 0.46480201090862844
+        },
+        "held-out, scale sigma=0": {
+          "frames": 45,
+          "mean_mm": 3.0796276224432915,
+          "tips_mm": 1.43718068807174,
+          "p95_mm": 7.753398589543064,
+          "mean_pct_hand": 0.3988342174849979
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 45,
+          "mean_mm": 3.183105800695884,
+          "tips_mm": 1.4685705769308528,
+          "p95_mm": 8.420204554565593,
+          "mean_pct_hand": 0.4122353955850316
+        },
+        "held-out, scale sigma=3": {
+          "frames": 45,
+          "mean_mm": 3.2501739692785767,
+          "tips_mm": 1.4791639452272634,
+          "p95_mm": 8.645753556905595,
+          "mean_pct_hand": 0.42092121212333383
+        },
+        "held-out, scale sigma=6": {
+          "frames": 45,
+          "mean_mm": 3.356339647490348,
+          "tips_mm": 1.4912191996391928,
+          "p95_mm": 8.129443599088933,
+          "mean_pct_hand": 0.434670441051136
+        },
+        "held-out, scale sigma=12": {
+          "frames": 45,
+          "mean_mm": 3.4346412935147823,
+          "tips_mm": 1.499649147596745,
+          "p95_mm": 8.56238875866031,
+          "mean_pct_hand": 0.444811074773328
+        }
+      },
+      "depth": {
+        "frames": 45,
+        "size_sd_pct": 8.182048425583258,
+        "size_max_over_min": 1.513011816752358,
+        "size_vs_image_size_corr": -0.6686035836915594,
+        "depth_sd_pct": {
+          "mediapipe size": 20.762685649129523,
+          "constant size": 14.380651611216033,
+          "smoothed size (sigma=3)": 18.37719177968448
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 2.426297418251183,
+          "constant size": 2.5714393840415224,
+          "smoothed size (sigma=3)": 2.6006907641846566
+        }
+      }
+    },
+    {
+      "clip": "08925",
+      "side": "right",
+      "frames": 41,
+      "hand_mm": 1251.886060461402,
+      "scale_sd_pct": 2.471339480788898,
+      "rows": {
+        "in-sample shape": {
+          "frames": 41,
+          "mean_mm": 3.478375245811683,
+          "tips_mm": 2.375033651304205,
+          "p95_mm": 8.78129079671746,
+          "mean_pct_hand": 0.2778507849611868
+        },
+        "per-frame scale (diagnostic)": {
+          "frames": 41,
+          "mean_mm": 3.065428541923197,
+          "tips_mm": 2.1539652973868435,
+          "p95_mm": 7.0546663429115,
+          "mean_pct_hand": 0.24486481947034264
+        },
+        "per-frame shape (diagnostic)": {
+          "frames": 41,
+          "mean_mm": 3.2268027315325205,
+          "tips_mm": 2.3324026687654915,
+          "p95_mm": 7.696648021671095,
+          "mean_pct_hand": 0.25775530485124437
+        },
+        "held-out, constant": {
+          "frames": 41,
+          "mean_mm": 3.478409441993979,
+          "tips_mm": 2.376667074275577,
+          "p95_mm": 8.79940634329785,
+          "mean_pct_hand": 0.27785351653424095
+        },
+        "held-out, scale sigma=0": {
+          "frames": 41,
+          "mean_mm": 3.1280536829046524,
+          "tips_mm": 2.138790583939371,
+          "p95_mm": 7.286309770432946,
+          "mean_pct_hand": 0.2498672827902373
+        },
+        "held-out, scale sigma=1.5": {
+          "frames": 41,
+          "mean_mm": 3.129865467140881,
+          "tips_mm": 2.1463653318871874,
+          "p95_mm": 7.378235821863782,
+          "mean_pct_hand": 0.2500120071620033
+        },
+        "held-out, scale sigma=3": {
+          "frames": 41,
+          "mean_mm": 3.1488701182857333,
+          "tips_mm": 2.163274325601963,
+          "p95_mm": 7.510503296254772,
+          "mean_pct_hand": 0.25153008869874055
+        },
+        "held-out, scale sigma=6": {
+          "frames": 41,
+          "mean_mm": 3.162069062038694,
+          "tips_mm": 2.162698792937391,
+          "p95_mm": 7.5359349680287835,
+          "mean_pct_hand": 0.2525844133828972
+        },
+        "held-out, scale sigma=12": {
+          "frames": 41,
+          "mean_mm": 3.1786492851124137,
+          "tips_mm": 2.143230431888401,
+          "p95_mm": 7.679456917262451,
+          "mean_pct_hand": 0.2539088328805957
+        }
+      },
+      "depth": {
+        "frames": 41,
+        "size_sd_pct": 2.471339480788898,
+        "size_max_over_min": 1.1069268920548492,
+        "size_vs_image_size_corr": 0.2119730607893233,
+        "depth_sd_pct": {
+          "mediapipe size": 2.728085801845041,
+          "constant size": 1.7924628811958898,
+          "smoothed size (sigma=3)": 2.314017374428405
+        },
+        "depth_roughness_pct": {
+          "mediapipe size": 1.5388416056751186,
+          "constant size": 0.5460623749709226,
+          "smoothed size (sigma=3)": 0.5436041944398019
+        }
+      }
+    }
+  ],
+  "pooled": {
+    "in-sample shape": {
+      "frames": 1617,
+      "mean_mm": 5.808079889557474,
+      "tips_mm": 2.773184364125695,
+      "p95_mm": 16.59950365214214,
+      "mean_pct_hand": 0.6771615330170051
+    },
+    "per-frame scale (diagnostic)": {
+      "frames": 1617,
+      "mean_mm": 3.7939917777760526,
+      "tips_mm": 2.098393907874565,
+      "p95_mm": 10.190455833755529,
+      "mean_pct_hand": 0.46644128156450454
+    },
+    "per-frame shape (diagnostic)": {
+      "frames": 1617,
+      "mean_mm": 3.9329060225084573,
+      "tips_mm": 2.0430697651383336,
+      "p95_mm": 10.994605304276638,
+      "mean_pct_hand": 0.4792030674875041
+    },
+    "held-out, constant": {
+      "frames": 1617,
+      "mean_mm": 5.817320583678635,
+      "tips_mm": 2.7728939031700803,
+      "p95_mm": 16.636428715868192,
+      "mean_pct_hand": 0.6781843372206388
+    },
+    "held-out, scale sigma=0": {
+      "frames": 1617,
+      "mean_mm": 4.433467354326747,
+      "tips_mm": 2.4427637090816177,
+      "p95_mm": 12.373423861298328,
+      "mean_pct_hand": 0.5433867967927435
+    },
+    "held-out, scale sigma=1.5": {
+      "frames": 1617,
+      "mean_mm": 4.463292386678595,
+      "tips_mm": 2.435747712590017,
+      "p95_mm": 12.60686335751632,
+      "mean_pct_hand": 0.5479334725593848
+    },
+    "held-out, scale sigma=3": {
+      "frames": 1617,
+      "mean_mm": 4.594040996963881,
+      "tips_mm": 2.4583212981370974,
+      "p95_mm": 13.068805270102867,
+      "mean_pct_hand": 0.56118145556398
+    },
+    "held-out, scale sigma=6": {
+      "frames": 1617,
+      "mean_mm": 4.901309238757744,
+      "tips_mm": 2.5895296558294967,
+      "p95_mm": 14.09352494139293,
+      "mean_pct_hand": 0.5926851569908743
+    },
+    "held-out, scale sigma=12": {
+      "frames": 1617,
+      "mean_mm": 5.379090434001242,
+      "tips_mm": 2.824275871784513,
+      "p95_mm": 15.798527115286452,
+      "mean_pct_hand": 0.643784992769039
+    }
+  },
+  "seconds": 1628.1
+}

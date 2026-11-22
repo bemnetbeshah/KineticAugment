@@ -182,7 +182,7 @@ def plausible_radius(num_betas: int, plausibility: float = SHAPE_PLAUSIBILITY) -
 
 
 def _optimise(model, observed, valid, start, betas=None, shape=None,
-              plausibility=SHAPE_PLAUSIBILITY):
+              plausibility=SHAPE_PLAUSIBILITY, scale=False):
     """
     L-BFGS through the real forward pass on the wrist-relative landmark error (mm).
 
@@ -202,8 +202,11 @@ def _optimise(model, observed, valid, start, betas=None, shape=None,
         shape: None, "shared" (one fitted shape for all frames) or "per_frame" (one
             fitted shape per frame). Fitted shapes stay inside |betas| <= plausible_radius
             by construction: betas = r u / sqrt(1 + |u|^2) for unconstrained u.
+        scale: also fit each frame a uniform scale about the wrist (its log is the free
+            variable). The scale is not a model parameter; see `hand_scale`.
 
-    Returns (params (F, 48), betas (1 or F, K), rms_mm (F,)).
+    Returns (params (F, 48), betas (1 or F, K), rms_mm (F,), scales (F,)); the scales are
+    ones unless `scale` is set.
     """
     kept = np.where(valid[..., None], observed, 0.0)
     target = torch.as_tensor(1000.0 * (kept - kept[:, :1]), dtype=FIT_DTYPE)
@@ -226,6 +229,10 @@ def _optimise(model, observed, valid, start, betas=None, shape=None,
         def current_betas():
             return radius * free / torch.sqrt(1.0 + (free ** 2).sum(dim=1, keepdim=True))
 
+    log_scale = torch.zeros(len(start), 1, 1, dtype=FIT_DTYPE, requires_grad=scale)
+    if scale:
+        variables = variables + [log_scale]
+
     optimiser = torch.optim.LBFGS(
         variables, lr=1.0, max_iter=iterations, tolerance_grad=1e-12,
         tolerance_change=1e-15, history_size=100, line_search_fn="strong_wolfe",
@@ -233,7 +240,7 @@ def _optimise(model, observed, valid, start, betas=None, shape=None,
 
     def residuals():
         points = 1000.0 * model.points(params[:, :3], params[:, 3:], current_betas())
-        return (points - points[:, :1]) - target
+        return torch.exp(log_scale) * (points - points[:, :1]) - target
 
     def closure():
         optimiser.zero_grad()
@@ -244,7 +251,8 @@ def _optimise(model, observed, valid, start, betas=None, shape=None,
     optimiser.step(closure)
     with torch.no_grad():
         fitted = params.detach().numpy().copy()
-        return fitted, current_betas().numpy().copy(), _rms_mm(residuals(), mask)
+        scales = torch.exp(log_scale).reshape(-1).numpy().copy()
+        return fitted, current_betas().numpy().copy(), _rms_mm(residuals(), mask), scales
 
 
 def fit_hands(observed, valid, model, betas=None) -> List[HandFit]:
@@ -285,7 +293,7 @@ def fit_hands(observed, valid, model, betas=None) -> List[HandFit]:
     frames = sorted(starts)
     for first in range(0, len(frames), FRAMES_PER_BATCH):
         batch = frames[first:first + FRAMES_PER_BATCH]
-        params, _, rms = _optimise(
+        params, _, rms, _ = _optimise(
             model, observed[batch], valid[batch], np.stack([starts[t] for t in batch]), betas
         )
         for k, t in enumerate(batch):
@@ -377,7 +385,7 @@ def fit_hand_shape(observed, valid, model, plausibility=SHAPE_PLAUSIBILITY) -> n
     frames = [t for t, fit in enumerate(neutral) if fit.status == "ok"]
     if not frames:
         return np.zeros(model.num_betas)
-    _, betas, _ = _optimise(model, observed[frames], valid[frames], _starts_from(neutral, frames),
+    _, betas, _, _ = _optimise(model, observed[frames], valid[frames], _starts_from(neutral, frames),
                             shape="shared", plausibility=plausibility)
     return betas[0]
 
@@ -403,7 +411,7 @@ def fit_hands_per_frame_shape(observed, valid, model,
     frames = [t for t, fit in enumerate(fits) if fit.status == "ok"]
     if not frames:
         return fits
-    params, betas, rms = _optimise(model, observed[frames], valid[frames],
+    params, betas, rms, _ = _optimise(model, observed[frames], valid[frames],
                                    _starts_from(fits, frames), shape="per_frame",
                                    plausibility=plausibility)
     for k, t in enumerate(frames):
